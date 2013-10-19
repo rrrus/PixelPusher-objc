@@ -1,0 +1,24 @@
+//
+// Prefix header for all source files of the 'PixelMapPlayback' target in the 'PixelMapPlayback' project
+//
+
+#import <Availability.h>
+
+#ifndef __IPHONE_4_0
+#warning "This project uses features only available in iOS SDK 4.0 and later."
+#endif
+
+#ifdef __OBJC__
+
+#import <UIKit/UIKit.h>
+#import <Foundation/Foundation.h>
+#import "DDLog.h"
+#import "RRMacros.h"
+#import "RRForEach.h"
+
+#define INIT_LOG_LEVEL_VERBOSE static const int ddLogLevel = LOG_LEVEL_VERBOSE;
+#define INIT_LOG_LEVEL_INFO static const int ddLogLevel = LOG_LEVEL_INFO;
+#define INIT_LOG_LEVEL_WARN static const int ddLogLevel = LOG_LEVEL_WARN;
+#define INIT_LOG_LEVEL_ERROR static const int ddLogLevel = LOG_LEVEL_ERROR;
+
+#endif

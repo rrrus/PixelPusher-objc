@@ -1,0 +1,474 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		DB4D483718132E8800788518 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DB4D483618132E8800788518 /* Foundation.framework */; };
+		DB4D486118132F3000788518 /* NSData+Utils.m in Sources */ = {isa = PBXBuildFile; fileRef = DB4D484818132F3000788518 /* NSData+Utils.m */; };
+		DB4D486218132F3000788518 /* PPCard.m in Sources */ = {isa = PBXBuildFile; fileRef = DB4D484B18132F3000788518 /* PPCard.m */; };
+		DB4D486318132F3000788518 /* PPDevice.m in Sources */ = {isa = PBXBuildFile; fileRef = DB4D484D18132F3000788518 /* PPDevice.m */; };
+		DB4D486418132F3000788518 /* PPDeviceHeader.m in Sources */ = {isa = PBXBuildFile; fileRef = DB4D484F18132F3000788518 /* PPDeviceHeader.m */; };
+		DB4D486518132F3000788518 /* PPDeviceRegistry.m in Sources */ = {isa = PBXBuildFile; fileRef = DB4D485118132F3000788518 /* PPDeviceRegistry.m */; };
+		DB4D486618132F3000788518 /* PPPixel.m in Sources */ = {isa = PBXBuildFile; fileRef = DB4D485318132F3000788518 /* PPPixel.m */; };
+		DB4D486718132F3000788518 /* PPPixelPusher.m in Sources */ = {isa = PBXBuildFile; fileRef = DB4D485518132F3000788518 /* PPPixelPusher.m */; };
+		DB4D486818132F3000788518 /* PPPusherGroup.m in Sources */ = {isa = PBXBuildFile; fileRef = DB4D485718132F3000788518 /* PPPusherGroup.m */; };
+		DB4D486918132F3000788518 /* PPScene.m in Sources */ = {isa = PBXBuildFile; fileRef = DB4D485918132F3000788518 /* PPScene.m */; };
+		DB4D486A18132F3000788518 /* PPStrip.m in Sources */ = {isa = PBXBuildFile; fileRef = DB4D485B18132F3000788518 /* PPStrip.m */; };
+		DB4D486B18132F3000788518 /* PPVStrip.m in Sources */ = {isa = PBXBuildFile; fileRef = DB4D485D18132F3000788518 /* PPVStrip.m */; };
+		DB4D486C18132F3000788518 /* RRForEach.m in Sources */ = {isa = PBXBuildFile; fileRef = DB4D485F18132F3000788518 /* RRForEach.m */; };
+		DB4D487F1813301900788518 /* DDAbstractDatabaseLogger.m in Sources */ = {isa = PBXBuildFile; fileRef = DB4D48701813301900788518 /* DDAbstractDatabaseLogger.m */; };
+		DB4D48801813301900788518 /* DDASLLogger.m in Sources */ = {isa = PBXBuildFile; fileRef = DB4D48721813301900788518 /* DDASLLogger.m */; };
+		DB4D48811813301900788518 /* DDFileLogger.m in Sources */ = {isa = PBXBuildFile; fileRef = DB4D48741813301900788518 /* DDFileLogger.m */; };
+		DB4D48821813301900788518 /* DDLog.m in Sources */ = {isa = PBXBuildFile; fileRef = DB4D48761813301900788518 /* DDLog.m */; };
+		DB4D48831813301900788518 /* DDTTYLogger.m in Sources */ = {isa = PBXBuildFile; fileRef = DB4D48781813301900788518 /* DDTTYLogger.m */; };
+		DB4D48841813301900788518 /* ContextFilterLogFormatter.m in Sources */ = {isa = PBXBuildFile; fileRef = DB4D487B1813301900788518 /* ContextFilterLogFormatter.m */; };
+		DB4D48851813301900788518 /* DispatchQueueLogFormatter.m in Sources */ = {isa = PBXBuildFile; fileRef = DB4D487D1813301900788518 /* DispatchQueueLogFormatter.m */; };
+		DB4D48871813308400788518 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DB4D48861813308400788518 /* UIKit.framework */; };
+		DB4D488F181330BB00788518 /* HLDeferred.m in Sources */ = {isa = PBXBuildFile; fileRef = DB4D488A181330BB00788518 /* HLDeferred.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
+		DB4D4890181330BB00788518 /* HLDeferredList.m in Sources */ = {isa = PBXBuildFile; fileRef = DB4D488C181330BB00788518 /* HLDeferredList.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
+		DB4D4891181330BB00788518 /* HLFailure.m in Sources */ = {isa = PBXBuildFile; fileRef = DB4D488E181330BB00788518 /* HLFailure.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
+		DB4D48971813314400788518 /* GCDAsyncSocket.m in Sources */ = {isa = PBXBuildFile; fileRef = DB4D48941813314400788518 /* GCDAsyncSocket.m */; };
+		DB4D48981813314400788518 /* GCDAsyncUdpSocket.m in Sources */ = {isa = PBXBuildFile; fileRef = DB4D48961813314400788518 /* GCDAsyncUdpSocket.m */; };
+		DB4D48A71813345C00788518 /* DDLog.h in Headers */ = {isa = PBXBuildFile; fileRef = DB4D48751813301900788518 /* DDLog.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		DB4D48A9181335C400788518 /* NSData+Utils.h in Headers */ = {isa = PBXBuildFile; fileRef = DB4D484718132F3000788518 /* NSData+Utils.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		DB4D48AA181335C400788518 /* PPCard.h in Headers */ = {isa = PBXBuildFile; fileRef = DB4D484A18132F3000788518 /* PPCard.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		DB4D48AB181335C400788518 /* PPDevice.h in Headers */ = {isa = PBXBuildFile; fileRef = DB4D484C18132F3000788518 /* PPDevice.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		DB4D48AC181335C400788518 /* PPDeviceHeader.h in Headers */ = {isa = PBXBuildFile; fileRef = DB4D484E18132F3000788518 /* PPDeviceHeader.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		DB4D48AD181335C400788518 /* PPDeviceRegistry.h in Headers */ = {isa = PBXBuildFile; fileRef = DB4D485018132F3000788518 /* PPDeviceRegistry.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		DB4D48AE181335C400788518 /* PPPixel.h in Headers */ = {isa = PBXBuildFile; fileRef = DB4D485218132F3000788518 /* PPPixel.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		DB4D48AF181335C400788518 /* PPPixelPusher.h in Headers */ = {isa = PBXBuildFile; fileRef = DB4D485418132F3000788518 /* PPPixelPusher.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		DB4D48B0181335C400788518 /* PPPusherGroup.h in Headers */ = {isa = PBXBuildFile; fileRef = DB4D485618132F3000788518 /* PPPusherGroup.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		DB4D48B1181335C400788518 /* PPScene.h in Headers */ = {isa = PBXBuildFile; fileRef = DB4D485818132F3000788518 /* PPScene.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		DB4D48B2181335C400788518 /* PPStrip.h in Headers */ = {isa = PBXBuildFile; fileRef = DB4D485A18132F3000788518 /* PPStrip.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		DB4D48B3181335C400788518 /* PPVStrip.h in Headers */ = {isa = PBXBuildFile; fileRef = DB4D485C18132F3000788518 /* PPVStrip.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		DB4D48B4181335C400788518 /* RRForEach.h in Headers */ = {isa = PBXBuildFile; fileRef = DB4D485E18132F3000788518 /* RRForEach.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		DB4D48B5181335C400788518 /* RRMacros.h in Headers */ = {isa = PBXBuildFile; fileRef = DB4D486018132F3000788518 /* RRMacros.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		DB4D48B6181335D200788518 /* DDTTYLogger.h in Headers */ = {isa = PBXBuildFile; fileRef = DB4D48771813301900788518 /* DDTTYLogger.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		DB4D48B7181335DD00788518 /* HLDeferred.h in Headers */ = {isa = PBXBuildFile; fileRef = DB4D4889181330BB00788518 /* HLDeferred.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		DB4D48B8181335E900788518 /* HLFailure.h in Headers */ = {isa = PBXBuildFile; fileRef = DB4D488D181330BB00788518 /* HLFailure.h */; settings = {ATTRIBUTES = (Public, ); }; };
+/* End PBXBuildFile section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		DB4D483118132E8800788518 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "include/${PRODUCT_NAME}";
+			dstSubfolderSpec = 16;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		DB3E2B45181341BB0034BFC8 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = text; name = README.md; path = ../README.md; sourceTree = "<group>"; };
+		DB4D483318132E8800788518 /* libPixelPusher-objc.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPixelPusher-objc.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		DB4D483618132E8800788518 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
+		DB4D484718132F3000788518 /* NSData+Utils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSData+Utils.h"; sourceTree = "<group>"; };
+		DB4D484818132F3000788518 /* NSData+Utils.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSData+Utils.m"; sourceTree = "<group>"; };
+		DB4D484918132F3000788518 /* PixelPusher-objc-Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "PixelPusher-objc-Prefix.pch"; sourceTree = "<group>"; };
+		DB4D484A18132F3000788518 /* PPCard.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PPCard.h; sourceTree = "<group>"; };
+		DB4D484B18132F3000788518 /* PPCard.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PPCard.m; sourceTree = "<group>"; };
+		DB4D484C18132F3000788518 /* PPDevice.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PPDevice.h; sourceTree = "<group>"; };
+		DB4D484D18132F3000788518 /* PPDevice.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PPDevice.m; sourceTree = "<group>"; };
+		DB4D484E18132F3000788518 /* PPDeviceHeader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PPDeviceHeader.h; sourceTree = "<group>"; };
+		DB4D484F18132F3000788518 /* PPDeviceHeader.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PPDeviceHeader.m; sourceTree = "<group>"; };
+		DB4D485018132F3000788518 /* PPDeviceRegistry.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PPDeviceRegistry.h; sourceTree = "<group>"; };
+		DB4D485118132F3000788518 /* PPDeviceRegistry.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PPDeviceRegistry.m; sourceTree = "<group>"; };
+		DB4D485218132F3000788518 /* PPPixel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PPPixel.h; sourceTree = "<group>"; };
+		DB4D485318132F3000788518 /* PPPixel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PPPixel.m; sourceTree = "<group>"; };
+		DB4D485418132F3000788518 /* PPPixelPusher.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PPPixelPusher.h; sourceTree = "<group>"; };
+		DB4D485518132F3000788518 /* PPPixelPusher.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PPPixelPusher.m; sourceTree = "<group>"; };
+		DB4D485618132F3000788518 /* PPPusherGroup.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PPPusherGroup.h; sourceTree = "<group>"; };
+		DB4D485718132F3000788518 /* PPPusherGroup.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PPPusherGroup.m; sourceTree = "<group>"; };
+		DB4D485818132F3000788518 /* PPScene.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PPScene.h; sourceTree = "<group>"; };
+		DB4D485918132F3000788518 /* PPScene.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PPScene.m; sourceTree = "<group>"; };
+		DB4D485A18132F3000788518 /* PPStrip.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PPStrip.h; sourceTree = "<group>"; };
+		DB4D485B18132F3000788518 /* PPStrip.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PPStrip.m; sourceTree = "<group>"; };
+		DB4D485C18132F3000788518 /* PPVStrip.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PPVStrip.h; sourceTree = "<group>"; };
+		DB4D485D18132F3000788518 /* PPVStrip.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PPVStrip.m; sourceTree = "<group>"; };
+		DB4D485E18132F3000788518 /* RRForEach.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RRForEach.h; sourceTree = "<group>"; };
+		DB4D485F18132F3000788518 /* RRForEach.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RRForEach.m; sourceTree = "<group>"; };
+		DB4D486018132F3000788518 /* RRMacros.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RRMacros.h; sourceTree = "<group>"; };
+		DB4D486F1813301900788518 /* DDAbstractDatabaseLogger.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DDAbstractDatabaseLogger.h; path = "3rd Party/CocoaLumberjack/Lumberjack/DDAbstractDatabaseLogger.h"; sourceTree = "<group>"; };
+		DB4D48701813301900788518 /* DDAbstractDatabaseLogger.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DDAbstractDatabaseLogger.m; path = "3rd Party/CocoaLumberjack/Lumberjack/DDAbstractDatabaseLogger.m"; sourceTree = "<group>"; };
+		DB4D48711813301900788518 /* DDASLLogger.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DDASLLogger.h; path = "3rd Party/CocoaLumberjack/Lumberjack/DDASLLogger.h"; sourceTree = "<group>"; };
+		DB4D48721813301900788518 /* DDASLLogger.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DDASLLogger.m; path = "3rd Party/CocoaLumberjack/Lumberjack/DDASLLogger.m"; sourceTree = "<group>"; };
+		DB4D48731813301900788518 /* DDFileLogger.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DDFileLogger.h; path = "3rd Party/CocoaLumberjack/Lumberjack/DDFileLogger.h"; sourceTree = "<group>"; };
+		DB4D48741813301900788518 /* DDFileLogger.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DDFileLogger.m; path = "3rd Party/CocoaLumberjack/Lumberjack/DDFileLogger.m"; sourceTree = "<group>"; };
+		DB4D48751813301900788518 /* DDLog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DDLog.h; path = "3rd Party/CocoaLumberjack/Lumberjack/DDLog.h"; sourceTree = "<group>"; };
+		DB4D48761813301900788518 /* DDLog.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DDLog.m; path = "3rd Party/CocoaLumberjack/Lumberjack/DDLog.m"; sourceTree = "<group>"; };
+		DB4D48771813301900788518 /* DDTTYLogger.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DDTTYLogger.h; path = "3rd Party/CocoaLumberjack/Lumberjack/DDTTYLogger.h"; sourceTree = "<group>"; };
+		DB4D48781813301900788518 /* DDTTYLogger.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DDTTYLogger.m; path = "3rd Party/CocoaLumberjack/Lumberjack/DDTTYLogger.m"; sourceTree = "<group>"; };
+		DB4D487A1813301900788518 /* ContextFilterLogFormatter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ContextFilterLogFormatter.h; sourceTree = "<group>"; };
+		DB4D487B1813301900788518 /* ContextFilterLogFormatter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ContextFilterLogFormatter.m; sourceTree = "<group>"; };
+		DB4D487C1813301900788518 /* DispatchQueueLogFormatter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DispatchQueueLogFormatter.h; sourceTree = "<group>"; };
+		DB4D487D1813301900788518 /* DispatchQueueLogFormatter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DispatchQueueLogFormatter.m; sourceTree = "<group>"; };
+		DB4D487E1813301900788518 /* README.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = README.txt; sourceTree = "<group>"; };
+		DB4D48861813308400788518 /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
+		DB4D4889181330BB00788518 /* HLDeferred.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = HLDeferred.h; path = "3rd Party/HLDeferred-objc/HLDeferred/Classes/HLDeferred.h"; sourceTree = "<group>"; };
+		DB4D488A181330BB00788518 /* HLDeferred.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = HLDeferred.m; path = "3rd Party/HLDeferred-objc/HLDeferred/Classes/HLDeferred.m"; sourceTree = "<group>"; };
+		DB4D488B181330BB00788518 /* HLDeferredList.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = HLDeferredList.h; path = "3rd Party/HLDeferred-objc/HLDeferred/Classes/HLDeferredList.h"; sourceTree = "<group>"; };
+		DB4D488C181330BB00788518 /* HLDeferredList.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = HLDeferredList.m; path = "3rd Party/HLDeferred-objc/HLDeferred/Classes/HLDeferredList.m"; sourceTree = "<group>"; };
+		DB4D488D181330BB00788518 /* HLFailure.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = HLFailure.h; path = "3rd Party/HLDeferred-objc/HLDeferred/Classes/HLFailure.h"; sourceTree = "<group>"; };
+		DB4D488E181330BB00788518 /* HLFailure.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = HLFailure.m; path = "3rd Party/HLDeferred-objc/HLDeferred/Classes/HLFailure.m"; sourceTree = "<group>"; };
+		DB4D48931813314400788518 /* GCDAsyncSocket.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GCDAsyncSocket.h; path = "3rd Party/CocoaAsyncSocket/GCD/GCDAsyncSocket.h"; sourceTree = "<group>"; };
+		DB4D48941813314400788518 /* GCDAsyncSocket.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = GCDAsyncSocket.m; path = "3rd Party/CocoaAsyncSocket/GCD/GCDAsyncSocket.m"; sourceTree = "<group>"; };
+		DB4D48951813314400788518 /* GCDAsyncUdpSocket.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GCDAsyncUdpSocket.h; path = "3rd Party/CocoaAsyncSocket/GCD/GCDAsyncUdpSocket.h"; sourceTree = "<group>"; };
+		DB4D48961813314400788518 /* GCDAsyncUdpSocket.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = GCDAsyncUdpSocket.m; path = "3rd Party/CocoaAsyncSocket/GCD/GCDAsyncUdpSocket.m"; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		DB4D483018132E8800788518 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				DB4D48871813308400788518 /* UIKit.framework in Frameworks */,
+				DB4D483718132E8800788518 /* Foundation.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		DB4D482A18132E8800788518 = {
+			isa = PBXGroup;
+			children = (
+				DB3E2B45181341BB0034BFC8 /* README.md */,
+				DB4D484618132F3000788518 /* Source */,
+				DB4D486D18132FDB00788518 /* 3rd Party */,
+				DB4D483518132E8800788518 /* Frameworks */,
+				DB4D483418132E8800788518 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		DB4D483418132E8800788518 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				DB4D483318132E8800788518 /* libPixelPusher-objc.a */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		DB4D483518132E8800788518 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				DB4D48861813308400788518 /* UIKit.framework */,
+				DB4D483618132E8800788518 /* Foundation.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		DB4D484618132F3000788518 /* Source */ = {
+			isa = PBXGroup;
+			children = (
+				DB4D484718132F3000788518 /* NSData+Utils.h */,
+				DB4D484818132F3000788518 /* NSData+Utils.m */,
+				DB4D484918132F3000788518 /* PixelPusher-objc-Prefix.pch */,
+				DB4D484A18132F3000788518 /* PPCard.h */,
+				DB4D484B18132F3000788518 /* PPCard.m */,
+				DB4D484C18132F3000788518 /* PPDevice.h */,
+				DB4D484D18132F3000788518 /* PPDevice.m */,
+				DB4D484E18132F3000788518 /* PPDeviceHeader.h */,
+				DB4D484F18132F3000788518 /* PPDeviceHeader.m */,
+				DB4D485018132F3000788518 /* PPDeviceRegistry.h */,
+				DB4D485118132F3000788518 /* PPDeviceRegistry.m */,
+				DB4D485218132F3000788518 /* PPPixel.h */,
+				DB4D485318132F3000788518 /* PPPixel.m */,
+				DB4D485418132F3000788518 /* PPPixelPusher.h */,
+				DB4D485518132F3000788518 /* PPPixelPusher.m */,
+				DB4D485618132F3000788518 /* PPPusherGroup.h */,
+				DB4D485718132F3000788518 /* PPPusherGroup.m */,
+				DB4D485818132F3000788518 /* PPScene.h */,
+				DB4D485918132F3000788518 /* PPScene.m */,
+				DB4D485A18132F3000788518 /* PPStrip.h */,
+				DB4D485B18132F3000788518 /* PPStrip.m */,
+				DB4D485C18132F3000788518 /* PPVStrip.h */,
+				DB4D485D18132F3000788518 /* PPVStrip.m */,
+				DB4D485E18132F3000788518 /* RRForEach.h */,
+				DB4D485F18132F3000788518 /* RRForEach.m */,
+				DB4D486018132F3000788518 /* RRMacros.h */,
+			);
+			path = Source;
+			sourceTree = "<group>";
+		};
+		DB4D486D18132FDB00788518 /* 3rd Party */ = {
+			isa = PBXGroup;
+			children = (
+				DB4D48921813311E00788518 /* CocoaAsyncSocket-GCD */,
+				DB4D486E1813300800788518 /* CocoaLumberjack */,
+				DB4D48881813309100788518 /* HLDeferred */,
+			);
+			name = "3rd Party";
+			sourceTree = "<group>";
+		};
+		DB4D486E1813300800788518 /* CocoaLumberjack */ = {
+			isa = PBXGroup;
+			children = (
+				DB4D486F1813301900788518 /* DDAbstractDatabaseLogger.h */,
+				DB4D48701813301900788518 /* DDAbstractDatabaseLogger.m */,
+				DB4D48711813301900788518 /* DDASLLogger.h */,
+				DB4D48721813301900788518 /* DDASLLogger.m */,
+				DB4D48731813301900788518 /* DDFileLogger.h */,
+				DB4D48741813301900788518 /* DDFileLogger.m */,
+				DB4D48751813301900788518 /* DDLog.h */,
+				DB4D48761813301900788518 /* DDLog.m */,
+				DB4D48771813301900788518 /* DDTTYLogger.h */,
+				DB4D48781813301900788518 /* DDTTYLogger.m */,
+				DB4D48791813301900788518 /* Extensions */,
+			);
+			name = CocoaLumberjack;
+			sourceTree = "<group>";
+		};
+		DB4D48791813301900788518 /* Extensions */ = {
+			isa = PBXGroup;
+			children = (
+				DB4D487A1813301900788518 /* ContextFilterLogFormatter.h */,
+				DB4D487B1813301900788518 /* ContextFilterLogFormatter.m */,
+				DB4D487C1813301900788518 /* DispatchQueueLogFormatter.h */,
+				DB4D487D1813301900788518 /* DispatchQueueLogFormatter.m */,
+				DB4D487E1813301900788518 /* README.txt */,
+			);
+			name = Extensions;
+			path = "3rd Party/CocoaLumberjack/Lumberjack/Extensions";
+			sourceTree = "<group>";
+		};
+		DB4D48881813309100788518 /* HLDeferred */ = {
+			isa = PBXGroup;
+			children = (
+				DB4D4889181330BB00788518 /* HLDeferred.h */,
+				DB4D488A181330BB00788518 /* HLDeferred.m */,
+				DB4D488B181330BB00788518 /* HLDeferredList.h */,
+				DB4D488C181330BB00788518 /* HLDeferredList.m */,
+				DB4D488D181330BB00788518 /* HLFailure.h */,
+				DB4D488E181330BB00788518 /* HLFailure.m */,
+			);
+			name = HLDeferred;
+			sourceTree = "<group>";
+		};
+		DB4D48921813311E00788518 /* CocoaAsyncSocket-GCD */ = {
+			isa = PBXGroup;
+			children = (
+				DB4D48931813314400788518 /* GCDAsyncSocket.h */,
+				DB4D48941813314400788518 /* GCDAsyncSocket.m */,
+				DB4D48951813314400788518 /* GCDAsyncUdpSocket.h */,
+				DB4D48961813314400788518 /* GCDAsyncUdpSocket.m */,
+			);
+			name = "CocoaAsyncSocket-GCD";
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXHeadersBuildPhase section */
+		DB4D48A61813345200788518 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				DB4D48A71813345C00788518 /* DDLog.h in Headers */,
+				DB4D48B8181335E900788518 /* HLFailure.h in Headers */,
+				DB4D48B7181335DD00788518 /* HLDeferred.h in Headers */,
+				DB4D48B6181335D200788518 /* DDTTYLogger.h in Headers */,
+				DB4D48A9181335C400788518 /* NSData+Utils.h in Headers */,
+				DB4D48AA181335C400788518 /* PPCard.h in Headers */,
+				DB4D48AB181335C400788518 /* PPDevice.h in Headers */,
+				DB4D48AC181335C400788518 /* PPDeviceHeader.h in Headers */,
+				DB4D48AD181335C400788518 /* PPDeviceRegistry.h in Headers */,
+				DB4D48AE181335C400788518 /* PPPixel.h in Headers */,
+				DB4D48AF181335C400788518 /* PPPixelPusher.h in Headers */,
+				DB4D48B0181335C400788518 /* PPPusherGroup.h in Headers */,
+				DB4D48B1181335C400788518 /* PPScene.h in Headers */,
+				DB4D48B2181335C400788518 /* PPStrip.h in Headers */,
+				DB4D48B3181335C400788518 /* PPVStrip.h in Headers */,
+				DB4D48B4181335C400788518 /* RRForEach.h in Headers */,
+				DB4D48B5181335C400788518 /* RRMacros.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXHeadersBuildPhase section */
+
+/* Begin PBXNativeTarget section */
+		DB4D483218132E8800788518 /* PixelPusher-objc */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = DB4D484118132E8800788518 /* Build configuration list for PBXNativeTarget "PixelPusher-objc" */;
+			buildPhases = (
+				DB4D48A61813345200788518 /* Headers */,
+				DB4D482F18132E8800788518 /* Sources */,
+				DB4D483018132E8800788518 /* Frameworks */,
+				DB4D483118132E8800788518 /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "PixelPusher-objc";
+			productName = "PixelPusher-objc";
+			productReference = DB4D483318132E8800788518 /* libPixelPusher-objc.a */;
+			productType = "com.apple.product-type.library.static";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		DB4D482B18132E8800788518 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0460;
+				ORGANIZATIONNAME = rrrus;
+			};
+			buildConfigurationList = DB4D482E18132E8800788518 /* Build configuration list for PBXProject "PixelPusher-objc" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+			);
+			mainGroup = DB4D482A18132E8800788518;
+			productRefGroup = DB4D483418132E8800788518 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				DB4D483218132E8800788518 /* PixelPusher-objc */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		DB4D482F18132E8800788518 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				DB4D486118132F3000788518 /* NSData+Utils.m in Sources */,
+				DB4D486218132F3000788518 /* PPCard.m in Sources */,
+				DB4D486318132F3000788518 /* PPDevice.m in Sources */,
+				DB4D486418132F3000788518 /* PPDeviceHeader.m in Sources */,
+				DB4D486518132F3000788518 /* PPDeviceRegistry.m in Sources */,
+				DB4D486618132F3000788518 /* PPPixel.m in Sources */,
+				DB4D486718132F3000788518 /* PPPixelPusher.m in Sources */,
+				DB4D486818132F3000788518 /* PPPusherGroup.m in Sources */,
+				DB4D486918132F3000788518 /* PPScene.m in Sources */,
+				DB4D486A18132F3000788518 /* PPStrip.m in Sources */,
+				DB4D486B18132F3000788518 /* PPVStrip.m in Sources */,
+				DB4D486C18132F3000788518 /* RRForEach.m in Sources */,
+				DB4D487F1813301900788518 /* DDAbstractDatabaseLogger.m in Sources */,
+				DB4D48801813301900788518 /* DDASLLogger.m in Sources */,
+				DB4D48811813301900788518 /* DDFileLogger.m in Sources */,
+				DB4D48821813301900788518 /* DDLog.m in Sources */,
+				DB4D48831813301900788518 /* DDTTYLogger.m in Sources */,
+				DB4D48841813301900788518 /* ContextFilterLogFormatter.m in Sources */,
+				DB4D48851813301900788518 /* DispatchQueueLogFormatter.m in Sources */,
+				DB4D488F181330BB00788518 /* HLDeferred.m in Sources */,
+				DB4D4890181330BB00788518 /* HLDeferredList.m in Sources */,
+				DB4D4891181330BB00788518 /* HLFailure.m in Sources */,
+				DB4D48971813314400788518 /* GCDAsyncSocket.m in Sources */,
+				DB4D48981813314400788518 /* GCDAsyncUdpSocket.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		DB4D483F18132E8800788518 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 6.1;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+			};
+			name = Debug;
+		};
+		DB4D484018132E8800788518 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 6.1;
+				SDKROOT = iphoneos;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		DB4D484218132E8800788518 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				DSTROOT = /tmp/PixelPusher_objc.dst;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "Source/PixelPusher-objc-Prefix.pch";
+				OTHER_LDFLAGS = "-ObjC";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+			};
+			name = Debug;
+		};
+		DB4D484318132E8800788518 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				DSTROOT = /tmp/PixelPusher_objc.dst;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "Source/PixelPusher-objc-Prefix.pch";
+				OTHER_LDFLAGS = "-ObjC";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		DB4D482E18132E8800788518 /* Build configuration list for PBXProject "PixelPusher-objc" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				DB4D483F18132E8800788518 /* Debug */,
+				DB4D484018132E8800788518 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		DB4D484118132E8800788518 /* Build configuration list for PBXNativeTarget "PixelPusher-objc" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				DB4D484218132E8800788518 /* Debug */,
+				DB4D484318132E8800788518 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = DB4D482B18132E8800788518 /* Project object */;
+}
