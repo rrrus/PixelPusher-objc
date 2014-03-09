@@ -47,6 +47,12 @@
 	return [PPPixel.alloc initWithRed:self.red*scale green:self.green*scale blue:self.blue*scale];
 }
 
+- (void)scaleLuminance:(float)scale {
+	_red *= scale;
+	_green *= scale;
+	_blue *= scale;
+}
+
 - (void)addPixel:(PPPixel*)other {
 	float or,og,ob;
 	or = self.red + other.red;
@@ -62,4 +68,10 @@
 	self.green = other.green;
 	self.blue = other.blue;
 }
+
+-(void)setColor:(UIColor *)color {
+	float a;
+	[color getRed:&_red green:&_green blue:&_blue alpha:&a];
+}
+
 @end

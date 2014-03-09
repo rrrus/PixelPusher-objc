@@ -134,7 +134,7 @@ INIT_LOG_LEVEL_INFO
 	int szHeight = 135;
 	// determine image size from pixel map density
 	if (self.pixelMapAvgSpacing > 0) {
-		szWidth = 2 / self.pixelMapAvgSpacing;
+		szWidth = (int)(2 / self.pixelMapAvgSpacing);
 		// make the width multiple of 2
 		while(szWidth%2 != 0) szWidth++;
 		// make image 4:3 aspect ratio to match ipad screen aspect
@@ -173,7 +173,10 @@ INIT_LOG_LEVEL_INFO
 	CGContextRef context = UIGraphicsGetCurrentContext();
 	CGContextConcatCTM(context, transform);
 
-	CGFloat offset = fmod(now * 40, mappingSpacing) - mappingSpacing;
+	// must use fmod (not fmodf) to modulo current time that will be a huge 64-bit
+	// double.  after the fmod, we can safely cast the result to the float without
+	// clipping.
+	CGFloat offset = (float)fmod(now * 40, mappingSpacing) - mappingSpacing;
 	[self drawGradient:context offset:offset spacing:mappingSpacing];
 //	[self drawSolidFill:context];
 
@@ -241,8 +244,8 @@ INIT_LOG_LEVEL_INFO
 	int szWidth = CGBitmapContextGetWidth(context);
 	int szHeight = CGBitmapContextGetHeight(context);
 	int szDiff2 = (szWidth - szHeight)/2;
-	UIColor *rectColor = [UIColor colorWithHue:fmod(CACurrentMediaTime()/20, 1) saturation:1 brightness:1 alpha:1];
-	CGFloat locations[] = { 0.4, 1 };
+	UIColor *rectColor = [UIColor colorWithHue:(float)fmod(CACurrentMediaTime()/20, 1) saturation:1 brightness:1 alpha:1];
+	CGFloat locations[] = { 0.4f, 1 };
 	NSArray *colors = @[(id)UIColor.blackColor.CGColor, (id)rectColor.CGColor];
 	CGGradientRef gradient = CGGradientCreateWithColors(nil,
 														(__bridge CFArrayRef)colors,
@@ -266,7 +269,7 @@ INIT_LOG_LEVEL_INFO
 	int szWidth = CGBitmapContextGetWidth(context);
 	int szHeight = CGBitmapContextGetHeight(context);
 	int szDiff2 = (szWidth - szHeight)/2;
-	UIColor *rectColor = [UIColor colorWithHue:fmod(CACurrentMediaTime()/20, 1) saturation:1 brightness:1 alpha:1];
+	UIColor *rectColor = [UIColor colorWithHue:(float)fmod(CACurrentMediaTime()/20, 1) saturation:1 brightness:1 alpha:1];
 	CGContextSetFillColorWithColor(context, rectColor.CGColor);
 	CGRect rc = CGRectMake(0, -szDiff2, szWidth, szWidth);
 	CGContextFillRect(context, rc);

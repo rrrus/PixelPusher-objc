@@ -23,6 +23,8 @@ extern NSString * const PPDeviceRegistryRemovedPusher;
 
 @property (nonatomic, weak) id<PPFrameDelegate> frameDelegate;
 @property (nonatomic, readonly) NSDictionary *pusherMap;
+@property (nonatomic) uint32_t frameRateLimit;
+@property (nonatomic) BOOL record;
 
 + (PPDeviceRegistry*)sharedRegistry;
 

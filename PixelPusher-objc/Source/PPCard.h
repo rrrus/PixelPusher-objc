@@ -13,6 +13,7 @@
 @interface PPCard : NSObject
 
 @property (nonatomic, readonly) int64_t bandwidthEstimate;
+@property (nonatomic, assign) BOOL record;
 
 - (id)initWithPusher:(PPPixelPusher*)pusher port:(uint16_t)port;
 

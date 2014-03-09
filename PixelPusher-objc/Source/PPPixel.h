@@ -8,6 +8,8 @@
 
 #import <Foundation/Foundation.h>
 
+@class UIColor;
+
 @interface PPPixel : NSObject
 
 @property (nonatomic, assign) float red;
@@ -18,7 +20,9 @@
 + (PPPixel*)pixelWithRed:(float)r green:(float)g blue:(float)b;
 
 - (PPPixel*)pixelScalingLuminance:(float)scale;
+- (void)scaleLuminance:(float)scale;
 - (void)addPixel:(PPPixel*)other;
 - (void)copy:(PPPixel*)other;
+- (void)setColor:(UIColor*)color;
 
 @end

@@ -13,6 +13,7 @@
 #import "PPPusherGroup.h"
 #import "PPScene.h"
 #import "GCDAsyncUdpSocket.h"
+#import <UIKit/UIKit.h>
 
 INIT_LOG_LEVEL_INFO
 
@@ -84,23 +85,72 @@ static PPDeviceRegistry *gSharedRegistry;
 	return self.scene.totalBandwidth;
 }
 
+- (BOOL)record {
+	return self.scene.record;
+}
+
+- (void)setRecord:(BOOL)record {
+	self.scene.record = record;
+}
+
 - (id)init
 {
     self = [super init];
     if (self) {
+		self.frameRateLimit = 60;
 		_pusherMap = NSMutableDictionary.new;
 		self.groupMap = NSMutableDictionary.new;
 		self.sortedPushers = NSMutableOrderedSet.new;
 		self.pusherLastSeenMap = NSMutableDictionary.new;
 		self.scene = PPScene.new;
 
+		[self bind];
+		
+		// monitor pushers' timeouts
+		[NSTimer scheduledTimerWithTimeInterval:kExpiryTimerInterval
+										 target:self
+									   selector:@selector(deviceExpiryTask:)
+									   userInfo:nil
+										repeats:YES];
+		
+		[NSNotificationCenter.defaultCenter addObserver:self
+											   selector:@selector(appDidBackground)
+												   name:UIApplicationDidEnterBackgroundNotification
+												 object:nil];
+		[NSNotificationCenter.defaultCenter addObserver:self
+											   selector:@selector(appDidActivate)
+												   name:UIApplicationDidBecomeActiveNotification
+												 object:nil];
+
+    }
+    return self;
+}
+
+- (void)appDidActivate {
+	// delay 1s in case we were switched in from another PP app
+	[NSTimer scheduledTimerWithTimeInterval:1 target:self selector:@selector(bind) userInfo:nil repeats:NO];
+}
+
+- (void)appDidBackground {
+	[self unbind];
+}
+
+- (void)bind {
+	if (!self.discoverySocket) {
 		// setup the discovery service
 		self.discoverySocket = [GCDAsyncUdpSocket.alloc initWithDelegate:self delegateQueue:dispatch_get_main_queue()];
 		[self.discoverySocket setIPv6Enabled:NO];
 		NSError *error;
 		[self.discoverySocket bindToPort:kDiscoveryPort error:&error];
 		if (error) {
-			[NSException raise:NSGenericException format:@"error binding to discovery port: %@", error];
+			UIAlertView *alert = [UIAlertView.alloc initWithTitle:@"PixelPusher"
+														  message:@"Another PixelPusher app is preventing me from finding PixelPushers.  Be a lamb and kill it for me?"
+														 delegate:nil
+												cancelButtonTitle:@"Sure thing, honey"
+												otherButtonTitles:nil, nil];
+			[alert show];
+			return;
+			self.discoverySocket = nil;
 		}
 		[self.discoverySocket enableBroadcast:YES error:&error];
 		if (error) {
@@ -110,15 +160,14 @@ static PPDeviceRegistry *gSharedRegistry;
 		if (error) {
 			[NSException raise:NSGenericException format:@"error beginning receive on discovery port: %@", error];
 		}
+	}
+}
 
-		// monitor pushers' timeouts
-		[NSTimer scheduledTimerWithTimeInterval:kExpiryTimerInterval
-										 target:self
-									   selector:@selector(deviceExpiryTask:)
-									   userInfo:nil
-										repeats:YES];
-    }
-    return self;
+- (void)unbind {
+	if (self.discoverySocket) {
+		[self.discoverySocket close];
+		self.discoverySocket = nil;
+	}
 }
 
 - (NSArray*)strips {

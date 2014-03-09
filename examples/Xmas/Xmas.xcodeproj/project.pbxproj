@@ -11,11 +11,13 @@
 		DB01CF77174C1A2200486F6C /* RRMainViewController_iPhone.xib in Resources */ = {isa = PBXBuildFile; fileRef = DB01CF74174C1A2200486F6C /* RRMainViewController_iPhone.xib */; };
 		DB3E2B42181339650034BFC8 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DB3E2B41181339650034BFC8 /* Security.framework */; };
 		DB3E2B44181339690034BFC8 /* CFNetwork.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DB3E2B43181339690034BFC8 /* CFNetwork.framework */; };
+		DB3E2B4A18134A9E0034BFC8 /* RRXmas.m in Sources */ = {isa = PBXBuildFile; fileRef = DB3E2B4918134A9E0034BFC8 /* RRXmas.m */; };
 		DB4D48A8181334FB00788518 /* libPixelPusher-objc.a in Frameworks */ = {isa = PBXBuildFile; fileRef = DB4D48A01813331C00788518 /* libPixelPusher-objc.a */; };
 		DB4D48BC1813363400788518 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DB4D48BB1813363400788518 /* CoreGraphics.framework */; };
 		DB4D48BE1813367100788518 /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DB4D48BD1813367100788518 /* QuartzCore.framework */; };
 		DBB0BC741759AA4F002E7E5E /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DBC1CD67174B4D2700CCAF52 /* UIKit.framework */; };
 		DBB0BC751759AA4F002E7E5E /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DBC1CD69174B4D2700CCAF52 /* Foundation.framework */; };
+		DBB953EE185E534C00BE64FD /* Animator.m in Sources */ = {isa = PBXBuildFile; fileRef = DBB953ED185E534C00BE64FD /* Animator.m */; };
 		DBC1CD68174B4D2700CCAF52 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DBC1CD67174B4D2700CCAF52 /* UIKit.framework */; };
 		DBC1CD6A174B4D2700CCAF52 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DBC1CD69174B4D2700CCAF52 /* Foundation.framework */; };
 		DBC1CDA0174B4D8B00CCAF52 /* Default-568h@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = DBC1CD94174B4D8B00CCAF52 /* Default-568h@2x.png */; };
@@ -25,7 +27,6 @@
 		DBC1CDB1174B4D9500CCAF52 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = DBC1CDA9174B4D9500CCAF52 /* main.m */; };
 		DBC1CDB2174B4D9500CCAF52 /* RRAppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = DBC1CDAC174B4D9500CCAF52 /* RRAppDelegate.m */; };
 		DBC1CDB4174B4D9500CCAF52 /* RRMainViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = DBC1CDB0174B4D9500CCAF52 /* RRMainViewController.m */; };
-		DBD130E5175B203F00F43D85 /* pixelsOnDaFloor.json in Resources */ = {isa = PBXBuildFile; fileRef = DBD130E4175B203F00F43D85 /* pixelsOnDaFloor.json */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -50,25 +51,28 @@
 		DB01CF74174C1A2200486F6C /* RRMainViewController_iPhone.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; name = RRMainViewController_iPhone.xib; path = Source/RRMainViewController_iPhone.xib; sourceTree = SOURCE_ROOT; };
 		DB3E2B41181339650034BFC8 /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
 		DB3E2B43181339690034BFC8 /* CFNetwork.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CFNetwork.framework; path = System/Library/Frameworks/CFNetwork.framework; sourceTree = SDKROOT; };
+		DB3E2B4818134A9E0034BFC8 /* RRXmas.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RRXmas.h; path = Source/RRXmas.h; sourceTree = SOURCE_ROOT; };
+		DB3E2B4918134A9E0034BFC8 /* RRXmas.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = RRXmas.m; path = Source/RRXmas.m; sourceTree = SOURCE_ROOT; };
 		DB4D4899181332FF00788518 /* PixelPusher-objc.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = "PixelPusher-objc.xcodeproj"; path = "../../PixelPusher-objc/PixelPusher-objc.xcodeproj"; sourceTree = SOURCE_ROOT; };
 		DB4D48BB1813363400788518 /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
 		DB4D48BD1813367100788518 /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
 		DBB0BC711759AA4F002E7E5E /* PixelPusherTests.octest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PixelPusherTests.octest; sourceTree = BUILT_PRODUCTS_DIR; };
-		DBC1CD64174B4D2700CCAF52 /* PixelMapPlayback.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PixelMapPlayback.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		DBB953EC185E534C00BE64FD /* Animator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Animator.h; path = Source/Animator.h; sourceTree = SOURCE_ROOT; };
+		DBB953ED185E534C00BE64FD /* Animator.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = Animator.m; path = Source/Animator.m; sourceTree = SOURCE_ROOT; };
+		DBC1CD64174B4D2700CCAF52 /* Xmas.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Xmas.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		DBC1CD67174B4D2700CCAF52 /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
 		DBC1CD69174B4D2700CCAF52 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		DBC1CD94174B4D8B00CCAF52 /* Default-568h@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "Default-568h@2x.png"; path = "Resources/Default-568h@2x.png"; sourceTree = SOURCE_ROOT; };
 		DBC1CD95174B4D8B00CCAF52 /* Default.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = Default.png; path = Resources/Default.png; sourceTree = SOURCE_ROOT; };
 		DBC1CD96174B4D8B00CCAF52 /* Default@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "Default@2x.png"; path = "Resources/Default@2x.png"; sourceTree = SOURCE_ROOT; };
 		DBC1CD98174B4D8B00CCAF52 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
-		DBC1CD9F174B4D8B00CCAF52 /* PixelMapPlayback-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "PixelMapPlayback-Info.plist"; sourceTree = "<group>"; };
+		DBC1CD9F174B4D8B00CCAF52 /* Xmas-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "Xmas-Info.plist"; sourceTree = "<group>"; };
 		DBC1CDA9174B4D9500CCAF52 /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = main.m; path = Source/main.m; sourceTree = SOURCE_ROOT; };
-		DBC1CDAA174B4D9500CCAF52 /* PixelMapPlayback-Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "PixelMapPlayback-Prefix.pch"; path = "Source/PixelMapPlayback-Prefix.pch"; sourceTree = SOURCE_ROOT; };
+		DBC1CDAA174B4D9500CCAF52 /* Xmas-Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "Xmas-Prefix.pch"; path = "Source/Xmas-Prefix.pch"; sourceTree = SOURCE_ROOT; };
 		DBC1CDAB174B4D9500CCAF52 /* RRAppDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RRAppDelegate.h; path = Source/RRAppDelegate.h; sourceTree = SOURCE_ROOT; };
 		DBC1CDAC174B4D9500CCAF52 /* RRAppDelegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = RRAppDelegate.m; path = Source/RRAppDelegate.m; sourceTree = SOURCE_ROOT; };
 		DBC1CDAF174B4D9500CCAF52 /* RRMainViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RRMainViewController.h; path = Source/RRMainViewController.h; sourceTree = SOURCE_ROOT; };
 		DBC1CDB0174B4D9500CCAF52 /* RRMainViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = RRMainViewController.m; path = Source/RRMainViewController.m; sourceTree = SOURCE_ROOT; };
-		DBD130E4175B203F00F43D85 /* pixelsOnDaFloor.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = pixelsOnDaFloor.json; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -109,7 +113,7 @@
 		DBC1CD5B174B4D2600CCAF52 = {
 			isa = PBXGroup;
 			children = (
-				DBC1CD6D174B4D2700CCAF52 /* PixelMapPlayback */,
+				DBC1CD6D174B4D2700CCAF52 /* Xmas */,
 				DBC1CD66174B4D2700CCAF52 /* Frameworks */,
 				DBC1CD65174B4D2700CCAF52 /* Products */,
 			);
@@ -118,7 +122,7 @@
 		DBC1CD65174B4D2700CCAF52 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				DBC1CD64174B4D2700CCAF52 /* PixelMapPlayback.app */,
+				DBC1CD64174B4D2700CCAF52 /* Xmas.app */,
 				DBB0BC711759AA4F002E7E5E /* PixelPusherTests.octest */,
 			);
 			name = Products;
@@ -137,25 +141,24 @@
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
-		DBC1CD6D174B4D2700CCAF52 /* PixelMapPlayback */ = {
+		DBC1CD6D174B4D2700CCAF52 /* Xmas */ = {
 			isa = PBXGroup;
 			children = (
 				DBC1CDA8174B4D9500CCAF52 /* Source */,
 				DBC1CD93174B4D8B00CCAF52 /* Resources */,
 				DB4D4899181332FF00788518 /* PixelPusher-objc.xcodeproj */,
 			);
-			path = PixelMapPlayback;
+			path = Xmas;
 			sourceTree = SOURCE_ROOT;
 		};
 		DBC1CD93174B4D8B00CCAF52 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
-				DBD130E4175B203F00F43D85 /* pixelsOnDaFloor.json */,
 				DBC1CD94174B4D8B00CCAF52 /* Default-568h@2x.png */,
 				DBC1CD95174B4D8B00CCAF52 /* Default.png */,
 				DBC1CD96174B4D8B00CCAF52 /* Default@2x.png */,
 				DBC1CD97174B4D8B00CCAF52 /* InfoPlist.strings */,
-				DBC1CD9F174B4D8B00CCAF52 /* PixelMapPlayback-Info.plist */,
+				DBC1CD9F174B4D8B00CCAF52 /* Xmas-Info.plist */,
 			);
 			path = Resources;
 			sourceTree = SOURCE_ROOT;
@@ -164,7 +167,11 @@
 			isa = PBXGroup;
 			children = (
 				DBC1CDA9174B4D9500CCAF52 /* main.m */,
-				DBC1CDAA174B4D9500CCAF52 /* PixelMapPlayback-Prefix.pch */,
+				DBC1CDAA174B4D9500CCAF52 /* Xmas-Prefix.pch */,
+				DBB953EC185E534C00BE64FD /* Animator.h */,
+				DBB953ED185E534C00BE64FD /* Animator.m */,
+				DB3E2B4818134A9E0034BFC8 /* RRXmas.h */,
+				DB3E2B4918134A9E0034BFC8 /* RRXmas.m */,
 				DBC1CDAB174B4D9500CCAF52 /* RRAppDelegate.h */,
 				DBC1CDAC174B4D9500CCAF52 /* RRAppDelegate.m */,
 				DBC1CDAF174B4D9500CCAF52 /* RRMainViewController.h */,
@@ -197,9 +204,9 @@
 			productReference = DBB0BC711759AA4F002E7E5E /* PixelPusherTests.octest */;
 			productType = "com.apple.product-type.bundle";
 		};
-		DBC1CD63174B4D2600CCAF52 /* PixelMapPlayback */ = {
+		DBC1CD63174B4D2600CCAF52 /* Xmas */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = DBC1CD90174B4D2700CCAF52 /* Build configuration list for PBXNativeTarget "PixelMapPlayback" */;
+			buildConfigurationList = DBC1CD90174B4D2700CCAF52 /* Build configuration list for PBXNativeTarget "Xmas" */;
 			buildPhases = (
 				DBC1CD60174B4D2600CCAF52 /* Sources */,
 				DBC1CD61174B4D2600CCAF52 /* Frameworks */,
@@ -210,9 +217,9 @@
 			dependencies = (
 				DB4D48A31813336100788518 /* PBXTargetDependency */,
 			);
-			name = PixelMapPlayback;
-			productName = PixelMapPlayback;
-			productReference = DBC1CD64174B4D2700CCAF52 /* PixelMapPlayback.app */;
+			name = Xmas;
+			productName = Xmas;
+			productReference = DBC1CD64174B4D2700CCAF52 /* Xmas.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -225,7 +232,7 @@
 				LastUpgradeCheck = 0460;
 				ORGANIZATIONNAME = rrrus;
 			};
-			buildConfigurationList = DBC1CD5F174B4D2600CCAF52 /* Build configuration list for PBXProject "PixelMapPlayback" */;
+			buildConfigurationList = DBC1CD5F174B4D2600CCAF52 /* Build configuration list for PBXProject "Xmas" */;
 			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = English;
 			hasScannedForEncodings = 0;
@@ -244,7 +251,7 @@
 			);
 			projectRoot = "";
 			targets = (
-				DBC1CD63174B4D2600CCAF52 /* PixelMapPlayback */,
+				DBC1CD63174B4D2600CCAF52 /* Xmas */,
 				DBB0BC701759AA4F002E7E5E /* PixelPusherTests */,
 			);
 		};
@@ -278,7 +285,6 @@
 				DBC1CDA3174B4D8B00CCAF52 /* InfoPlist.strings in Resources */,
 				DB01CF76174C1A2200486F6C /* RRMainViewController_iPad.xib in Resources */,
 				DB01CF77174C1A2200486F6C /* RRMainViewController_iPhone.xib in Resources */,
-				DBD130E5175B203F00F43D85 /* pixelsOnDaFloor.json in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -312,9 +318,11 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				DBB953EE185E534C00BE64FD /* Animator.m in Sources */,
 				DBC1CDB1174B4D9500CCAF52 /* main.m in Sources */,
 				DBC1CDB2174B4D9500CCAF52 /* RRAppDelegate.m in Sources */,
 				DBC1CDB4174B4D9500CCAF52 /* RRMainViewController.m in Sources */,
+				DB3E2B4A18134A9E0034BFC8 /* RRXmas.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -431,18 +439,9 @@
 		DBC1CD91174B4D2700CCAF52 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
-				CLANG_WARN_OBJC_EXPLICIT_OWNERSHIP_TYPE = YES;
-				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
-				CLANG_WARN_OBJC_REPEATED_USE_OF_WEAK = NO;
-				CLANG_WARN_SUSPICIOUS_IMPLICIT_CONVERSION = YES;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
-				GCC_PREFIX_HEADER = "Source/PixelMapPlayback-Prefix.pch";
-				GCC_WARN_MULTIPLE_DEFINITION_TYPES_FOR_SELECTOR = YES;
-				GCC_WARN_SHADOW = YES;
-				GCC_WARN_UNUSED_FUNCTION = YES;
-				GCC_WARN_UNUSED_LABEL = YES;
-				INFOPLIST_FILE = "Resources/PixelMapPlayback-Info.plist";
+				GCC_PREFIX_HEADER = "Source/Xmas-Prefix.pch";
+				INFOPLIST_FILE = "Resources/Xmas-Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 5.0;
 				OTHER_LDFLAGS = (
 					"-all_load",
@@ -457,18 +456,9 @@
 		DBC1CD92174B4D2700CCAF52 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
-				CLANG_WARN_OBJC_EXPLICIT_OWNERSHIP_TYPE = YES;
-				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
-				CLANG_WARN_OBJC_REPEATED_USE_OF_WEAK = NO;
-				CLANG_WARN_SUSPICIOUS_IMPLICIT_CONVERSION = YES;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
-				GCC_PREFIX_HEADER = "Source/PixelMapPlayback-Prefix.pch";
-				GCC_WARN_MULTIPLE_DEFINITION_TYPES_FOR_SELECTOR = YES;
-				GCC_WARN_SHADOW = YES;
-				GCC_WARN_UNUSED_FUNCTION = YES;
-				GCC_WARN_UNUSED_LABEL = YES;
-				INFOPLIST_FILE = "Resources/PixelMapPlayback-Info.plist";
+				GCC_PREFIX_HEADER = "Source/Xmas-Prefix.pch";
+				INFOPLIST_FILE = "Resources/Xmas-Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 5.0;
 				OTHER_LDFLAGS = (
 					"-all_load",
@@ -492,7 +482,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		DBC1CD5F174B4D2600CCAF52 /* Build configuration list for PBXProject "PixelMapPlayback" */ = {
+		DBC1CD5F174B4D2600CCAF52 /* Build configuration list for PBXProject "Xmas" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				DBC1CD8E174B4D2700CCAF52 /* Debug */,
@@ -501,7 +491,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		DBC1CD90174B4D2700CCAF52 /* Build configuration list for PBXNativeTarget "PixelMapPlayback" */ = {
+		DBC1CD90174B4D2700CCAF52 /* Build configuration list for PBXNativeTarget "Xmas" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				DBC1CD91174B4D2700CCAF52 /* Debug */,

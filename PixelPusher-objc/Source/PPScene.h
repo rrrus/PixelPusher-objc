@@ -16,6 +16,7 @@
 @property (nonatomic, weak) id<PPFrameDelegate> frameDelegate;
 @property (nonatomic, readonly) int64_t totalBandwidth;
 @property (nonatomic, readonly) BOOL isRunning;
+@property (nonatomic, assign) BOOL record;
 
 - (id)init;
 

@@ -6,6 +6,7 @@
 //  Copyright (c) 2013 rrrus. All rights reserved.
 //
 
+#import <UIKit/UIKit.h>
 #import "GCDAsyncUdpSocket.h"
 #import "HLDeferredList.h"
 #import "NSData+Utils.h"
@@ -34,6 +35,8 @@ static const uint32_t kPacketSize = 1460;
 @property (nonatomic, assign) uint16_t pusherPort;
 @property (nonatomic, assign) NSString *cardAddress;
 @property (nonatomic, assign) int64_t packetNumber;
+@property (nonatomic, strong) NSOutputStream* writeStream;
+@property (nonatomic, assign) CFTimeInterval lastSendTime;
 
 @property (nonatomic, strong) NSMutableDictionary *packetPromises;
 
@@ -75,6 +78,46 @@ static const uint32_t kPacketSize = 1460;
 
 - (void)dealloc {
 	[self cancelAllInFlight];
+}
+
+- (void)setRecord:(BOOL)record {
+	if (record)	[self createWriteStream];
+	else		[self closeWriteStream];
+}
+
+- (void)createWriteStream {
+	if (!self.writeStream) {
+		NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+		NSString *appDocsDir = ([paths count] > 0) ? [paths objectAtIndex:0] : nil;
+
+		// write map to file
+		NSDateFormatter *dateFormatter = NSDateFormatter.alloc.init;
+		[dateFormatter setDateFormat:@"yyyy-MM-dd-HH-mm"];
+		NSString *mapfilename = [NSString stringWithFormat:@"canfile.%d.%d.%@.ppshow",
+								 self.pusher.groupOrdinal,
+								 self.pusher.controllerOrdinal,
+								 [dateFormatter stringFromDate:NSDate.date]];
+		NSString *mapfilepath = [appDocsDir stringByAppendingPathComponent:mapfilename];
+		self.writeStream = [NSOutputStream outputStreamToFileAtPath:mapfilepath append:NO];
+		[self.writeStream open];
+		[NSNotificationCenter.defaultCenter addObserver:self
+											   selector:@selector(appWillBackground)
+												   name:UIApplicationDidEnterBackgroundNotification
+												 object:nil];
+		_record = YES;
+	}
+}
+
+- (void)closeWriteStream {
+	if (self.writeStream) {
+		[self.writeStream close];
+		self.writeStream = nil;
+		_record = NO;
+	}
+}
+
+- (void)appWillBackground {
+	[self closeWriteStream];
 }
 
 - (NSMutableData*)packetFromPool {
@@ -137,6 +180,8 @@ static const uint32_t kPacketSize = 1460;
 	const int32_t supportedStripsPerPacket = (kPacketSize - 4) / (1 + 3 * self.pusher.pixelsPerStrip);
 	const int32_t stripPerPacket = MIN(requestedStripsPerPacket, supportedStripsPerPacket);
 
+	CFTimeInterval frameTime = CACurrentMediaTime();
+	CFTimeInterval packetInterval = self.threadSleep + self.threadExtraDelay + self.pusher.extraDelay;
 	while (stripIdx < nStrips) {
 		payload = NO;
 		NSMutableData *packet = self.packetFromPool;
@@ -154,9 +199,20 @@ static const uint32_t kPacketSize = 1460;
 			stripIdx++;
 			if (strip.touched) {
 				strip.powerScale = powerScale;
-				*(P++) = strip.stripNumber;
+				*(P++) = (uint8_t)strip.stripNumber;
 				packetLength++;
 				uint32_t stripPacketSize = [strip serialize:P];
+				if (self.writeStream) {
+					// we need to make the pusher wait on playback the same length of time between strips as we wait between packets
+					// this number is in microseconds.
+					uint32_t buf = 0;
+					if (i == 0 && self.lastSendTime != 0 ) {  // only write the delay in the first strip in a datagram.
+						buf = NSSwapHostIntToLittle( (uint32_t)((frameTime-self.lastSendTime)*1000000.) );
+					}
+					[self.writeStream write:(uint8_t*)&buf maxLength:sizeof(buf)];
+
+					[self.writeStream write:P-1 maxLength:stripPacketSize+1];
+				}
 				packetLength += stripPacketSize;
 				P += stripPacketSize;
 
@@ -180,12 +236,14 @@ static const uint32_t kPacketSize = 1460;
 				[self.udpsocket sendData:outGoing withTimeout:1 tag:packetNumber];
 				// TODO: use dispatch_after instead of sleep
 				// make sure there's a min delay between packets sent
-				[NSThread sleepForTimeInterval:self.threadSleep + self.threadExtraDelay + self.pusher.extraDelay];
+				[NSThread sleepForTimeInterval:packetInterval];
 			});
 			// bump the packet count
 			self.packetNumber++;
 			sentPacket = YES;
 			totalLength += packetLength;
+			self.lastSendTime = frameTime;
+			frameTime += packetInterval;
 		} else {
 			[self returnPacketToPool:packet];
 		}
@@ -239,8 +297,8 @@ static const uint32_t kPacketSize = 1460;
 	dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, (int64_t)(delayInSeconds * NSEC_PER_SEC));
 	dispatch_after(popTime, dispatch_get_main_queue(), ^(void){
 		DDLogInfo(@"attempting to reconnect card socket");
-		NSError *error;
-		[self.udpsocket connectToHost:self.pusher.ipAddress onPort:self.pusherPort error:&error];
+		NSError *error2;
+		[self.udpsocket connectToHost:self.pusher.ipAddress onPort:self.pusherPort error:&error2];
 	});
 }
 @end

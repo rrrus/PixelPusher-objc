@@ -25,8 +25,6 @@
 		DB4D48811813301900788518 /* DDFileLogger.m in Sources */ = {isa = PBXBuildFile; fileRef = DB4D48741813301900788518 /* DDFileLogger.m */; };
 		DB4D48821813301900788518 /* DDLog.m in Sources */ = {isa = PBXBuildFile; fileRef = DB4D48761813301900788518 /* DDLog.m */; };
 		DB4D48831813301900788518 /* DDTTYLogger.m in Sources */ = {isa = PBXBuildFile; fileRef = DB4D48781813301900788518 /* DDTTYLogger.m */; };
-		DB4D48841813301900788518 /* ContextFilterLogFormatter.m in Sources */ = {isa = PBXBuildFile; fileRef = DB4D487B1813301900788518 /* ContextFilterLogFormatter.m */; };
-		DB4D48851813301900788518 /* DispatchQueueLogFormatter.m in Sources */ = {isa = PBXBuildFile; fileRef = DB4D487D1813301900788518 /* DispatchQueueLogFormatter.m */; };
 		DB4D48871813308400788518 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DB4D48861813308400788518 /* UIKit.framework */; };
 		DB4D488F181330BB00788518 /* HLDeferred.m in Sources */ = {isa = PBXBuildFile; fileRef = DB4D488A181330BB00788518 /* HLDeferred.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		DB4D4890181330BB00788518 /* HLDeferredList.m in Sources */ = {isa = PBXBuildFile; fileRef = DB4D488C181330BB00788518 /* HLDeferredList.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
@@ -104,10 +102,6 @@
 		DB4D48761813301900788518 /* DDLog.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DDLog.m; path = "3rd Party/CocoaLumberjack/Lumberjack/DDLog.m"; sourceTree = "<group>"; };
 		DB4D48771813301900788518 /* DDTTYLogger.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DDTTYLogger.h; path = "3rd Party/CocoaLumberjack/Lumberjack/DDTTYLogger.h"; sourceTree = "<group>"; };
 		DB4D48781813301900788518 /* DDTTYLogger.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DDTTYLogger.m; path = "3rd Party/CocoaLumberjack/Lumberjack/DDTTYLogger.m"; sourceTree = "<group>"; };
-		DB4D487A1813301900788518 /* ContextFilterLogFormatter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ContextFilterLogFormatter.h; sourceTree = "<group>"; };
-		DB4D487B1813301900788518 /* ContextFilterLogFormatter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ContextFilterLogFormatter.m; sourceTree = "<group>"; };
-		DB4D487C1813301900788518 /* DispatchQueueLogFormatter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DispatchQueueLogFormatter.h; sourceTree = "<group>"; };
-		DB4D487D1813301900788518 /* DispatchQueueLogFormatter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DispatchQueueLogFormatter.m; sourceTree = "<group>"; };
 		DB4D487E1813301900788518 /* README.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = README.txt; sourceTree = "<group>"; };
 		DB4D48861813308400788518 /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
 		DB4D4889181330BB00788518 /* HLDeferred.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = HLDeferred.h; path = "3rd Party/HLDeferred-objc/HLDeferred/Classes/HLDeferred.h"; sourceTree = "<group>"; };
@@ -227,10 +221,6 @@
 		DB4D48791813301900788518 /* Extensions */ = {
 			isa = PBXGroup;
 			children = (
-				DB4D487A1813301900788518 /* ContextFilterLogFormatter.h */,
-				DB4D487B1813301900788518 /* ContextFilterLogFormatter.m */,
-				DB4D487C1813301900788518 /* DispatchQueueLogFormatter.h */,
-				DB4D487D1813301900788518 /* DispatchQueueLogFormatter.m */,
 				DB4D487E1813301900788518 /* README.txt */,
 			);
 			name = Extensions;
@@ -357,8 +347,6 @@
 				DB4D48811813301900788518 /* DDFileLogger.m in Sources */,
 				DB4D48821813301900788518 /* DDLog.m in Sources */,
 				DB4D48831813301900788518 /* DDTTYLogger.m in Sources */,
-				DB4D48841813301900788518 /* ContextFilterLogFormatter.m in Sources */,
-				DB4D48851813301900788518 /* DispatchQueueLogFormatter.m in Sources */,
 				DB4D488F181330BB00788518 /* HLDeferred.m in Sources */,
 				DB4D4890181330BB00788518 /* HLDeferredList.m in Sources */,
 				DB4D4891181330BB00788518 /* HLFailure.m in Sources */,
@@ -426,9 +414,18 @@
 		DB4D484218132E8800788518 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = NO;
+				CLANG_WARN_OBJC_RECEIVER_WEAK = YES;
+				CLANG_WARN_OBJC_REPEATED_USE_OF_WEAK = YES;
+				CLANG_WARN_SUSPICIOUS_IMPLICIT_CONVERSION = YES;
 				DSTROOT = /tmp/PixelPusher_objc.dst;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "Source/PixelPusher-objc-Prefix.pch";
+				GCC_WARN_MULTIPLE_DEFINITION_TYPES_FOR_SELECTOR = YES;
+				GCC_WARN_SHADOW = YES;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_PARAMETER = NO;
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -438,9 +435,18 @@
 		DB4D484318132E8800788518 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = NO;
+				CLANG_WARN_OBJC_RECEIVER_WEAK = YES;
+				CLANG_WARN_OBJC_REPEATED_USE_OF_WEAK = YES;
+				CLANG_WARN_SUSPICIOUS_IMPLICIT_CONVERSION = YES;
 				DSTROOT = /tmp/PixelPusher_objc.dst;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "Source/PixelPusher-objc-Prefix.pch";
+				GCC_WARN_MULTIPLE_DEFINITION_TYPES_FOR_SELECTOR = YES;
+				GCC_WARN_SHADOW = YES;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_PARAMETER = NO;
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;

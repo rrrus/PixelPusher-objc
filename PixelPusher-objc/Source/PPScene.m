@@ -15,8 +15,6 @@
 INIT_LOG_LEVEL_INFO
 
 static const int32_t kPusherPort = 9897;
-static const int32_t kFrameRateLimit = 60;	// limit to 60fps
-static const CFTimeInterval kMinFrameInterval = 1.0/kFrameRateLimit;
 
 typedef struct {
 	CFTimeInterval render;
@@ -24,7 +22,7 @@ typedef struct {
 	CFTimeInterval throttle;
 } FrameTimes;
 
-static FrameTimes sFrameTimes[kFrameRateLimit];
+static FrameTimes sFrameTimes[85];
 static uint32_t sFrameCount = 0;
 
 @interface PPScene ()
@@ -75,6 +73,15 @@ static uint32_t sFrameCount = 0;
 	[NSNotificationCenter.defaultCenter removeObserver:self];
 }
 
+- (void)setRecord:(BOOL)record {
+	if (_record != record) {
+		_record = record;
+		[self.cardMap forEach:^(id key, PPCard* card, BOOL *stop) {
+			card.record = record;
+		}];
+	}
+}
+
 - (void)setAutoThrottle:(BOOL)autothrottle {
 	_autoThrottle = autothrottle;
     //System.err.println("Setting autothrottle in SceneThread.");
@@ -121,16 +128,20 @@ static uint32_t sFrameCount = 0;
 }
 
 - (void)frameTask {
+	uint32_t frameRateLimit = PPDeviceRegistry.sharedRegistry.frameRateLimit;
+	CFTimeInterval minFrameInterval = 1.0/frameRateLimit;
+
 	CFTimeInterval start = CACurrentMediaTime();
 	// call the frame delegate to render a frame
 	HLDeferred *frameRenderPromise = self.defaultFramePromise;
-	if (self.frameDelegate) {
+	id<PPFrameDelegate> strongFrameDelegate = self.frameDelegate;
+	if (strongFrameDelegate) {
 		// allow frame render tasks to return nil
-		HLDeferred * renderPromise = [self.frameDelegate pixelPusherRender];
+		HLDeferred * renderPromise = [strongFrameDelegate pixelPusherRender];
 		if (renderPromise) frameRenderPromise = renderPromise;
 	}
-	[frameRenderPromise then:^id(id result) {
-		uint32_t timesIdx = sFrameCount % kFrameRateLimit;
+	[frameRenderPromise then:^id(id result2) {
+		uint32_t timesIdx = sFrameCount % frameRateLimit;
 		sFrameTimes[timesIdx].render = CACurrentMediaTime()	- start;
 		// wait for all card tasks from last frame to finish flushing
 		[self.lastFrameFlush then:^id(id result) {
@@ -144,7 +155,7 @@ static uint32_t sFrameCount = 0;
 			self.lastFrameFlush = [HLDeferredList.alloc initWithDeferreds:promises];
 
 			// delay to our min frame interval if we haven't exceeded it yet
-			CFTimeInterval delayTilNextFrame = kMinFrameInterval - (CACurrentMediaTime()-start);
+			CFTimeInterval delayTilNextFrame = minFrameInterval - (CACurrentMediaTime()-start);
 			if (delayTilNextFrame < 0) {
 	//			DDLogInfo(@"frame deadline blown by %fs", -delayTilNextFrame);
 			}
@@ -158,17 +169,17 @@ static uint32_t sFrameCount = 0;
 				CFTimeInterval sumRender = 0;
 				CFTimeInterval sumFlush = 0;
 				CFTimeInterval sumThrottle = 0;
-				for (uint32_t idx = 0; idx < kFrameRateLimit; idx++) {
+				for (uint32_t idx = 0; idx < frameRateLimit; idx++) {
 					sumRender += sFrameTimes[idx].render;
 					sumFlush += sFrameTimes[idx].flush;
 					sumThrottle += sFrameTimes[idx].throttle;
 				}
-				sumRender /= kFrameRateLimit;
-				sumThrottle /= kFrameRateLimit;
-				sumFlush /= kFrameRateLimit;
-				CFTimeInterval idle = kMinFrameInterval-sumThrottle-sumRender-sumFlush;
+				sumRender /= frameRateLimit;
+				sumThrottle /= frameRateLimit;
+				sumFlush /= frameRateLimit;
+				CFTimeInterval idle = minFrameInterval-sumThrottle-sumRender-sumFlush;
 	//			DDLogInfo(@"avg render %1.1f%%, flush %1.1f%%, send %1.1f%%, idle %1.1f%%",
-	//					  sumRender/kMinFrameInterval*100, sumFlush/kMinFrameInterval*100, sumSend/kMinFrameInterval*100, idle/kMinFrameInterval*100);
+	//					  sumRender/minFrameInterval*100, sumFlush/minFrameInterval*100, sumSend/minFrameInterval*100, idle/minFrameInterval*100);
 				DDLogInfo(@"avg render %1.2fms, flush %1.2fms, throttle %1.2fms, idle %1.2fms",
 						  sumRender*1000, sumFlush*1000, sumThrottle*1000, idle*1000);
 			}
@@ -196,6 +207,7 @@ static uint32_t sFrameCount = 0;
 		if (self.isRunning) {
 			[newCard start];
 			[newCard setExtraDelay:self.extraDelay];
+			newCard.record = self.record;
 			[pusher setAutoThrottle:self.autoThrottle];
 		}
 		self.pusherMap[pusher.macAddress] = pusher;
