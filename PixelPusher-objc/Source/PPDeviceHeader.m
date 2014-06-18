@@ -23,7 +23,7 @@ static const int headerLength = 24;
 	self = [self init];
 	if (self) {
 		if (packet.length < headerLength) {
-			[NSException raise:NSInvalidArgumentException format:@"expected header size %d, but got %d", headerLength, packet.length];
+			[NSException raise:NSInvalidArgumentException format:@"expected header size %d, but got %lu", headerLength, (unsigned long)packet.length];
 		}
 
 		[packet getBytes:&(_macAddress.sa_data) range:NSMakeRange(0, 6)];
