@@ -51,7 +51,7 @@ static const uint32_t kPacketSize = 1460;
 		dispatch_set_target_queue(self.packetQueue, dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0));
 
 		self.pusher = pusher;
-		self.pusherPort = port;
+		self.pusherPort = self.pusher.myPort;
 
 		self.flushPromise = [HLDeferred deferredWithResult:nil];
 		self.packetPromises = NSMutableDictionary.new;

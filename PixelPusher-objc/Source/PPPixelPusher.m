@@ -27,6 +27,7 @@ INIT_LOG_LEVEL_INFO
 @property (nonatomic, assign) int64_t powerTotal;
 @property (nonatomic, assign) int64_t deltaSequence;
 @property (nonatomic, assign) int32_t maxStripsPerPacket;
+@property (nonatomic, assign) int16_t myPort;
 @end
 
 @implementation PPPixelPusher
@@ -36,7 +37,7 @@ INIT_LOG_LEVEL_INFO
 	if (self) {
 		NSData *packet = header.packetRemainder;
 		if (packet.length < 12) {
-			[NSException raise:NSInvalidArgumentException format:@"expected header size %d, but got %d", 12, packet.length];
+			[NSException raise:NSInvalidArgumentException format:@"expected header size %d, but got %lu", 12, (unsigned long)packet.length];
 		}
 
 		self.stripsAttached = [packet ubyteAtOffset:0];
@@ -52,6 +53,11 @@ INIT_LOG_LEVEL_INFO
 
 		self.artnetUniverse = [packet ushortAtOffset:24];
 		self.artnetChannel = [packet ushortAtOffset:26];
+        if (packet.length > 12) {
+            self.myPort = [packet ushortAtOffset:28];
+        } else {
+            self.myPort = 9897;
+        }
 	}
 	return self;
 }
