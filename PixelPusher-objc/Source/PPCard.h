@@ -15,7 +15,7 @@
 @property (nonatomic, readonly) int64_t bandwidthEstimate;
 @property (nonatomic, assign) BOOL record;
 
-- (id)initWithPusher:(PPPixelPusher*)pusher port:(uint16_t)port;
+- (id)initWithPusher:(PPPixelPusher*)pusher;
 
 - (void)setExtraDelay:(NSTimeInterval)delay;
 - (BOOL)controls:(PPPixelPusher*)pusher;

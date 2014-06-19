@@ -44,7 +44,7 @@ static const uint32_t kPacketSize = 1460;
 
 @implementation PPCard
 
-- (id)initWithPusher:(PPPixelPusher*)pusher port:(uint16_t)port {
+- (id)initWithPusher:(PPPixelPusher*)pusher {
 	self = [self init];
 	if (self) {
 		self.packetQueue = dispatch_queue_create("PPCard", DISPATCH_QUEUE_SERIAL);

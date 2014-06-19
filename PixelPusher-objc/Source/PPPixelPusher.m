@@ -13,6 +13,8 @@
 
 INIT_LOG_LEVEL_INFO
 
+static const int32_t kDefaultPusherPort = 9897;
+
 @interface PPPixelPusher ()
 @property (nonatomic, assign) int32_t stripsAttached;
 @property (nonatomic, assign) int32_t artnetUniverse;
@@ -56,7 +58,7 @@ INIT_LOG_LEVEL_INFO
         if (packet.length > 12) {
             self.myPort = [packet ushortAtOffset:28];
         } else {
-            self.myPort = 9897;
+            self.myPort = kDefaultPusherPort;
         }
 	}
 	return self;

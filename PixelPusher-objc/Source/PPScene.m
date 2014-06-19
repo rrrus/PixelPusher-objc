@@ -14,8 +14,6 @@
 
 INIT_LOG_LEVEL_INFO
 
-static const int32_t kPusherPort = 9897;
-
 typedef struct {
 	CFTimeInterval render;
 	CFTimeInterval flush;
@@ -203,7 +201,7 @@ static uint32_t sFrameCount = 0;
 - (void)registryAddedPusher:(NSNotification*)notif {
 	PPPixelPusher *pusher = DYNAMIC_CAST(PPPixelPusher, notif.object);
 	if (!self.drain && pusher) {
-		PPCard *newCard = [PPCard.alloc initWithPusher:pusher port:kPusherPort];
+		PPCard *newCard = [PPCard.alloc initWithPusher:pusher];
 		if (self.isRunning) {
 			[newCard start];
 			[newCard setExtraDelay:self.extraDelay];

@@ -21,7 +21,7 @@
 @property (nonatomic, readonly) int64_t powerTotal;
 @property (nonatomic, readonly) int64_t deltaSequence;
 @property (nonatomic, readonly) int32_t maxStripsPerPacket;
-@property (nonatomic, assign)   int16_t myPort;
+@property (nonatomic, readonly) int16_t myPort;
 
 @property (nonatomic, assign)	BOOL	autoThrottle;
 @property (nonatomic, assign)	NSTimeInterval extraDelay;
