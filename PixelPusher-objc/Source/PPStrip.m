@@ -95,7 +95,7 @@ static const uint8_t sLinearExp[] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
 	}];
 
     self.touched = NO;
-	return self.pixels.count*3;
+	return (uint32_t)self.pixels.count*3;
 }
 
 

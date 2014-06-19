@@ -7,20 +7,19 @@
 //
 
 #import "PPPixel.h"
-#import <UIKit/UIKit.h>
 
 @interface PPPixel ()
 @end
 
 @implementation PPPixel
 
-+ (PPPixel*)pixelWithRed:(float)r green:(float)g blue:(float)b {
++ (PPPixel*)pixelWithRed:(CGFloat)r green:(CGFloat)g blue:(CGFloat)b {
 	return [PPPixel.alloc initWithRed:r green:g blue:b];
 }
 
-+ (PPPixel*)pixelWithHue:(float)hue saturation:(float)sat luminance:(float)lum {
++ (PPPixel*)pixelWithHue:(CGFloat)hue saturation:(CGFloat)sat luminance:(CGFloat)lum {
 	UIColor *color = [UIColor colorWithHue:hue saturation:sat brightness:lum alpha:1];
-	float r,g,b,a;
+	CGFloat r,g,b,a;
 	[color getRed:&r green:&g blue:&b alpha:&a];
 	return [PPPixel pixelWithRed:r green:g blue:b];
 }
@@ -33,7 +32,7 @@
 	return copy;
 }
 
-- (id)initWithRed:(float)r green:(float)g blue:(float)b {
+- (id)initWithRed:(CGFloat)r green:(CGFloat)g blue:(CGFloat)b {
 	self = [self init];
 	if (self) {
 		self.red = r;
@@ -43,18 +42,18 @@
 	return self;
 }
 
-- (PPPixel*)pixelScalingLuminance:(float)scale {
+- (PPPixel*)pixelScalingLuminance:(CGFloat)scale {
 	return [PPPixel.alloc initWithRed:self.red*scale green:self.green*scale blue:self.blue*scale];
 }
 
-- (void)scaleLuminance:(float)scale {
+- (void)scaleLuminance:(CGFloat)scale {
 	_red *= scale;
 	_green *= scale;
 	_blue *= scale;
 }
 
 - (void)addPixel:(PPPixel*)other {
-	float or,og,ob;
+	CGFloat or,og,ob;
 	or = self.red + other.red;
 	og = self.green + other.green;
 	ob = self.blue + other.blue;
@@ -70,7 +69,7 @@
 }
 
 -(void)setColor:(UIColor *)color {
-	float a;
+	CGFloat a;
 	[color getRed:&_red green:&_green blue:&_blue alpha:&a];
 }
 

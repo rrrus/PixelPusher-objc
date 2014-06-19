@@ -22,6 +22,10 @@
 @property (nonatomic, readonly) int64_t deltaSequence;
 @property (nonatomic, readonly) int32_t maxStripsPerPacket;
 @property (nonatomic, readonly) int16_t myPort;
+@property (nonatomic, readonly) NSArray *stripFlags;
+@property (nonatomic, readonly) uint32_t pusherFlags;
+@property (nonatomic, readonly) uint32_t segments;
+@property (nonatomic, readonly) uint32_t powerDomain;
 
 @property (nonatomic, assign)	BOOL	autoThrottle;
 @property (nonatomic, assign)	NSTimeInterval extraDelay;

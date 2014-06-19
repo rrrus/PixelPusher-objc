@@ -48,7 +48,7 @@
 	float head = self.headPosition;
 	float tail = self.tailPosition;
 	if (head < 0 && tail < 0) return NO;
-	int pixcount = strip.pixels.count;
+	int pixcount = (int)strip.pixels.count;
 	if (head > pixcount && tail > pixcount) return NO;
 	
 	int start, end, lead;

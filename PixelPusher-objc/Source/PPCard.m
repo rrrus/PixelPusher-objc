@@ -174,7 +174,7 @@ static const uint32_t kPacketSize = 1460;
 	BOOL sentPacket = NO;
 	float powerScale = PPDeviceRegistry.sharedRegistry.powerScale;
 
-	const int32_t nStrips = self.pusher.strips.count;
+	const NSUInteger nStrips = self.pusher.strips.count;
 	int32_t stripIdx = 0;
 	const int32_t requestedStripsPerPacket = self.pusher.maxStripsPerPacket;
 	const int32_t supportedStripsPerPacket = (kPacketSize - 4) / (1 + 3 * self.pusher.pixelsPerStrip);
@@ -190,7 +190,7 @@ static const uint32_t kPacketSize = 1460;
 		if (self.pusher.updatePeriod > 0.0001) {
 			self.threadSleep = self.pusher.updatePeriod + 0.001;
 		}
-		packetLength += addIntToBuffer(&P, self.packetNumber);
+		packetLength += addIntToBuffer(&P, (int32_t)self.packetNumber);
 		for (int i = 0; i < stripPerPacket;) {
 			if (stripIdx >= nStrips) {
 				break;

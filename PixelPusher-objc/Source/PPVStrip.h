@@ -15,7 +15,7 @@ typedef struct {
 } PixelPath;
 
 typedef struct {
-	float red, green, blue;
+	CGFloat red, green, blue;
 } VPixel;
 
 void addToPixel(VPixel *target, PPPixel *toAdd);

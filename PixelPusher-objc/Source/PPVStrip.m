@@ -16,7 +16,7 @@ PixelPath PixelPathMake(NSUInteger strip, NSUInteger pixel) {
 }
 
 void addToPixel(VPixel *target, PPPixel *toAdd) {
-	float or,og,ob;
+	CGFloat or,og,ob;
 	or = target->red + toAdd.red;
 	og = target->green + toAdd.green;
 	ob = target->blue + toAdd.blue;
@@ -40,10 +40,10 @@ void addToPixel(VPixel *target, PPPixel *toAdd) {
 	self = [self init];
 	if (self) {
 		self.count = count;
-		uint32_t size = sizeof(PixelPath)*count;
+		NSUInteger size = sizeof(PixelPath)*count;
 		self.pixelMap = [NSMutableData dataWithCapacity:size];
 		self.pixelMap.length = size;
-		uint32_t pxsize = sizeof(VPixel)*count;
+		NSUInteger pxsize = sizeof(VPixel)*count;
 		self.pixelStore = [NSMutableData dataWithCapacity:pxsize];
 		self.pixelStore.length = pxsize;
 		vpixStart = self.pixelStore.mutableBytes;

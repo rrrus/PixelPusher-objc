@@ -30,6 +30,10 @@ static const int32_t kDefaultPusherPort = 9897;
 @property (nonatomic, assign) int64_t deltaSequence;
 @property (nonatomic, assign) int32_t maxStripsPerPacket;
 @property (nonatomic, assign) int16_t myPort;
+@property (nonatomic, strong) NSArray *stripFlags;
+@property (nonatomic, assign) uint32_t pusherFlags;
+@property (nonatomic, assign) uint32_t segments;
+@property (nonatomic, assign) uint32_t powerDomain;
 @end
 
 @implementation PPPixelPusher
@@ -38,8 +42,8 @@ static const int32_t kDefaultPusherPort = 9897;
 	self = [super initWithHeader:header];
 	if (self) {
 		NSData *packet = header.packetRemainder;
-		if (packet.length < 12) {
-			[NSException raise:NSInvalidArgumentException format:@"expected header size %d, but got %lu", 12, (unsigned long)packet.length];
+		if (packet.length < 28) {
+			[NSException raise:NSInvalidArgumentException format:@"expected header size %d, but got %lu", 28, (unsigned long)packet.length];
 		}
 
 		self.stripsAttached = [packet ubyteAtOffset:0];
@@ -55,11 +59,39 @@ static const int32_t kDefaultPusherPort = 9897;
 
 		self.artnetUniverse = [packet ushortAtOffset:24];
 		self.artnetChannel = [packet ushortAtOffset:26];
-        if (packet.length > 12) {
+        if (packet.length > 28 && self.softwareRevision > 100) {
             self.myPort = [packet ushortAtOffset:28];
         } else {
             self.myPort = kDefaultPusherPort;
         }
+		
+		// A minor complication here.  The PixelPusher firmware generates announce packets from
+		// a static structure, so the size of stripFlags is always 8;  even if there are fewer
+		// strips configured.  So we have a wart. - jls.
+
+		int stripFlagSize = 8;
+		if (self.stripsAttached > stripFlagSize) stripFlagSize = self.stripsAttached;
+		
+		NSMutableArray *theStripFlags = NSMutableArray.new;
+		self.stripFlags = theStripFlags;
+		if (packet.length > 30 && self.softwareRevision > 108) {
+			for (int i=0; i<8; i++) {
+				uint8_t flag = [packet ubyteAtOffset:30+i];
+				[theStripFlags addObject:@(flag)];
+			}
+		} else {
+			for (int i=0; i<8; i++) [theStripFlags addObject:@(0)];
+		}
+
+		// the next value after the strip flags is a 32-bit value, and as such is
+		// aligned to a 4-byte boundary, thus the 2 extry bytes of padding in the offset:
+		// 32, instead of 30
+		int postStripFlagOffset = 32+stripFlagSize;
+		if (packet.length > postStripFlagOffset && self.softwareRevision > 116) {
+			self.pusherFlags = [packet uintAtOffset:postStripFlagOffset];
+			self.segments = [packet uintAtOffset:postStripFlagOffset+4];
+			self.powerDomain = [packet uintAtOffset:postStripFlagOffset+8];
+		}
 	}
 	return self;
 }
@@ -102,6 +134,11 @@ static const int32_t kDefaultPusherPort = 9897;
 	self.groupOrdinal = device.groupOrdinal;
 	self.artnetChannel = device.artnetChannel;
 	self.artnetUniverse = device.artnetUniverse;
+	self.myPort = device.myPort;
+	self.stripFlags = (NSArray*)device.stripFlags.copy;
+	self.pusherFlags = device.pusherFlags;
+	self.segments = device.segments;
+	self.powerDomain = device.powerDomain;
 }
 
 - (BOOL)isEqualToPusher:(PPPixelPusher*)other {
@@ -138,9 +175,13 @@ static const int32_t kDefaultPusherPort = 9897;
     if (fabs(self.updatePeriod - other.updatePeriod) > 0.0005
 		|| self.stripsAttached != other.stripsAttached
 		|| self.pixelsPerStrip != other.pixelsPerStrip
-//		|| self.powerTotal != other.powerTotal
     	|| self.artnetChannel != other.artnetChannel
-		|| self.artnetUniverse != other.artnetUniverse)
+		|| self.artnetUniverse != other.artnetUniverse
+		|| self.myPort != other.myPort
+		|| abs(self.powerTotal - other.powerTotal) > 10000
+		|| self.powerDomain != other.powerDomain
+		|| self.segments != other.segments
+		|| self.pusherFlags != other.pusherFlags)
 	{
 		return NO;
     }
