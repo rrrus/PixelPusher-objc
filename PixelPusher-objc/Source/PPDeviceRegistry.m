@@ -81,6 +81,14 @@ static PPDeviceRegistry *gSharedRegistry;
 	[self.scene setAutoThrottle:autothrottle];
 }
 
+- (void)setGlobalBrightness:(float)globalBrightness {
+	self.scene.globalBrightness = globalBrightness;
+}
+
+- (float)globalBrightness {
+	return self.scene.globalBrightness;
+}
+
 - (int64_t)getTotalBandwidth {
 	return self.scene.totalBandwidth;
 }

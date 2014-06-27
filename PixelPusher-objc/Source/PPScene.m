@@ -49,6 +49,7 @@ static uint32_t sFrameCount = 0;
 		self.cardMap = NSMutableDictionary.new;
 		self.drain = NO;
 		self.isRunning = NO;
+		self.globalBrightness = 1.0;
 		self.lastFrameFlush = [HLDeferred deferredWithResult:nil];
 
 		[NSNotificationCenter.defaultCenter addObserver:self
@@ -81,13 +82,24 @@ static uint32_t sFrameCount = 0;
 }
 
 - (void)setAutoThrottle:(BOOL)autothrottle {
-	_autoThrottle = autothrottle;
-    //System.err.println("Setting autothrottle in SceneThread.");
-	[self.pusherMap forEach:^(id key, PPPixelPusher *pusher, BOOL *stop) {
-		//System.err.println("Setting card "+pusher.getControllerOrdinal()+" group "+pusher.getGroupOrdinal()+" to "+
-		//      (autothrottle?"throttle":"not throttle"));
-		[pusher setAutoThrottle:autothrottle];
-	}];
+	if (_autoThrottle != autothrottle) {
+		_autoThrottle = autothrottle;
+		//System.err.println("Setting autothrottle in SceneThread.");
+		[self.pusherMap forEach:^(id key, PPPixelPusher *pusher, BOOL *stop) {
+			//System.err.println("Setting card "+pusher.getControllerOrdinal()+" group "+pusher.getGroupOrdinal()+" to "+
+			//      (autothrottle?"throttle":"not throttle"));
+			pusher.autoThrottle = autothrottle;
+		}];
+	}
+}
+
+- (void)setGlobalBrightness:(float)globalBrightness {
+	if (_globalBrightness != globalBrightness) {
+		_globalBrightness = globalBrightness;
+		[self.pusherMap forEach:^(id key, PPPixelPusher *pusher, BOOL *stop) {
+			pusher.brightness = globalBrightness;
+		}];
+	}
 }
 
 - (int64_t)totalBandwidth {
@@ -204,9 +216,10 @@ static uint32_t sFrameCount = 0;
 		PPCard *newCard = [PPCard.alloc initWithPusher:pusher];
 		if (self.isRunning) {
 			[newCard start];
-			[newCard setExtraDelay:self.extraDelay];
+			newCard.extraDelay = self.extraDelay;
 			newCard.record = self.record;
-			[pusher setAutoThrottle:self.autoThrottle];
+			pusher.autoThrottle = self.autoThrottle;
+			pusher.brightness = self.globalBrightness;
 		}
 		self.pusherMap[pusher.macAddress] = pusher;
 		self.cardMap[pusher.macAddress] = newCard;

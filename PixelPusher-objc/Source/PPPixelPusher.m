@@ -42,6 +42,8 @@ static const int32_t ACCEPTABLE_LOWEST_SW_REV = 121;
 - (id)initWithHeader:(PPDeviceHeader*)header {
 	self = [super initWithHeader:header];
 	if (self) {
+		self.brightness = 1.0;
+		
 		NSData *packet = header.packetRemainder;
 		if (self.softwareRevision < ACCEPTABLE_LOWEST_SW_REV) {
 			DDLogWarn(@"WARNING!  This PixelPusher Library requires firmware revision %g", ACCEPTABLE_LOWEST_SW_REV/100.0);
@@ -111,12 +113,25 @@ static const int32_t ACCEPTABLE_LOWEST_SW_REV = 121;
 			self.ipAddress, self.controllerOrdinal, self.groupOrdinal, self.deltaSequence, self.updatePeriod, self.powerTotal, self.pusherFlags];
 }
 
+- (void)setBrightness:(float)brightness {
+	if (_brightness != brightness) {
+		_brightness = brightness;
+		if (_strips) {
+			[_strips forEach:^(PPStrip* strip, NSUInteger idx, BOOL *stop) {
+				strip.brightness = brightness;
+			}];
+		}
+	}
+}
+
 - (void)allocateStrips {
 	if (!_strips) {
 		NSMutableArray *array = NSMutableArray.new;
 		for (int i=0; i<self.stripsAttached; i++) {
 			int32_t stripFlags = [self.stripFlags[i] intValue];
-			[array addObject:[PPStrip.alloc initWithStripNumber:i pixelCount:self.pixelsPerStrip flags:stripFlags]];
+			PPStrip *strip = [PPStrip.alloc initWithStripNumber:i pixelCount:self.pixelsPerStrip flags:stripFlags];
+			strip.brightness = self.brightness;
+			[array addObject:strip];
 		}
 		_strips = array;
 	}

@@ -38,6 +38,7 @@ typedef enum {
 @property (nonatomic, readonly) uint32_t segments;
 @property (nonatomic, readonly) uint32_t powerDomain;
 
+@property (nonatomic, assign)	float	brightness;
 @property (nonatomic, assign)	BOOL	autoThrottle;
 @property (nonatomic, assign)	NSTimeInterval extraDelay;
 

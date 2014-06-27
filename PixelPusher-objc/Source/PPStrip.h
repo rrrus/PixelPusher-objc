@@ -18,6 +18,7 @@
 @property (nonatomic, readonly) BOOL isWidePixel;
 @property (nonatomic, assign) BOOL touched;
 @property (nonatomic, assign) float powerScale;
+@property (nonatomic, assign) float brightness;
 
 // `pixCount` should be the PPPixelPusher's pixelsPerStrip value.  the actual number of
 // pixels for the strip will be calculated and allocated appropriately based on that
