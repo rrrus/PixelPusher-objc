@@ -14,6 +14,7 @@
 INIT_LOG_LEVEL_INFO
 
 static const int32_t kDefaultPusherPort = 9897;
+static const int32_t ACCEPTABLE_LOWEST_SW_REV = 121;
 
 @interface PPPixelPusher ()
 @property (nonatomic, assign) int32_t stripsAttached;
@@ -42,6 +43,11 @@ static const int32_t kDefaultPusherPort = 9897;
 	self = [super initWithHeader:header];
 	if (self) {
 		NSData *packet = header.packetRemainder;
+		if (self.softwareRevision < ACCEPTABLE_LOWEST_SW_REV) {
+			DDLogWarn(@"WARNING!  This PixelPusher Library requires firmware revision %g", ACCEPTABLE_LOWEST_SW_REV/100.0);
+			DDLogWarn(@"WARNING!  This PixelPusher is using %g", self.softwareRevision/100.0);
+			DDLogWarn(@"WARNING!  This is not expected to work.  Please update your PixelPusher.");
+		}
 		if (packet.length < 28) {
 			[NSException raise:NSInvalidArgumentException format:@"expected header size %d, but got %lu", 28, (unsigned long)packet.length];
 		}
@@ -59,7 +65,7 @@ static const int32_t kDefaultPusherPort = 9897;
 
 		self.artnetUniverse = [packet ushortAtOffset:24];
 		self.artnetChannel = [packet ushortAtOffset:26];
-        if (packet.length > 28 && self.softwareRevision > 100) {
+        if (packet.length >= 30 && self.softwareRevision > 100) {
             self.myPort = [packet ushortAtOffset:28];
         } else {
             self.myPort = kDefaultPusherPort;
@@ -74,20 +80,24 @@ static const int32_t kDefaultPusherPort = 9897;
 		
 		NSMutableArray *theStripFlags = NSMutableArray.new;
 		self.stripFlags = theStripFlags;
-		if (packet.length > 30 && self.softwareRevision > 108) {
-			for (int i=0; i<8; i++) {
+		if (packet.length >= (30+stripFlagSize) && self.softwareRevision > 108) {
+			for (int i=0; i<stripFlagSize; i++) {
 				uint8_t flag = [packet ubyteAtOffset:30+i];
 				[theStripFlags addObject:@(flag)];
 			}
 		} else {
-			for (int i=0; i<8; i++) [theStripFlags addObject:@(0)];
+			for (int i=0; i<stripFlagSize; i++) [theStripFlags addObject:@(0)];
 		}
 
-		// the next value after the strip flags is a 32-bit value, and as such is
-		// aligned to a 4-byte boundary, thus the 2 extry bytes of padding in the offset:
-		// 32, instead of 30
-		int postStripFlagOffset = 32+stripFlagSize;
-		if (packet.length > postStripFlagOffset && self.softwareRevision > 116) {
+		// you may be asking yourself, why the +2 on that postStripFlagOffset calculation?
+		// well, the PixelPusher device uses a fixed struct with compiler enforced 4-byte
+		// aligned ints for this and so requires 2-byte padding before the 4-byte int types
+		// that follow the strip flags.  PixelPusher is also hard fixed at 8 strip flags, so
+		// this padding requirement is fixed.  other devices that support >8 strips don't use a
+		// fixed struct and insert this padding to comply with this spec, so we can safely
+		// add this 2-byte padding regardless of strip count.
+		int postStripFlagOffset = 30 + stripFlagSize + 2;
+		if (packet.length >= (postStripFlagOffset+(4*3)) && self.softwareRevision > 116) {
 			self.pusherFlags = [packet uintAtOffset:postStripFlagOffset];
 			self.segments = [packet uintAtOffset:postStripFlagOffset+4];
 			self.powerDomain = [packet uintAtOffset:postStripFlagOffset+8];
@@ -97,15 +107,16 @@ static const int32_t kDefaultPusherPort = 9897;
 }
 
 - (NSString *)description {
-	return [NSString stringWithFormat:@"%@ (%@, controller %d, group %d, deltaSeq %lld, update %f, power %lld)", super.description,
-			self.ipAddress, self.controllerOrdinal, self.groupOrdinal, self.deltaSequence, self.updatePeriod, self.powerTotal];
+	return [NSString stringWithFormat:@"%@ (%@, controller %d, group %d, deltaSeq %lld, update %f, power %lld, flags %03x)", super.description,
+			self.ipAddress, self.controllerOrdinal, self.groupOrdinal, self.deltaSequence, self.updatePeriod, self.powerTotal, self.pusherFlags];
 }
 
 - (void)allocateStrips {
 	if (!_strips) {
 		NSMutableArray *array = NSMutableArray.new;
 		for (int i=0; i<self.stripsAttached; i++) {
-			[array addObject:[PPStrip.alloc initWithStripNumber:i pixelCount:self.pixelsPerStrip]];
+			int32_t stripFlags = [self.stripFlags[i] intValue];
+			[array addObject:[PPStrip.alloc initWithStripNumber:i pixelCount:self.pixelsPerStrip flags:stripFlags]];
 		}
 		_strips = array;
 	}
@@ -178,7 +189,7 @@ static const int32_t kDefaultPusherPort = 9897;
     	|| self.artnetChannel != other.artnetChannel
 		|| self.artnetUniverse != other.artnetUniverse
 		|| self.myPort != other.myPort
-		|| abs(self.powerTotal - other.powerTotal) > 10000
+		|| labs(self.powerTotal - other.powerTotal) > 10000
 		|| self.powerDomain != other.powerDomain
 		|| self.segments != other.segments
 		|| self.pusherFlags != other.pusherFlags)

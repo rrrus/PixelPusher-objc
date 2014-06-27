@@ -17,8 +17,6 @@
 
 INIT_LOG_LEVEL_INFO
 
-static const uint32_t kPacketSize = 1460;
-
 @interface PPCard () <GCDAsyncUdpSocketDelegate>
 @property (nonatomic, strong) HLDeferred *flushPromise;
 @property (nonatomic, strong) PPPixelPusher *pusher;
@@ -28,6 +26,7 @@ static const uint32_t kPacketSize = 1460;
 @property (nonatomic, assign) NSTimeInterval threadExtraDelay;
 @property (nonatomic, assign) NSTimeInterval threadSendTime;
 @property (nonatomic, assign) int64_t bandwidthEstimate;
+@property (nonatomic, assign) int32_t maxPacketSize;
 @property (nonatomic, strong) NSMutableSet *packetPool;
 @property (nonatomic, strong) NSMutableDictionary *packetsInFlight;
 @property (nonatomic, strong) GCDAsyncUdpSocket *udpsocket;
@@ -62,6 +61,7 @@ static const uint32_t kPacketSize = 1460;
 		if (error) {
 			[NSException raise:NSGenericException format:@"error connecting to pusher (%@): %@", self.pusher.ipAddress, error];
 		}
+		self.maxPacketSize = 4 +  ((1 + 3 * pusher.pixelsPerStrip) * pusher.maxStripsPerPacket);
 		self.packetPool = NSMutableSet.new;
 		self.packetsInFlight = NSMutableDictionary.new;
 		self.cardAddress = self.pusher.ipAddress;
@@ -124,7 +124,7 @@ static const uint32_t kPacketSize = 1460;
 	NSMutableData *aPacket = self.packetPool.anyObject;
 	if (!aPacket) {
 		aPacket = NSMutableData.new;
-		aPacket.length = kPacketSize;
+		aPacket.length = self.maxPacketSize;
 	} else {
 		[self.packetPool removeObject:aPacket];
 	}
@@ -177,11 +177,9 @@ static const uint32_t kPacketSize = 1460;
 	const NSUInteger nStrips = self.pusher.strips.count;
 	int32_t stripIdx = 0;
 	const int32_t requestedStripsPerPacket = self.pusher.maxStripsPerPacket;
-	const int32_t supportedStripsPerPacket = (kPacketSize - 4) / (1 + 3 * self.pusher.pixelsPerStrip);
-	const int32_t stripPerPacket = MIN(requestedStripsPerPacket, supportedStripsPerPacket);
+	const int32_t stripPerPacket = MIN(requestedStripsPerPacket, (int32_t)nStrips);
 
 	CFTimeInterval frameTime = CACurrentMediaTime();
-	CFTimeInterval packetInterval = self.threadSleep + self.threadExtraDelay + self.pusher.extraDelay;
 	while (stripIdx < nStrips) {
 		payload = NO;
 		NSMutableData *packet = self.packetFromPool;
@@ -189,20 +187,37 @@ static const uint32_t kPacketSize = 1460;
 		int32_t packetLength = 0;
 		if (self.pusher.updatePeriod > 0.0001) {
 			self.threadSleep = self.pusher.updatePeriod + 0.001;
+		} else {
+			// Shoot for the framelimit.
+			self.threadSleep = ((1.0/PPDeviceRegistry.sharedRegistry.frameRateLimit) / (nStrips / stripPerPacket));
 		}
+		
+		// Handle errant delay calculation in the firmware.
+		if (self.pusher.updatePeriod > 0.1) {
+			self.threadSleep = (0.016 / (nStrips / stripPerPacket));
+		}
+
+		CFTimeInterval totalDelay = self.threadSleep + self.threadExtraDelay + self.pusher.extraDelay;
+
 		packetLength += addIntToBuffer(&P, (int32_t)self.packetNumber);
+		
+		// TODO: PusherCommands sent here!
+		
 		for (int i = 0; i < stripPerPacket;) {
 			if (stripIdx >= nStrips) {
 				break;
 			}
 			PPStrip *strip = self.pusher.strips[stripIdx];
 			stripIdx++;
-			if (strip.touched) {
+			// output the strip if is touched, or if this is a fixed packet size pusher.
+			if (strip.touched || (self.pusher.pusherFlags & PFLAG_FIXEDSIZE)) {
 				strip.powerScale = powerScale;
 				*(P++) = (uint8_t)strip.stripNumber;
 				packetLength++;
 				uint32_t stripPacketSize = [strip serialize:P];
 				if (self.writeStream) {
+					// TODO: update to canfile format 2
+					
 					// we need to make the pusher wait on playback the same length of time between strips as we wait between packets
 					// this number is in microseconds.
 					uint32_t buf = 0;
@@ -216,7 +231,7 @@ static const uint32_t kPacketSize = 1460;
 				packetLength += stripPacketSize;
 				P += stripPacketSize;
 
-				NSAssert(packetLength < kPacketSize, @"packet buffer overrun!");
+				NSAssert(packetLength <= self.maxPacketSize, @"packet buffer overrun!");
 				payload = true;
 				i++;
 			}
@@ -236,14 +251,14 @@ static const uint32_t kPacketSize = 1460;
 				[self.udpsocket sendData:outGoing withTimeout:1 tag:packetNumber];
 				// TODO: use dispatch_after instead of sleep
 				// make sure there's a min delay between packets sent
-				[NSThread sleepForTimeInterval:packetInterval];
+				[NSThread sleepForTimeInterval:totalDelay];
 			});
 			// bump the packet count
 			self.packetNumber++;
 			sentPacket = YES;
 			totalLength += packetLength;
 			self.lastSendTime = frameTime;
-			frameTime += packetInterval;
+			frameTime += totalDelay;
 		} else {
 			[self returnPacketToPool:packet];
 		}

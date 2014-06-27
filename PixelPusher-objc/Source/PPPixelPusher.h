@@ -11,6 +11,17 @@
 
 @class PPDeviceHeader;
 
+typedef enum {
+	PFLAG_PROTECTED = (1<<0),
+	PFLAG_FIXEDSIZE = (1<<1)
+} PPPusherFlags;
+
+typedef enum {
+	SFLAG_RGBOW = (1<<0),
+	SFLAG_WIDEPIXELS = (1<<1),
+	SFLAG_LOGARITHMIC = (1<<2)
+} PPStripFlags;
+
 @interface PPPixelPusher : PPDeviceImpl
 
 @property (nonatomic, readonly) NSArray *strips;
@@ -35,7 +46,7 @@
 - (BOOL)isEqualToPusher:(PPPixelPusher*)pusher;
 - (void)allocateStrips;
 
-- (void)setStrip:(int32_t)stripNumber pixels:(NSArray*)pixels;
+//- (void)setStrip:(int32_t)stripNumber pixels:(NSArray*)pixels;
 - (void)increaseExtraDelay:(NSTimeInterval)i;
 - (void)decreaseExtraDelay:(NSTimeInterval)i;
 

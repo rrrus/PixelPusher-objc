@@ -226,7 +226,7 @@ static PPDeviceRegistry *gSharedRegistry;
 }
 
 - (void)setStrip:(NSString*)macAddress index:(int32_t)stripNumber pixels:(NSArray*)pixels {
-	[self.pusherMap[macAddress] setStrip:stripNumber pixels:pixels];
+//	[self.pusherMap[macAddress] setStrip:stripNumber pixels:pixels];
 }
 
 - (void)startPushing {
