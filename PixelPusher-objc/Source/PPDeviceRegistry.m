@@ -158,7 +158,7 @@ static PPDeviceRegistry *gSharedRegistry;
 												otherButtonTitles:nil, nil];
 			[alert show];
 			return;
-			self.discoverySocket = nil;
+//			self.discoverySocket = nil;
 		}
 		[self.discoverySocket enableBroadcast:YES error:&error];
 		if (error) {
@@ -294,7 +294,7 @@ static PPDeviceRegistry *gSharedRegistry;
 - (void)updatePusher:(PPPixelPusher*)device macAddress:(NSString*)macAddr {
 	// We already knew about this device at the given MAC, but its details
 	// have changed
-	DDLogInfo(@"Device changed: %@", macAddr);
+	DDLogVerbose(@"Device changed: %@", macAddr);
 	PPPixelPusher *pusher = self.pusherMap[macAddr];
 	[pusher copyHeader:device];
 	[self.sortedPushers sortUsingComparator:self.pusherComparator];

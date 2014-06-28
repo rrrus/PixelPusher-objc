@@ -109,8 +109,9 @@ static const int32_t ACCEPTABLE_LOWEST_SW_REV = 121;
 }
 
 - (NSString *)description {
-	return [NSString stringWithFormat:@"%@ (%@, controller %d, group %d, deltaSeq %lld, update %f, power %lld, flags %03x)", super.description,
-			self.ipAddress, self.controllerOrdinal, self.groupOrdinal, self.deltaSequence, self.updatePeriod, self.powerTotal, self.pusherFlags];
+	return [NSString stringWithFormat:@"%@ (%@, controller %d, group %d, deltaSeq %lld, update %f, power %lld, flags %03x, firmware v%1.2f, hardware rev %d)",
+			super.description, self.ipAddress, self.controllerOrdinal, self.groupOrdinal, self.deltaSequence, self.updatePeriod,
+			self.powerTotal, self.pusherFlags, self.softwareRevision/100.0f, self.hardwareRevision];
 }
 
 - (void)setBrightness:(float)brightness {
