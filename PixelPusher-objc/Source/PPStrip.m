@@ -10,10 +10,19 @@
 #import "PPPixelPusher.h"
 #import "PPStrip.h"
 
-// linear input, exponential output to map to the eye's log sensitivity
-static const uint8_t sLinearExp8[] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5, 5, 5, 5, 6, 6, 6, 6, 6, 6, 7, 7, 7, 7, 7, 7, 8, 8, 8, 8, 8, 9, 9, 9, 9, 9, 10, 10, 10, 10, 11, 11, 11, 11, 12, 12, 12, 13, 13, 13, 14, 14, 14, 14, 15, 15, 16, 16, 16, 17, 17, 17, 18, 18, 19, 19, 20, 20, 20, 21, 21, 22, 22, 23, 23, 24, 25, 25, 26, 26, 27, 27, 28, 29, 29, 30, 31, 31, 32, 33, 34, 34, 35, 36, 37, 38, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 54, 55, 56, 57, 59, 60, 61, 63, 64, 65, 67, 68, 70, 72, 73, 75, 76, 78, 80, 82, 83, 85, 87, 89, 91, 93, 95, 97, 99, 102, 104, 106, 109, 111, 114, 116, 119, 121, 124, 127, 129, 132, 135, 138, 141, 144, 148, 151, 154, 158, 161, 165, 168, 172, 176, 180, 184, 188, 192, 196, 201, 205, 209, 214, 219, 224, 229, 234, 239, 244, 249, 255, };
+static CurveFunction gOutputCurveFunction;
+static const uint8_t * gOutputLUT8 = nil;
+static uint16_t* gOutputLUT16 = nil;
 
-static const uint8_t * gOutputLUT8 = sLinearExp8;
+const CurveFunction sCurveLinearFunction =  ^float(float input) {
+	return input;
+};
+
+const CurveFunction sCurveAntilogFunction =  ^float(float input) {
+	// input range 0-1, output range 0-1
+	return (powf(2, 8*input)-1)/255;
+};
+
 @interface PPStrip ()
 @property (nonatomic, assign) uint32_t pixelCount;
 @property (nonatomic, assign) int32_t stripNumber;
@@ -21,6 +30,52 @@ static const uint8_t * gOutputLUT8 = sLinearExp8;
 @end
 
 @implementation PPStrip
+
++ (void)setOutputCurveFunction:(CurveFunction)curveFunction {
+	if (gOutputCurveFunction != curveFunction) {
+		gOutputCurveFunction = [curveFunction copy];
+		// only rebuild if they already exist
+		if (gOutputLUT8) [PPStrip buildOutputCurve:8];
+		if (gOutputLUT16) [PPStrip buildOutputCurve:16];
+	}
+}
+
++ (void)buildOutputCurve:(int)depth {
+	if (!gOutputCurveFunction) gOutputCurveFunction = sCurveAntilogFunction;
+
+	if (depth == 16) {
+		if (gOutputLUT8) free((void*)gOutputLUT8);
+		gOutputLUT8 = nil;
+	} else {
+		if (gOutputLUT8) free((void*)gOutputLUT8);
+		gOutputLUT8 = nil;
+	}
+	
+	// special case linear output function
+	if (!gOutputCurveFunction || gOutputCurveFunction == sCurveLinearFunction) {
+		// give the LUTs a non-nil value so we can check to see if they're in use
+		if (depth == 16) {
+			gOutputLUT16 = malloc(1);
+		} else {
+			gOutputLUT8 = malloc(1);
+		}
+		return;
+	}
+	
+	if (depth == 16) {
+		uint16_t *outputLUT16 = malloc(65536);
+		gOutputLUT16 = outputLUT16;
+		for (int i=0; i<65536; i++) {
+			outputLUT16[i] = (uint16_t)( lroundf( 65535.0f * gOutputCurveFunction(i/65535.0f) ) );
+		}
+	} else {
+		uint8_t *outputLUT8 = malloc(256);
+		gOutputLUT8 = outputLUT8;
+		for (int i=0; i<256; i++) {
+			outputLUT8[i] = (uint8_t)( lroundf( 255.0f * gOutputCurveFunction(i/255.0f) ) );
+		}
+	}
+}
 
 - (id)initWithStripNumber:(int32_t)stripNum pixelCount:(int32_t)pixCount flags:(int32_t)flags{
 	self = [self init];
@@ -31,7 +86,12 @@ static const uint8_t * gOutputLUT8 = sLinearExp8;
 		self.powerScale = 1.0;
 		self.brightness = 1.0;
 
-		if (self.flags & SFLAG_WIDEPIXELS) pixCount = (pixCount+1)/2;
+		if (self.flags & SFLAG_WIDEPIXELS) {
+			pixCount = (pixCount+1)/2;
+			if (!gOutputLUT16) [PPStrip buildOutputCurve:16];
+		} else {
+			if (!gOutputLUT8) [PPStrip buildOutputCurve:8];
+		}
 
 		self.pixelCount = pixCount;
 		_pixels = [NSMutableArray arrayWithCapacity:pixCount];
@@ -91,40 +151,67 @@ static const uint8_t * gOutputLUT8 = sLinearExp8;
 //		}
 //	} else {
 
+	// convert brightness plus powerScale to 16-bit binary fraction
 	uint32_t iPostLutScale = (uint32_t)(self.brightness * self.powerScale * 65536);
 	__block uint8_t *P = buffer;
 	
 	// TODO: optimization opportunity -- use a for loop and a standard C-array
 	// and possibly a real pixmap for the source
+	
 	if (self.flags & SFLAG_WIDEPIXELS) {
-		[self.pixels forEach:^(PPPixel *pixel, NSUInteger idx, BOOL *stop) {
-			// TODO: 16-bit anti log table
-			uint16_t wide;
-			wide = (uint16_t) (pixel.red * self.powerScale * 65535);
-			*P = (wide & 0xf0) >> 8;
-			*(P+3) = (wide & 0x0f);
-			P++;
-			wide = (uint16_t) (pixel.green * self.powerScale * 65535);
-			*P = (wide & 0xf0) >> 8;
-			*(P+3) = (wide & 0x0f);
-			P++;
-			wide = (uint16_t) (pixel.blue * self.powerScale * 65535);
-			*P = (wide & 0xf0) >> 8;
-			*(P+3) = (wide & 0x0f);
-			P += 4; // skip the next 3 bytes we already filled in
-		}];
+		if (gOutputCurveFunction != sCurveLinearFunction) {
+			[self.pixels forEach:^(PPPixel *pixel, NSUInteger idx, BOOL *stop) {
+				uint16_t wide;
+				wide = (uint16_t)(gOutputLUT16[(uint16_t) (pixel.red * 65535)] * iPostLutScale / 65536);
+				*P = (wide & 0xf0) >> 8;
+				*(P+3) = (wide & 0x0f);
+				P++;
+				wide = (uint16_t)(gOutputLUT16[(uint16_t) (pixel.green * 65535)] * iPostLutScale / 65536);
+				*P = (wide & 0xf0) >> 8;
+				*(P+3) = (wide & 0x0f);
+				P++;
+				wide = (uint16_t)(gOutputLUT16[(uint16_t) (pixel.blue * 65535)] * iPostLutScale / 65536);
+				*P = (wide & 0xf0) >> 8;
+				*(P+3) = (wide & 0x0f);
+				P += 4; // skip the next 3 bytes we already filled in
+			}];
+		} else {
+			// since we're skipping the multiply of the pixel channel's float to full range short (65535)
+			// we need to adjust iPostLutScale so full scale is 65535, not 65536.
+			// since it is close enough, we'll just subtract 1 if iPostLutScale > 0
+			if (iPostLutScale > 0) iPostLutScale--;
+			[self.pixels forEach:^(PPPixel *pixel, NSUInteger idx, BOOL *stop) {
+				uint16_t wide;
+				wide = (uint16_t) (pixel.red * iPostLutScale);
+				*P = (wide & 0xf0) >> 8;
+				*(P+3) = (wide & 0x0f);
+				P++;
+				wide = (uint16_t) (pixel.green * iPostLutScale);
+				*P = (wide & 0xf0) >> 8;
+				*(P+3) = (wide & 0x0f);
+				P++;
+				wide = (uint16_t) (pixel.blue * iPostLutScale);
+				*P = (wide & 0xf0) >> 8;
+				*(P+3) = (wide & 0x0f);
+				P += 4; // skip the next 3 bytes we already filled in
+			}];
+		}
 	} else {
-		if (gOutputLUT8) {
+		if (gOutputCurveFunction != sCurveLinearFunction) {
 			[self.pixels forEach:^(PPPixel *pixel, NSUInteger idx, BOOL *stop) {
 				*(P++) = (uint8_t)(gOutputLUT8[(uint8_t) (pixel.red * 255)] * iPostLutScale / 65536);
 				*(P++) = (uint8_t)(gOutputLUT8[(uint8_t) (pixel.green * 255)] * iPostLutScale / 65536);
 				*(P++) = (uint8_t)(gOutputLUT8[(uint8_t) (pixel.blue * 255)] * iPostLutScale / 65536);
 			}];
 		} else {
+			// since we're skipping the multiply of the pixel channel's float to full range byte (255)
+			// we need to scale iPostLutScale to the range 0-65280 (255*256) so that the final /256
+			// will render values in the range 0-255 instead of 0-256
+			iPostLutScale = iPostLutScale * 255 / 256;
 			[self.pixels forEach:^(PPPixel *pixel, NSUInteger idx, BOOL *stop) {
-				*(P++) = (uint8_t)( (uint8_t) (pixel.red * 255) * iPostLutScale / 65536);
-				*(P++) = (uint8_t)( (uint8_t) (pixel.green * 255) * iPostLutScale / 65536);
-				*(P++) = (uint8_t)( (uint8_t) (pixel.blue * 255) * iPostLutScale / 65536);
+				*(P++) = (uint8_t)( (uint32_t) (pixel.red * iPostLutScale) / 256);
+				*(P++) = (uint8_t)( (uint32_t) (pixel.green * iPostLutScale) / 256);
+				*(P++) = (uint8_t)( (uint32_t) (pixel.blue * iPostLutScale) / 256);
 			}];
 		}
 	}
