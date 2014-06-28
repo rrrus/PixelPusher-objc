@@ -30,7 +30,6 @@ though I've never tested it there.
 * no 5-axis RGBOW pixel support (don't know what devices do this)
 * PPPixelPusher defers allocation of strips so parsing status packets in PPDeviceRegistry uses less memory
 * DeviceRegistry uses 3 different notifications (add, remove, update) instead of just 1 (something changed, you figure out what)
-* pixel values passed through inv log LUT to better map to LEDs' log output brightness
 
 ### TODO:
 * instrumentation (bandwidth)
