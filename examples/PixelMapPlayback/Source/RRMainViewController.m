@@ -226,9 +226,9 @@ INIT_LOG_LEVEL_INFO
 						}
 
 						PPPixel *pix = strip.pixels[i];
-						pix.red = (float)sr/count/255.0;
-						pix.green = (float)sg/count/255.0;
-						pix.blue = (float)sb/count/255.0;
+						pix.red = (float)sr/count/255.0f;
+						pix.green = (float)sg/count/255.0f;
+						pix.blue = (float)sb/count/255.0f;
 					}
 				}
 			}

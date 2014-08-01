@@ -7,6 +7,7 @@
 //
 
 #import "HLDeferred.h"
+#import "PPConfigVC.h"
 #import "PPDeviceRegistry.h"
 #import "PPPixel.h"
 #import "PPStrip.h"
@@ -15,12 +16,14 @@
 #import "RRForEach.h"
 #import "RRMainViewController.h"
 
-INIT_LOG_LEVEL_INFO
+//INIT_LOG_LEVEL_INFO
 
 @interface RRMainViewController () <PPFrameDelegate, UIGestureRecognizerDelegate>
 @property (nonatomic, strong) IBOutlet UIImageView *imageView;
 @property (nonatomic, strong) NSMutableArray *comets;
 @property (nonatomic, assign) uint32_t numStrips;
+
+@property (nonatomic, strong) PPConfigVC *pusherConfigVC;
 @end
 
 @implementation RRMainViewController
@@ -28,11 +31,19 @@ INIT_LOG_LEVEL_INFO
 - (void)viewDidLoad
 {
     [super viewDidLoad];
+	
+	self.pusherConfigVC = [PPConfigVC loadFromNib];
+	
+	[self.view addSubview:self.pusherConfigVC.view];
+	CGRect rc = self.pusherConfigVC.view.frame;
+	rc.origin.x = 100;
+	rc.origin.y = 100;
+	self.pusherConfigVC.view.frame = rc;
 
 	PPDeviceRegistry.sharedRegistry.frameDelegate = self;
 	[PPDeviceRegistry.sharedRegistry startPushing];
 
-	self.numStrips = 8;
+	self.numStrips = 6;
 	self.comets = NSMutableArray.array;
 	for (int i=0; i<self.numStrips; i++) {
 		[self.comets addObject:NSMutableArray.array];
@@ -55,6 +66,13 @@ INIT_LOG_LEVEL_INFO
 
 - (void)renderComets {
 	NSArray *strips = PPDeviceRegistry.sharedRegistry.strips;
+	static float brightness = 1.0;
+	if (PPDeviceRegistry.sharedRegistry.globalBrightness != brightness) {
+		PPDeviceRegistry.sharedRegistry.globalBrightness = brightness;
+	}
+	static BOOL linear = NO;
+	PPStrip.outputCurveFunction = linear ? sCurveLinearFunction : sCurveAntilogFunction;
+
 	if (strips.count >= self.numStrips) {
 		for (NSUInteger s=0; s<self.numStrips; s++) {
 			PPStrip *strip = strips[s];
@@ -63,7 +81,7 @@ INIT_LOG_LEVEL_INFO
 				pix.red = pix.green = pix.blue = 0;
 			}
 			NSMutableArray *stripComets = self.comets[s];
-			while (stripComets.count < 10) {
+			while (stripComets.count < 8) {
 				RRComet *comet = RRComet.alloc.init;
 				[stripComets addObject:comet];
 			}

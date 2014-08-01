@@ -23,6 +23,7 @@ extern const CurveFunction sCurveAntilogFunction;
 @property (nonatomic, readonly) int32_t stripNumber;
 @property (nonatomic, readonly) int32_t flags;
 @property (nonatomic, readonly) BOOL isWidePixel;
+@property (nonatomic, readonly) BOOL isRGBOWPixel;
 @property (nonatomic, assign) BOOL touched;
 @property (nonatomic, assign) float powerScale;
 @property (nonatomic, assign) float brightness;

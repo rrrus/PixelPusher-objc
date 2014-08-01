@@ -48,7 +48,21 @@
 		DB4D48B6181335D200788518 /* DDTTYLogger.h in Headers */ = {isa = PBXBuildFile; fileRef = DB4D48771813301900788518 /* DDTTYLogger.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DB4D48B7181335DD00788518 /* HLDeferred.h in Headers */ = {isa = PBXBuildFile; fileRef = DB4D4889181330BB00788518 /* HLDeferred.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DB4D48B8181335E900788518 /* HLFailure.h in Headers */ = {isa = PBXBuildFile; fileRef = DB4D488D181330BB00788518 /* HLFailure.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		DBB0115A196C9849000A1C73 /* PPConfigVC.h in Headers */ = {isa = PBXBuildFile; fileRef = DBB01157196C9849000A1C73 /* PPConfigVC.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		DBB0115B196C9849000A1C73 /* PPConfigVC.m in Sources */ = {isa = PBXBuildFile; fileRef = DBB01158196C9849000A1C73 /* PPConfigVC.m */; };
+		DBB01172196CABDC000A1C73 /* PPConfigVC.xib in Resources */ = {isa = PBXBuildFile; fileRef = DBB01159196C9849000A1C73 /* PPConfigVC.xib */; };
+		DBB01173196CABE2000A1C73 /* PPPusherCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = DBB0115C196CA4AD000A1C73 /* PPPusherCell.xib */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		DBB01170196CABA6000A1C73 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = DB4D482B18132E8800788518 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = DBB01160196CAADE000A1C73;
+			remoteInfo = "PixelPusher-objc-bundle";
+		};
+/* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
 		DB4D483118132E8800788518 /* CopyFiles */ = {
@@ -114,6 +128,12 @@
 		DB4D48941813314400788518 /* GCDAsyncSocket.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = GCDAsyncSocket.m; path = "3rd Party/CocoaAsyncSocket/GCD/GCDAsyncSocket.m"; sourceTree = "<group>"; };
 		DB4D48951813314400788518 /* GCDAsyncUdpSocket.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GCDAsyncUdpSocket.h; path = "3rd Party/CocoaAsyncSocket/GCD/GCDAsyncUdpSocket.h"; sourceTree = "<group>"; };
 		DB4D48961813314400788518 /* GCDAsyncUdpSocket.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = GCDAsyncUdpSocket.m; path = "3rd Party/CocoaAsyncSocket/GCD/GCDAsyncUdpSocket.m"; sourceTree = "<group>"; };
+		DBB01157196C9849000A1C73 /* PPConfigVC.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PPConfigVC.h; sourceTree = "<group>"; };
+		DBB01158196C9849000A1C73 /* PPConfigVC.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PPConfigVC.m; sourceTree = "<group>"; };
+		DBB01159196C9849000A1C73 /* PPConfigVC.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = PPConfigVC.xib; sourceTree = "<group>"; };
+		DBB0115C196CA4AD000A1C73 /* PPPusherCell.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = PPPusherCell.xib; sourceTree = "<group>"; };
+		DBB01161196CAADE000A1C73 /* PixelPusher-objc-bundle.bundle */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "PixelPusher-objc-bundle.bundle"; sourceTree = BUILT_PRODUCTS_DIR; };
+		DBB01164196CAADE000A1C73 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -126,6 +146,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		DBB0115E196CAADE000A1C73 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -135,6 +162,7 @@
 				DB3E2B45181341BB0034BFC8 /* README.md */,
 				DB4D484618132F3000788518 /* Source */,
 				DB4D486D18132FDB00788518 /* 3rd Party */,
+				DBB01162196CAADE000A1C73 /* PixelPusher-objc-bundle */,
 				DB4D483518132E8800788518 /* Frameworks */,
 				DB4D483418132E8800788518 /* Products */,
 			);
@@ -144,6 +172,7 @@
 			isa = PBXGroup;
 			children = (
 				DB4D483318132E8800788518 /* libPixelPusher-objc.a */,
+				DBB01161196CAADE000A1C73 /* PixelPusher-objc-bundle.bundle */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -186,6 +215,10 @@
 				DB4D485E18132F3000788518 /* RRForEach.h */,
 				DB4D485F18132F3000788518 /* RRForEach.m */,
 				DB4D486018132F3000788518 /* RRMacros.h */,
+				DBB01157196C9849000A1C73 /* PPConfigVC.h */,
+				DBB01158196C9849000A1C73 /* PPConfigVC.m */,
+				DBB01159196C9849000A1C73 /* PPConfigVC.xib */,
+				DBB0115C196CA4AD000A1C73 /* PPPusherCell.xib */,
 			);
 			path = Source;
 			sourceTree = "<group>";
@@ -251,6 +284,22 @@
 			name = "CocoaAsyncSocket-GCD";
 			sourceTree = "<group>";
 		};
+		DBB01162196CAADE000A1C73 /* PixelPusher-objc-bundle */ = {
+			isa = PBXGroup;
+			children = (
+				DBB01163196CAADE000A1C73 /* Supporting Files */,
+			);
+			path = "PixelPusher-objc-bundle";
+			sourceTree = "<group>";
+		};
+		DBB01163196CAADE000A1C73 /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
+				DBB01164196CAADE000A1C73 /* Info.plist */,
+			);
+			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXHeadersBuildPhase section */
@@ -263,6 +312,7 @@
 				DB4D48B7181335DD00788518 /* HLDeferred.h in Headers */,
 				DB4D48B6181335D200788518 /* DDTTYLogger.h in Headers */,
 				DB4D48A9181335C400788518 /* NSData+Utils.h in Headers */,
+				DBB0115A196C9849000A1C73 /* PPConfigVC.h in Headers */,
 				DB4D48AA181335C400788518 /* PPCard.h in Headers */,
 				DB4D48AB181335C400788518 /* PPDevice.h in Headers */,
 				DB4D48AC181335C400788518 /* PPDeviceHeader.h in Headers */,
@@ -293,11 +343,29 @@
 			buildRules = (
 			);
 			dependencies = (
+				DBB01171196CABA6000A1C73 /* PBXTargetDependency */,
 			);
 			name = "PixelPusher-objc";
 			productName = "PixelPusher-objc";
 			productReference = DB4D483318132E8800788518 /* libPixelPusher-objc.a */;
 			productType = "com.apple.product-type.library.static";
+		};
+		DBB01160196CAADE000A1C73 /* PixelPusher-objc-bundle */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = DBB01165196CAADE000A1C73 /* Build configuration list for PBXNativeTarget "PixelPusher-objc-bundle" */;
+			buildPhases = (
+				DBB0115D196CAADE000A1C73 /* Sources */,
+				DBB0115E196CAADE000A1C73 /* Frameworks */,
+				DBB0115F196CAADE000A1C73 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "PixelPusher-objc-bundle";
+			productName = "PixelPusher-objc-bundle";
+			productReference = DBB01161196CAADE000A1C73 /* PixelPusher-objc-bundle.bundle */;
+			productType = "com.apple.product-type.bundle";
 		};
 /* End PBXNativeTarget section */
 
@@ -307,6 +375,11 @@
 			attributes = {
 				LastUpgradeCheck = 0460;
 				ORGANIZATIONNAME = rrrus;
+				TargetAttributes = {
+					DBB01160196CAADE000A1C73 = {
+						CreatedOnToolsVersion = 6.0;
+					};
+				};
 			};
 			buildConfigurationList = DB4D482E18132E8800788518 /* Build configuration list for PBXProject "PixelPusher-objc" */;
 			compatibilityVersion = "Xcode 3.2";
@@ -321,9 +394,22 @@
 			projectRoot = "";
 			targets = (
 				DB4D483218132E8800788518 /* PixelPusher-objc */,
+				DBB01160196CAADE000A1C73 /* PixelPusher-objc-bundle */,
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		DBB0115F196CAADE000A1C73 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				DBB01172196CABDC000A1C73 /* PPConfigVC.xib in Resources */,
+				DBB01173196CABE2000A1C73 /* PPPusherCell.xib in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		DB4D482F18132E8800788518 /* Sources */ = {
@@ -340,6 +426,7 @@
 				DB4D486818132F3000788518 /* PPPusherGroup.m in Sources */,
 				DB4D486918132F3000788518 /* PPScene.m in Sources */,
 				DB4D486A18132F3000788518 /* PPStrip.m in Sources */,
+				DBB0115B196C9849000A1C73 /* PPConfigVC.m in Sources */,
 				DB4D486B18132F3000788518 /* PPVStrip.m in Sources */,
 				DB4D486C18132F3000788518 /* RRForEach.m in Sources */,
 				DB4D487F1813301900788518 /* DDAbstractDatabaseLogger.m in Sources */,
@@ -355,7 +442,22 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		DBB0115D196CAADE000A1C73 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		DBB01171196CABA6000A1C73 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = DBB01160196CAADE000A1C73 /* PixelPusher-objc-bundle */;
+			targetProxy = DBB01170196CABA6000A1C73 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		DB4D483F18132E8800788518 /* Debug */ = {
@@ -453,6 +555,64 @@
 			};
 			name = Release;
 		};
+		DBB01166196CAADE000A1C73 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				COMBINE_HIDPI_IMAGES = YES;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				INFOPLIST_FILE = "PixelPusher-objc-bundle/Info.plist";
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Bundles";
+				MACOSX_DEPLOYMENT_TARGET = 10.9;
+				MTL_ENABLE_DEBUG_INFO = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				WRAPPER_EXTENSION = bundle;
+			};
+			name = Debug;
+		};
+		DBB01167196CAADE000A1C73 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				INFOPLIST_FILE = "PixelPusher-objc-bundle/Info.plist";
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Bundles";
+				MACOSX_DEPLOYMENT_TARGET = 10.9;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				WRAPPER_EXTENSION = bundle;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -473,6 +633,14 @@
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
+		};
+		DBB01165196CAADE000A1C73 /* Build configuration list for PBXNativeTarget "PixelPusher-objc-bundle" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				DBB01166196CAADE000A1C73 /* Debug */,
+				DBB01167196CAADE000A1C73 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
 		};
 /* End XCConfigurationList section */
 	};

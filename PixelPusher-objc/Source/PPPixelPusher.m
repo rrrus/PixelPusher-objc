@@ -14,7 +14,6 @@
 INIT_LOG_LEVEL_INFO
 
 static const int32_t kDefaultPusherPort = 9897;
-static const int32_t ACCEPTABLE_LOWEST_SW_REV = 121;
 
 @interface PPPixelPusher ()
 @property (nonatomic, assign) int32_t stripsAttached;
@@ -39,16 +38,36 @@ static const int32_t ACCEPTABLE_LOWEST_SW_REV = 121;
 
 @implementation PPPixelPusher
 
++ (NSComparator)sortComparator {
+	return ^NSComparisonResult(PPPixelPusher *obj1, PPPixelPusher *obj2) {
+		int32_t group0 = obj1.groupOrdinal;
+		int32_t group1 = obj2.groupOrdinal;
+		if (group0 != group1) {
+			if (group0 < group1) return NSOrderedAscending;
+			return NSOrderedDescending;
+		}
+		
+		int32_t ord1 = obj1.controllerOrdinal;
+		int32_t ord2 = obj2.controllerOrdinal;
+		if (ord1 != ord2) {
+			if (ord1 < ord2) return NSOrderedAscending;
+			return NSOrderedDescending;
+		}
+		
+		return [obj1.macAddress compare:obj2.macAddress];
+	};
+}
+
 - (id)initWithHeader:(PPDeviceHeader*)header {
 	self = [super initWithHeader:header];
 	if (self) {
 		self.brightness = 1.0;
 		
 		NSData *packet = header.packetRemainder;
-		if (self.softwareRevision < ACCEPTABLE_LOWEST_SW_REV) {
-			DDLogWarn(@"WARNING!  This PixelPusher Library requires firmware revision %g", ACCEPTABLE_LOWEST_SW_REV/100.0);
-			DDLogWarn(@"WARNING!  This PixelPusher is using %g", self.softwareRevision/100.0);
-			DDLogWarn(@"WARNING!  This is not expected to work.  Please update your PixelPusher.");
+		if (self.softwareRevision < PP_ACCEPTABLE_LOWEST_SW_REV) {
+//			DDLogWarn(@"WARNING!  This PixelPusher Library requires firmware revision %g", PP_ACCEPTABLE_LOWEST_SW_REV/100.0);
+//			DDLogWarn(@"WARNING!  This PixelPusher is using %g", self.softwareRevision/100.0);
+//			DDLogWarn(@"WARNING!  This is not expected to work.  Please update your PixelPusher.");
 		}
 		if (packet.length < 28) {
 			[NSException raise:NSInvalidArgumentException format:@"expected header size %d, but got %lu", 28, (unsigned long)packet.length];

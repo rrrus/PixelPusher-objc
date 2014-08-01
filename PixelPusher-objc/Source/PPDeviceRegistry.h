@@ -23,6 +23,7 @@ extern NSString * const PPDeviceRegistryRemovedPusher;
 
 @property (nonatomic, weak) id<PPFrameDelegate> frameDelegate;
 @property (nonatomic, readonly) NSDictionary *pusherMap;
+@property (nonatomic, readonly) NSDictionary *groupMap;
 @property (nonatomic) uint32_t frameRateLimit;
 @property (nonatomic, assign) float globalBrightness;
 @property (nonatomic) BOOL record;
@@ -37,6 +38,7 @@ extern NSString * const PPDeviceRegistryRemovedPusher;
 
 - (NSArray*)strips;
 - (NSArray*)pushers;
+- (NSArray*)groups;
 
 - (NSArray*)pushersInGroup:(int32_t)groupNumber;
 - (NSArray*)stripsInGroup:(int32_t)groupNumber;

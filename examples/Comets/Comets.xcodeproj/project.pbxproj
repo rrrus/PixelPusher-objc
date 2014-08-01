@@ -12,9 +12,10 @@
 		DB3E2B42181339650034BFC8 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DB3E2B41181339650034BFC8 /* Security.framework */; };
 		DB3E2B44181339690034BFC8 /* CFNetwork.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DB3E2B43181339690034BFC8 /* CFNetwork.framework */; };
 		DB3E2B4A18134A9E0034BFC8 /* RRComet.m in Sources */ = {isa = PBXBuildFile; fileRef = DB3E2B4918134A9E0034BFC8 /* RRComet.m */; };
-		DB4D48A8181334FB00788518 /* libPixelPusher-objc.a in Frameworks */ = {isa = PBXBuildFile; fileRef = DB4D48A01813331C00788518 /* libPixelPusher-objc.a */; };
+		DB4D48A8181334FB00788518 /* libPixelPusher-objc.a in Frameworks */ = {isa = PBXBuildFile; fileRef = DB4D48A01813331C00788518 /* libPixelPusher-objc.a */; settings = {ATTRIBUTES = (Required, ); }; };
 		DB4D48BC1813363400788518 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DB4D48BB1813363400788518 /* CoreGraphics.framework */; };
 		DB4D48BE1813367100788518 /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DB4D48BD1813367100788518 /* QuartzCore.framework */; };
+		DBB0116F196CAB69000A1C73 /* PixelPusher-objc-bundle.bundle in Resources */ = {isa = PBXBuildFile; fileRef = DBB0116E196CAB5E000A1C73 /* PixelPusher-objc-bundle.bundle */; };
 		DBB0BC741759AA4F002E7E5E /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DBC1CD67174B4D2700CCAF52 /* UIKit.framework */; };
 		DBB0BC751759AA4F002E7E5E /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DBC1CD69174B4D2700CCAF52 /* Foundation.framework */; };
 		DBC1CD68174B4D2700CCAF52 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DBC1CD67174B4D2700CCAF52 /* UIKit.framework */; };
@@ -42,6 +43,20 @@
 			proxyType = 1;
 			remoteGlobalIDString = DB4D483218132E8800788518;
 			remoteInfo = "PixelPusher-objc";
+		};
+		DBB0116A196CAB5E000A1C73 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = DB4D4899181332FF00788518 /* PixelPusher-objc.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = DBB01160196CAADE000A1C73;
+			remoteInfo = "PixelPusher-objc-bundle";
+		};
+		DBB0116D196CAB5E000A1C73 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = DB4D4899181332FF00788518 /* PixelPusher-objc.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = DBB01161196CAADE000A1C73;
+			remoteInfo = "PixelPusher-objc-bundle";
 		};
 /* End PBXContainerItemProxy section */
 
@@ -103,6 +118,7 @@
 			isa = PBXGroup;
 			children = (
 				DB4D48A01813331C00788518 /* libPixelPusher-objc.a */,
+				DBB0116E196CAB5E000A1C73 /* PixelPusher-objc-bundle.bundle */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -111,6 +127,7 @@
 			isa = PBXGroup;
 			children = (
 				DBC1CD6D174B4D2700CCAF52 /* Comets */,
+				DB4D4899181332FF00788518 /* PixelPusher-objc.xcodeproj */,
 				DBC1CD66174B4D2700CCAF52 /* Frameworks */,
 				DBC1CD65174B4D2700CCAF52 /* Products */,
 			);
@@ -143,7 +160,6 @@
 			children = (
 				DBC1CDA8174B4D9500CCAF52 /* Source */,
 				DBC1CD93174B4D8B00CCAF52 /* Resources */,
-				DB4D4899181332FF00788518 /* PixelPusher-objc.xcodeproj */,
 			);
 			path = Comets;
 			sourceTree = SOURCE_ROOT;
@@ -197,7 +213,7 @@
 			name = PixelPusherTests;
 			productName = PixelPusherTests;
 			productReference = DBB0BC711759AA4F002E7E5E /* PixelPusherTests.octest */;
-			productType = "com.apple.product-type.bundle";
+			productType = "com.apple.product-type.bundle.ocunit-test";
 		};
 		DBC1CD63174B4D2600CCAF52 /* Comets */ = {
 			isa = PBXNativeTarget;
@@ -210,6 +226,7 @@
 			buildRules = (
 			);
 			dependencies = (
+				DBB0116B196CAB5E000A1C73 /* PBXTargetDependency */,
 				DB4D48A31813336100788518 /* PBXTargetDependency */,
 			);
 			name = Comets;
@@ -226,6 +243,11 @@
 				CLASSPREFIX = RR;
 				LastUpgradeCheck = 0460;
 				ORGANIZATIONNAME = rrrus;
+				TargetAttributes = {
+					DBC1CD63174B4D2600CCAF52 = {
+						DevelopmentTeam = WLWP6XK456;
+					};
+				};
 			};
 			buildConfigurationList = DBC1CD5F174B4D2600CCAF52 /* Build configuration list for PBXProject "Comets" */;
 			compatibilityVersion = "Xcode 3.2";
@@ -260,6 +282,13 @@
 			remoteRef = DB4D489F1813331C00788518 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
+		DBB0116E196CAB5E000A1C73 /* PixelPusher-objc-bundle.bundle */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.cfbundle;
+			path = "PixelPusher-objc-bundle.bundle";
+			remoteRef = DBB0116D196CAB5E000A1C73 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
 /* End PBXReferenceProxy section */
 
 /* Begin PBXResourcesBuildPhase section */
@@ -280,6 +309,7 @@
 				DBC1CDA3174B4D8B00CCAF52 /* InfoPlist.strings in Resources */,
 				DB01CF76174C1A2200486F6C /* RRMainViewController_iPad.xib in Resources */,
 				DB01CF77174C1A2200486F6C /* RRMainViewController_iPhone.xib in Resources */,
+				DBB0116F196CAB69000A1C73 /* PixelPusher-objc-bundle.bundle in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -327,6 +357,11 @@
 			isa = PBXTargetDependency;
 			name = "PixelPusher-objc";
 			targetProxy = DB4D48A21813336100788518 /* PBXContainerItemProxy */;
+		};
+		DBB0116B196CAB5E000A1C73 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = "PixelPusher-objc-bundle";
+			targetProxy = DBB0116A196CAB5E000A1C73 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -433,6 +468,8 @@
 		DBC1CD91174B4D2700CCAF52 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "Source/Comets-Prefix.pch";
 				INFOPLIST_FILE = "Resources/Comets-Info.plist";
@@ -442,6 +479,7 @@
 					"-ObjC",
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE = "";
 				USER_HEADER_SEARCH_PATHS = "$(DSTROOT)/usr/local/include $(TARGET_BUILD_DIR)/usr/local/include";
 				WRAPPER_EXTENSION = app;
 			};
@@ -450,6 +488,8 @@
 		DBC1CD92174B4D2700CCAF52 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "Source/Comets-Prefix.pch";
 				INFOPLIST_FILE = "Resources/Comets-Info.plist";
@@ -459,6 +499,7 @@
 					"-ObjC",
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE = "";
 				USER_HEADER_SEARCH_PATHS = "$(DSTROOT)/usr/local/include $(TARGET_BUILD_DIR)/usr/local/include";
 				WRAPPER_EXTENSION = app;
 			};
