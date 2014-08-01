@@ -220,9 +220,9 @@ const CurveFunction sCurveAntilogFunction =  ^float(float input) {
 				uint16_t R = (uint16_t)(gOutputLUT10[(uint16_t) (pixel.red * 767)] * iPostLutScale / 65536);
 				uint16_t G = (uint16_t)(gOutputLUT10[(uint16_t) (pixel.green * 767)] * iPostLutScale / 65536);
 				uint16_t B = (uint16_t)(gOutputLUT10[(uint16_t) (pixel.blue * 767)] * iPostLutScale / 65536);
-				uint16_t W = MIN( MIN(R, G), B);
+				uint16_t W = (uint16_t)MIN( MIN(R, G), B);
 				R -= W; G -= W; B -= W;
-				uint16_t O = MIN( R, G*orangeGreenInv/1024 );
+				uint16_t O = (uint16_t)MIN( R, G*orangeGreenInv/1024 );
 				R -= O;
 				G -= O*orangeGreen/1024;
 				
