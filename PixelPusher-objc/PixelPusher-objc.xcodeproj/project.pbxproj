@@ -31,24 +31,24 @@
 		DB4D4891181330BB00788518 /* HLFailure.m in Sources */ = {isa = PBXBuildFile; fileRef = DB4D488E181330BB00788518 /* HLFailure.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		DB4D48971813314400788518 /* GCDAsyncSocket.m in Sources */ = {isa = PBXBuildFile; fileRef = DB4D48941813314400788518 /* GCDAsyncSocket.m */; };
 		DB4D48981813314400788518 /* GCDAsyncUdpSocket.m in Sources */ = {isa = PBXBuildFile; fileRef = DB4D48961813314400788518 /* GCDAsyncUdpSocket.m */; };
-		DB4D48A71813345C00788518 /* DDLog.h in Headers */ = {isa = PBXBuildFile; fileRef = DB4D48751813301900788518 /* DDLog.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		DB4D48A9181335C400788518 /* NSData+Utils.h in Headers */ = {isa = PBXBuildFile; fileRef = DB4D484718132F3000788518 /* NSData+Utils.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		DB4D48AA181335C400788518 /* PPCard.h in Headers */ = {isa = PBXBuildFile; fileRef = DB4D484A18132F3000788518 /* PPCard.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		DB4D48AB181335C400788518 /* PPDevice.h in Headers */ = {isa = PBXBuildFile; fileRef = DB4D484C18132F3000788518 /* PPDevice.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		DB4D48AC181335C400788518 /* PPDeviceHeader.h in Headers */ = {isa = PBXBuildFile; fileRef = DB4D484E18132F3000788518 /* PPDeviceHeader.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		DB4D48AD181335C400788518 /* PPDeviceRegistry.h in Headers */ = {isa = PBXBuildFile; fileRef = DB4D485018132F3000788518 /* PPDeviceRegistry.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		DB4D48AE181335C400788518 /* PPPixel.h in Headers */ = {isa = PBXBuildFile; fileRef = DB4D485218132F3000788518 /* PPPixel.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		DB4D48AF181335C400788518 /* PPPixelPusher.h in Headers */ = {isa = PBXBuildFile; fileRef = DB4D485418132F3000788518 /* PPPixelPusher.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		DB4D48B0181335C400788518 /* PPPusherGroup.h in Headers */ = {isa = PBXBuildFile; fileRef = DB4D485618132F3000788518 /* PPPusherGroup.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		DB4D48B1181335C400788518 /* PPScene.h in Headers */ = {isa = PBXBuildFile; fileRef = DB4D485818132F3000788518 /* PPScene.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		DB4D48B2181335C400788518 /* PPStrip.h in Headers */ = {isa = PBXBuildFile; fileRef = DB4D485A18132F3000788518 /* PPStrip.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		DB4D48B3181335C400788518 /* PPVStrip.h in Headers */ = {isa = PBXBuildFile; fileRef = DB4D485C18132F3000788518 /* PPVStrip.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		DB4D48B4181335C400788518 /* RRForEach.h in Headers */ = {isa = PBXBuildFile; fileRef = DB4D485E18132F3000788518 /* RRForEach.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		DB4D48B5181335C400788518 /* RRMacros.h in Headers */ = {isa = PBXBuildFile; fileRef = DB4D486018132F3000788518 /* RRMacros.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		DB4D48B6181335D200788518 /* DDTTYLogger.h in Headers */ = {isa = PBXBuildFile; fileRef = DB4D48771813301900788518 /* DDTTYLogger.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		DB4D48B7181335DD00788518 /* HLDeferred.h in Headers */ = {isa = PBXBuildFile; fileRef = DB4D4889181330BB00788518 /* HLDeferred.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		DB4D48B8181335E900788518 /* HLFailure.h in Headers */ = {isa = PBXBuildFile; fileRef = DB4D488D181330BB00788518 /* HLFailure.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		DBB0115A196C9849000A1C73 /* PPConfigVC.h in Headers */ = {isa = PBXBuildFile; fileRef = DBB01157196C9849000A1C73 /* PPConfigVC.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		DB4D48A71813345C00788518 /* DDLog.h in Headers */ = {isa = PBXBuildFile; fileRef = DB4D48751813301900788518 /* DDLog.h */; };
+		DB4D48A9181335C400788518 /* NSData+Utils.h in Headers */ = {isa = PBXBuildFile; fileRef = DB4D484718132F3000788518 /* NSData+Utils.h */; };
+		DB4D48AA181335C400788518 /* PPCard.h in Headers */ = {isa = PBXBuildFile; fileRef = DB4D484A18132F3000788518 /* PPCard.h */; };
+		DB4D48AB181335C400788518 /* PPDevice.h in Headers */ = {isa = PBXBuildFile; fileRef = DB4D484C18132F3000788518 /* PPDevice.h */; };
+		DB4D48AC181335C400788518 /* PPDeviceHeader.h in Headers */ = {isa = PBXBuildFile; fileRef = DB4D484E18132F3000788518 /* PPDeviceHeader.h */; };
+		DB4D48AD181335C400788518 /* PPDeviceRegistry.h in Headers */ = {isa = PBXBuildFile; fileRef = DB4D485018132F3000788518 /* PPDeviceRegistry.h */; };
+		DB4D48AE181335C400788518 /* PPPixel.h in Headers */ = {isa = PBXBuildFile; fileRef = DB4D485218132F3000788518 /* PPPixel.h */; };
+		DB4D48AF181335C400788518 /* PPPixelPusher.h in Headers */ = {isa = PBXBuildFile; fileRef = DB4D485418132F3000788518 /* PPPixelPusher.h */; };
+		DB4D48B0181335C400788518 /* PPPusherGroup.h in Headers */ = {isa = PBXBuildFile; fileRef = DB4D485618132F3000788518 /* PPPusherGroup.h */; };
+		DB4D48B1181335C400788518 /* PPScene.h in Headers */ = {isa = PBXBuildFile; fileRef = DB4D485818132F3000788518 /* PPScene.h */; };
+		DB4D48B2181335C400788518 /* PPStrip.h in Headers */ = {isa = PBXBuildFile; fileRef = DB4D485A18132F3000788518 /* PPStrip.h */; };
+		DB4D48B3181335C400788518 /* PPVStrip.h in Headers */ = {isa = PBXBuildFile; fileRef = DB4D485C18132F3000788518 /* PPVStrip.h */; };
+		DB4D48B4181335C400788518 /* RRForEach.h in Headers */ = {isa = PBXBuildFile; fileRef = DB4D485E18132F3000788518 /* RRForEach.h */; };
+		DB4D48B5181335C400788518 /* RRMacros.h in Headers */ = {isa = PBXBuildFile; fileRef = DB4D486018132F3000788518 /* RRMacros.h */; };
+		DB4D48B6181335D200788518 /* DDTTYLogger.h in Headers */ = {isa = PBXBuildFile; fileRef = DB4D48771813301900788518 /* DDTTYLogger.h */; };
+		DB4D48B7181335DD00788518 /* HLDeferred.h in Headers */ = {isa = PBXBuildFile; fileRef = DB4D4889181330BB00788518 /* HLDeferred.h */; };
+		DB4D48B8181335E900788518 /* HLFailure.h in Headers */ = {isa = PBXBuildFile; fileRef = DB4D488D181330BB00788518 /* HLFailure.h */; };
+		DBB0115A196C9849000A1C73 /* PPConfigVC.h in Headers */ = {isa = PBXBuildFile; fileRef = DBB01157196C9849000A1C73 /* PPConfigVC.h */; };
 		DBB0115B196C9849000A1C73 /* PPConfigVC.m in Sources */ = {isa = PBXBuildFile; fileRef = DBB01158196C9849000A1C73 /* PPConfigVC.m */; };
 		DBB01172196CABDC000A1C73 /* PPConfigVC.xib in Resources */ = {isa = PBXBuildFile; fileRef = DBB01159196C9849000A1C73 /* PPConfigVC.xib */; };
 		DBB01173196CABE2000A1C73 /* PPPusherCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = DBB0115C196CA4AD000A1C73 /* PPPusherCell.xib */; };
@@ -487,6 +487,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 6.1;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
 			};
 			name = Debug;
 		};
@@ -509,6 +510,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 6.1;
 				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
 				VALIDATE_PRODUCT = YES;
 			};
 			name = Release;
@@ -641,6 +643,7 @@
 				DBB01167196CAADE000A1C73 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
