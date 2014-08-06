@@ -82,9 +82,8 @@ end.parse!
 $lastMAC = 1
 $lastPort = 64203
 def makePusher(options)
-	ipaddr = Socket::getaddrinfo(Socket.gethostname,"echo",Socket::AF_INET)[0][3]
-		.split(".")
-		.map { |e| e.to_i }
+	ipaddrstr = Socket::getaddrinfo(Socket.gethostname,"echo",Socket::AF_INET)[0][3]
+	ipaddr = ipaddrstr.split(".").map { |e| e.to_i }
 
 	pusher = options.merge({
 		:mac => [0xff,0xff,0xff,0xff,0xff, $lastMAC],
@@ -134,6 +133,9 @@ def makePusher(options)
 	s.bind(pusher[:ipaddr].map { |e| e.to_s }.join("."), pusher[:port])
 	pusher[:listener] = s
 
+	macStr = pusher[:mac].map { |e| e.to_s }.join(":")
+	puts("Pusher: MAC %s IP %s:%d GROUP %d NUM %d" % [macStr, ipaddrstr, pusher[:port], pusher[:group], pusher[:number]])
+
 	return pusher
 end
 
@@ -164,7 +166,8 @@ if (Pushers.length > 0)
 			begin
 				stuff = pusher[:listener].recvfrom_nonblock(1500)
 				if (stuff)
-					puts("data for pusher %s" % pusher[:mac].map { |e| e.to_s }.join(":"))
+					# receiving doesn't work reliably from ruby.  not sure why
+					# puts("data for pusher %s" % pusher[:mac].map { |e| e.to_s }.join(":"))
 				end
 			rescue Exception
 			end
