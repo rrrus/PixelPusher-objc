@@ -115,14 +115,14 @@ static PPDeviceRegistry *gSharedRegistry;
 		self.scene = PPScene.new;
 
 		[self bind];
-		
+
 		// monitor pushers' timeouts
 		[NSTimer scheduledTimerWithTimeInterval:kExpiryTimerInterval
 										 target:self
 									   selector:@selector(deviceExpiryTask:)
 									   userInfo:nil
 										repeats:YES];
-		
+
 		[NSNotificationCenter.defaultCenter addObserver:self
 											   selector:@selector(appDidBackground)
 												   name:UIApplicationDidEnterBackgroundNotification
@@ -200,7 +200,7 @@ static PPDeviceRegistry *gSharedRegistry;
 
 - (NSArray*)pushersInGroup:(int32_t)groupNumber {
 	PPPusherGroup *group = DYNAMIC_CAST(PPPusherGroup, self.groupMap[@(groupNumber)]);
-	
+
 	if (group != nil)	return group.pushers;
 	else				return @[];
 }
@@ -237,7 +237,7 @@ static PPDeviceRegistry *gSharedRegistry;
 			[_groupMap removeObjectForKey:@(pusher.groupOrdinal)];
 			[self.sortedGroups removeObject:group];
 		}
-		
+
 		if (self.scene.isRunning) [self.scene removePusher:pusher];
 
 		[NSNotificationCenter.defaultCenter postNotificationName:PPDeviceRegistryRemovedPusher object:pusher];
@@ -266,7 +266,7 @@ static PPDeviceRegistry *gSharedRegistry;
 		NSLog(@"while parsing discovery packet: %@", exception);
 	}
 	if (!header) return;
-	
+
 	NSString *macAddr = header.macAddressString;
 	if (header.deviceType != ePixelPusher) {
 		DDLogInfo(@"Ignoring non-PixelPusher discovery packet from %@", header);
@@ -356,7 +356,7 @@ static PPDeviceRegistry *gSharedRegistry;
 			return NSOrderedDescending;
 		}];
 	}
-		
+
 	pusher.autoThrottle = gAutoThrottle;
 
 	[NSNotificationCenter.defaultCenter postNotificationName:PPDeviceRegistryAddedPusher object:pusher];

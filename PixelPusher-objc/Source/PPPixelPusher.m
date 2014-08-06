@@ -46,14 +46,14 @@ static const int32_t kDefaultPusherPort = 9897;
 			if (group0 < group1) return NSOrderedAscending;
 			return NSOrderedDescending;
 		}
-		
+
 		int32_t ord1 = obj1.controllerOrdinal;
 		int32_t ord2 = obj2.controllerOrdinal;
 		if (ord1 != ord2) {
 			if (ord1 < ord2) return NSOrderedAscending;
 			return NSOrderedDescending;
 		}
-		
+
 		return [obj1.macAddress compare:obj2.macAddress];
 	};
 }
@@ -62,7 +62,7 @@ static const int32_t kDefaultPusherPort = 9897;
 	self = [super initWithHeader:header];
 	if (self) {
 		self.brightness = 1.0;
-		
+
 		NSData *packet = header.packetRemainder;
 		if (self.softwareRevision < PP_ACCEPTABLE_LOWEST_SW_REV) {
 //			DDLogWarn(@"WARNING!  This PixelPusher Library requires firmware revision %g", PP_ACCEPTABLE_LOWEST_SW_REV/100.0);
@@ -91,14 +91,14 @@ static const int32_t kDefaultPusherPort = 9897;
         } else {
             self.port = kDefaultPusherPort;
         }
-		
+
 		// A minor complication here.  The PixelPusher firmware generates announce packets from
 		// a static structure, so the size of stripFlags is always 8;  even if there are fewer
 		// strips configured.  So we have a wart. - jls.
 
 		int stripFlagSize = 8;
 		if (self.stripsAttached > stripFlagSize) stripFlagSize = self.stripsAttached;
-		
+
 		NSMutableArray *theStripFlags = NSMutableArray.new;
 		self.stripFlags = theStripFlags;
 		if (packet.length >= (30+stripFlagSize) && self.softwareRevision > 108) {

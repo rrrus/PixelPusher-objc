@@ -33,7 +33,7 @@ extern const CurveFunction sCurveAntilogFunction;
 	the curve function may be called at any time, from non-main threads, and multiple calls
 	concurrently to recompute output curves for varying output depths.  beware to ensure
 	the function is thread-safe and reentrant.
- 
+
 	@example
 		//  set an inverse output curve
 		[PPStrip setOutputCurveFunction:^float(float input) {

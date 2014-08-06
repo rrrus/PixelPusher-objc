@@ -192,7 +192,7 @@ INIT_LOG_LEVEL_INFO
 			// Shoot for the framelimit.
 			self.threadSleep = ((1.0/PPDeviceRegistry.sharedRegistry.frameRateLimit) / (nStrips / stripPerPacket));
 		}
-		
+
 		// Handle errant delay calculation in the firmware.
 		if (self.pusher.updatePeriod > 0.1) {
 			self.threadSleep = (0.016 / (nStrips / stripPerPacket));
@@ -201,9 +201,9 @@ INIT_LOG_LEVEL_INFO
 		CFTimeInterval totalDelay = self.threadSleep + self.threadExtraDelay + self.pusher.extraDelay;
 
 		packetLength += addIntToBuffer(&P, (int32_t)self.packetNumber);
-		
+
 		// TODO: PusherCommands sent here!
-		
+
 		for (int i = 0; i < stripPerPacket;) {
 			if (stripIdx >= nStrips) {
 				break;
@@ -218,7 +218,7 @@ INIT_LOG_LEVEL_INFO
 				uint32_t stripPacketSize = [strip serialize:P];
 				if (self.writeStream) {
 					// TODO: update to canfile format 2
-					
+
 					// we need to make the pusher wait on playback the same length of time between strips as we wait between packets
 					// this number is in microseconds.
 					uint32_t buf = 0;
