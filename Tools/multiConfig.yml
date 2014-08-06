@@ -1,0 +1,26 @@
+---
+-
+  :number: 0
+  :group: 1
+  :strips_attached: 8
+  :pixels_per_strip: 200
+-
+  :number: 1
+  :group: 1
+  :strips_attached: 5
+  :pixels_per_strip: 220
+-
+  :number: 0
+  :group: 2
+  :strips_attached: 8
+  :pixels_per_strip: 100
+-
+  :number: 1
+  :group: 2
+  :strips_attached: 4
+  :pixels_per_strip: 160
+-
+  :number: 2
+  :group: 2
+  :strips_attached: 3
+  :pixels_per_strip: 50
