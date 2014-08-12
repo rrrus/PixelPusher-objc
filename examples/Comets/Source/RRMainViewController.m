@@ -8,6 +8,7 @@
 
 #import "HLDeferred.h"
 #import "PPConfigVC.h"
+#import "PPConfigVC2.h"
 #import "PPDeviceRegistry.h"
 #import "PPPixel.h"
 #import "PPStrip.h"
@@ -24,6 +25,7 @@
 @property (nonatomic, assign) uint32_t numStrips;
 
 @property (nonatomic, strong) PPConfigVC *pusherConfigVC;
+@property (nonatomic, strong) PPConfigVC2 *pusherConfigVC2;
 @end
 
 @implementation RRMainViewController
@@ -33,12 +35,23 @@
     [super viewDidLoad];
 	
 	self.pusherConfigVC = [PPConfigVC loadFromNib];
+	self.pusherConfigVC2 = [PPConfigVC2 loadFromNib];
 	
 	[self.view addSubview:self.pusherConfigVC.view];
+	[self.view addSubview:self.pusherConfigVC2.view];
 	CGRect rc = self.pusherConfigVC.view.frame;
-	rc.origin.x = 100;
+	rc.origin.x = 50;
 	rc.origin.y = 100;
+	rc.size.width = 400;
+	rc.size.height = 400;
 	self.pusherConfigVC.view.frame = rc;
+	
+	rc = self.pusherConfigVC2.view.frame;
+	rc.origin.x = 600;
+	rc.origin.y = 100;
+	rc.size.width = 400;
+	rc.size.height = 400;
+	self.pusherConfigVC2.view.frame = rc;
 
 	PPDeviceRegistry.sharedRegistry.frameDelegate = self;
 	[PPDeviceRegistry.sharedRegistry startPushing];

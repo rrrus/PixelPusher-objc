@@ -99,15 +99,17 @@ def makePusher(options)
 	# IP addr
 	data += pusher[:ipaddr].pack("CCCC")
 	# device type, protocol_version, vendor_id, product_id
-	data += [PIXELPUSHER, 2, 12, 2].pack("CCvv")
+	data += [PIXELPUSHER, 1, 99, 98].pack("CCvv")
 	# hw_revision, sw_revision, link_speed
-	data += [4, 121, 100000000].pack("vvV")
+	data += [2, 121, 100000000].pack("vvV")
 
 	### PixelPusher packet header
 	# strips attached, max_strips_per_packet, pixels_per_strip, update_period, power_total, delta_sequence
-	data += [pusher[:strips_attached], 2, pusher[:pixels_per_strip], 3000000, 12000, 0].pack("CCvVVV")
+	data += [pusher[:strips_attached], 2, pusher[:pixels_per_strip], 2945, 58564, 0].pack("CCvVVV")
 	# controller_ordinal, group_ordinal, artnet_universe, artnet_channel
 	data += [pusher[:number], pusher[:group], 0, 0].pack("VVvv")
+	# my_port support in sw vers >= 100
+	# pusher/strip flags support in sw vers > 108
 	# my_port, strip_flags (8 strip flags plus 2 padding bytes)
 	data += [pusher[:port], 0,0,0,0,0,0,0,0,0,0].pack("vC10")
 	# pusher_flags, segments, power_domain

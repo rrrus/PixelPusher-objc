@@ -10,6 +10,21 @@
   :strips_attached: 5
   :pixels_per_strip: 220
 -
+  :number: 2
+  :group: 1
+  :strips_attached: 5
+  :pixels_per_strip: 220
+-
+  :number: 4
+  :group: 1
+  :strips_attached: 5
+  :pixels_per_strip: 220
+-
+  :number: 5
+  :group: 1
+  :strips_attached: 5
+  :pixels_per_strip: 220
+-
   :number: 0
   :group: 2
   :strips_attached: 8
