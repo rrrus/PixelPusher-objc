@@ -12,8 +12,15 @@
 #import "PPPixelPusher.h"
 #import "RRBorderedButton.h"
 #import "RRSimpleCollectionView.h"
+#import "UIImage+RRR.h"
 
 UIColor *gBorderColor;
+
+typedef enum {
+	eStateGlobal,
+	eStateAll,
+	eStateGroups
+} ConfigTopState;
 
 @interface PPConfigGroupCell : RRSimpleCollectionViewCell
 @property (nonatomic, strong) UILabel *label;
@@ -22,17 +29,23 @@ UIColor *gBorderColor;
 @interface PPConfigPusherCell : PPConfigGroupCell
 @end
 
+@interface PPConfigAllPusherCell : PPConfigGroupCell
+@property (nonatomic, strong) UILabel *subLabel;
+@end
+
 @interface PPConfigVC2 ()
 
 @property (nonatomic, strong) IBOutlet UIButton *globalBtn;
 @property (nonatomic, strong) IBOutlet UIButton *allBtn;
 @property (nonatomic, strong) IBOutlet UIButton *groupsBtn;
+@property (nonatomic, strong) IBOutletCollection(UIButton) NSArray *topLevelBtns;
 
 @property (nonatomic, strong) IBOutlet UIView *groupsMenu;
 @property (nonatomic, strong) IBOutlet RRSimpleCollectionView *groupsCollectionView;
 @property (nonatomic, strong) IBOutlet RRSimpleCollectionView *pushersCollectionView;
 
 @property (nonatomic, strong) NSTimer *debounceTimer;
+@property (nonatomic, assign) ConfigTopState topState;
 
 @end
 
@@ -53,20 +66,28 @@ UIColor *gBorderColor;
 	gBorderColor = [UIColor colorWithWhite:0 alpha:0.15f];
 	
 	self.groupsCollectionView.scrollDirection = UICollectionViewScrollDirectionHorizontal;
-	[self.groupsCollectionView registerCellViewClass:PPConfigGroupCell.class];
+	[self.groupsCollectionView registerCellViewClass:PPConfigGroupCell.class forIdentifier:@"groupCell"];
 	self.groupsCollectionView.minimumLineSpacing = 0;
 	self.groupsCollectionView.minimumInteritemSpacing = 0;
 	self.groupsCollectionView.itemSize = CGSizeMake(88, 44);
 	self.pushersCollectionView.scrollDirection = UICollectionViewScrollDirectionHorizontal;
-	[self.pushersCollectionView registerCellViewClass:PPConfigPusherCell.class];
+	[self.pushersCollectionView registerCellViewClass:PPConfigPusherCell.class forIdentifier:@"pusherInGroup"];
+	[self.pushersCollectionView registerCellViewClass:PPConfigAllPusherCell.class forIdentifier:@"allPusher"];
 	self.pushersCollectionView.minimumLineSpacing = 0;
 	self.pushersCollectionView.minimumInteritemSpacing = 0;
 	self.pushersCollectionView.itemSize = CGSizeMake(88, 44);
+	self.pushersCollectionView.showsScrollIndicator = NO;
 	
-	[@[self.globalBtn, self.allBtn] forEach:^(id obj, NSUInteger idx, BOOL *stop) {
-		RRBorderedButton *btn = DYNAMIC_CAST(RRBorderedButton, obj);
-		btn.borderColor = gBorderColor;
+	UIImage *blueImg = [UIImage imageWithColor:UIColor.blueColor size:CGSizeMake(1, 1)];
+	[self.topLevelBtns forEach:^(UIButton *btn, NSUInteger idx, BOOL *stop) {
+		[btn setBackgroundImage:blueImg forState:UIControlStateSelected];
+		btn.contentMode = UIViewContentModeScaleToFill;
+		RRBorderedButton *borderBtn = DYNAMIC_CAST(RRBorderedButton, btn);
+		borderBtn.borderColor = gBorderColor;
 	}];
+	
+	self.topState = eStateGroups;
+	self.groupsBtn.selected = YES;
 	
 	NSNotificationCenter *notifCenter = NSNotificationCenter.defaultCenter;
 	[notifCenter addObserver:self selector:@selector(onDeviceListChange:) name:PPDeviceRegistryAddedPusher object:nil];
@@ -85,14 +106,53 @@ UIColor *gBorderColor;
 - (void)onDeviceListChangeDebounced:(NSTimer*)aTimer {
 	self.debounceTimer = nil;
 	
-	NSArray *groups = PPDeviceRegistry.sharedRegistry.groups;
-	self.groupsCollectionView.data = groups;
-	if (groups.count > 0) {
-		PPPusherGroup *group = DYNAMIC_CAST(PPPusherGroup, groups[0]);
-		self.pushersCollectionView.data = group.pushers;
+	if (self.topState == eStateGroups) {
+		self.pushersCollectionView.cellIdentifier = @"pusherInGroup";
+		NSArray *groups = PPDeviceRegistry.sharedRegistry.groups;
+		self.groupsCollectionView.data = groups;
+		if (groups.count > 0) {
+			PPPusherGroup *group = DYNAMIC_CAST(PPPusherGroup, groups[0]);
+			self.pushersCollectionView.data = group.pushers;
+		} else {
+			self.pushersCollectionView.data = nil;
+		}
 	} else {
-		self.pushersCollectionView.data = nil;
+		self.pushersCollectionView.cellIdentifier = @"allPusher";
+		self.pushersCollectionView.data = PPDeviceRegistry.sharedRegistry.pushers;
 	}
+}
+
+- (void)selectTopLevelButton:(UIButton*)toSelect {
+	[self.topLevelBtns forEach:^(UIButton *btn, NSUInteger idx, BOOL *stop) {
+		btn.selected = (btn == toSelect);
+	}];
+	
+	ConfigTopState newState = self.topState;
+	if (toSelect == self.globalBtn) {
+		newState = eStateGlobal;
+	} else if (toSelect == self.allBtn) {
+		newState = eStateAll;
+	} else if (toSelect == self.groupsBtn) {
+		newState = eStateGroups;
+	}
+	
+	if (self.topState != newState) {
+		self.topState = newState;
+		self.groupsCollectionView.hidden = (self.topState != eStateGroups);
+		[self onDeviceListChangeDebounced:nil];
+	}
+}
+
+- (IBAction)onGlobalBtn:(id)sender {
+	[self selectTopLevelButton:sender];
+}
+
+- (IBAction)onAllBtn:(id)sender {
+	[self selectTopLevelButton:sender];
+}
+
+- (IBAction)onGroupsBtn:(id)sender {
+	[self selectTopLevelButton:sender];
 }
 
 @end
@@ -123,7 +183,7 @@ UIColor *gBorderColor;
 	return self;
 }
 
-- (void)setObject:(NSObject *)object {
+- (void)setObject:(NSObject *)object atIndexPath:(NSIndexPath *)idx {
 	PPPusherGroup *group = DYNAMIC_CAST(PPPusherGroup, object);
 	if (group) {
 		self.label.text = [NSString stringWithFormat:@"%d", group.ordinal];
@@ -136,7 +196,7 @@ UIColor *gBorderColor;
 
 @implementation PPConfigPusherCell
 
-- (void)setObject:(NSObject *)object {
+- (void)setObject:(NSObject *)object atIndexPath:(NSIndexPath *)idx {
 	PPPixelPusher *pusher = DYNAMIC_CAST(PPPixelPusher, object);
 	if (pusher) {
 		self.label.text = [NSString stringWithFormat:@"%d", pusher.controllerOrdinal];
@@ -147,8 +207,39 @@ UIColor *gBorderColor;
 
 @end
 
+@implementation PPConfigAllPusherCell
 
+- (instancetype)initWithFrame:(CGRect)frame {
+	self = [super initWithFrame:frame];
+	if (self) {
+		CGRect rc = self.contentView.bounds;
+		rc.size.height -= 13;
+		self.label.frame = rc;
+		rc.origin.y = rc.size.height;
+		rc.size.height = 13;
+		
+		self.subLabel = [UILabel.alloc initWithFrame:rc];
+		self.subLabel.font = [UIFont boldSystemFontOfSize:12];
+		self.subLabel.textColor = UIColor.whiteColor;
+		self.subLabel.textAlignment = NSTextAlignmentCenter;
+		self.subLabel.translatesAutoresizingMaskIntoConstraints = YES;
+		self.subLabel.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleTopMargin;
+		[self.contentView addSubview:self.subLabel];
+		
+	}
+	return self;
+}
 
+- (void)setObject:(NSObject *)object atIndexPath:(NSIndexPath *)idx {
+	PPPixelPusher *pusher = DYNAMIC_CAST(PPPixelPusher, object);
+	if (pusher) {
+		self.subLabel.text = [NSString stringWithFormat:@"%d:%d", pusher.groupOrdinal, pusher.controllerOrdinal];
+	} else {
+		self.subLabel.text = @"";
+	}
+	self.label.text = [NSString stringWithFormat:@"%d", idx.item+1];
+}
 
+@end
 
 

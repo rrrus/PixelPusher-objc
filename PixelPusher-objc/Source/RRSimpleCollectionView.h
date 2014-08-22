@@ -10,20 +10,23 @@
 
 @interface RRSimpleCollectionViewCell : UICollectionViewCell
 
-- (void)setObject:(NSObject*)object;
+- (void)setObject:(NSObject*)object atIndexPath:(NSIndexPath*)idx;
 
 @end
 
 @interface RRSimpleCollectionView : UIView
 
 @property (nonatomic) UICollectionViewScrollDirection scrollDirection; // default is UICollectionViewScrollDirectionVertical
+@property (nonatomic) BOOL showsScrollIndicator;
 @property (nonatomic) CGFloat minimumLineSpacing;
 @property (nonatomic) CGFloat minimumInteritemSpacing;
 @property (nonatomic) CGSize itemSize;
 
 @property (nonatomic, strong) NSArray *data;
+@property (nonatomic, copy) NSString *cellIdentifier;
 
 // class must be a subclass of RRSimpleCollectionViewCell
-- (void)registerCellViewClass:(Class)aClass;
+- (void)registerCellViewClass:(Class)aClass forIdentifier:(NSString*)identifier;
+
 
 @end

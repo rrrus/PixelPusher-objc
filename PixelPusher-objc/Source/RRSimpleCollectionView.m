@@ -49,9 +49,10 @@
 	return self;
 }
 
-- (void)registerCellViewClass:(Class)aClass {
+- (void)registerCellViewClass:(Class)aClass forIdentifier:(NSString *)identifier {
 	NSAssert([aClass isSubclassOfClass:RRSimpleCollectionViewCell.class], @"RRSimpleCollectionView.registerCellViewClass must be a subclass of RRSimpleCollectionViewCell");
-	[self.collectionView registerClass:aClass forCellWithReuseIdentifier:@"simpleCell"];
+	[self.collectionView registerClass:aClass forCellWithReuseIdentifier:identifier];
+	if (!self.cellIdentifier) self.cellIdentifier = identifier;
 }
 
 - (void)setData:(NSArray *)data {
@@ -71,10 +72,10 @@
 }
 
 - (UICollectionViewCell *)collectionView:(UICollectionView *)collectionView cellForItemAtIndexPath:(NSIndexPath *)indexPath {
-	UICollectionViewCell *acell = [self.collectionView dequeueReusableCellWithReuseIdentifier:@"simpleCell" forIndexPath:indexPath];
+	UICollectionViewCell *acell = [self.collectionView dequeueReusableCellWithReuseIdentifier:self.cellIdentifier forIndexPath:indexPath];
 	RRSimpleCollectionViewCell *cell = DYNAMIC_CAST(RRSimpleCollectionViewCell, acell);
 	if (cell && indexPath.item < self.data.count) {
-		[cell setObject:self.data[indexPath.item]];
+		[cell setObject:self.data[indexPath.item] atIndexPath:indexPath];
 	}
 	return cell;
 }
@@ -83,6 +84,15 @@
 
 - (void)setScrollDirection:(UICollectionViewScrollDirection)scrollDirection {
 	self.layout.scrollDirection = scrollDirection;
+}
+
+- (void)setShowsScrollIndicator:(BOOL)showsScrollIndicator {
+	self.collectionView.showsHorizontalScrollIndicator = showsScrollIndicator;
+	self.collectionView.showsVerticalScrollIndicator = showsScrollIndicator;
+}
+
+- (BOOL)showsScrollIndicator {
+	return self.collectionView.showsHorizontalScrollIndicator;
 }
 
 - (UICollectionViewScrollDirection)scrollDirection {
@@ -116,5 +126,5 @@
 @end
 
 @implementation RRSimpleCollectionViewCell
-- (void)setObject:(NSObject *)object {}
+- (void)setObject:(NSObject*)object atIndexPath:(NSIndexPath*)idx {}
 @end
