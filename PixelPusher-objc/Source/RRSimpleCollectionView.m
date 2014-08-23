@@ -65,6 +65,21 @@
 	}
 }
 
+- (NSIndexPath *)selectedItem {
+	NSArray *selectedItems = self.collectionView.indexPathsForSelectedItems;
+	if (selectedItems && selectedItems.count > 0) {
+		return selectedItems[0];
+	} else {
+		return nil;
+	}
+}
+
+- (void)setSelectedItem:(NSIndexPath *)selectedItem {
+	[self.collectionView selectItemAtIndexPath:selectedItem
+									  animated:YES
+								scrollPosition:UICollectionViewScrollPositionCenteredVertically|UICollectionViewScrollPositionCenteredHorizontally];
+}
+
 #pragma mark - UICollectionView delegates
 
 - (NSInteger)collectionView:(UICollectionView *)collectionView numberOfItemsInSection:(NSInteger)section {
@@ -78,6 +93,16 @@
 		[cell setObject:self.data[indexPath.item] atIndexPath:indexPath];
 	}
 	return cell;
+}
+
+- (void)collectionView:(UICollectionView *)collectionView didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
+	id<RRSimpleCollectionViewDelegate> strongDelegate = self.delegate;
+	[strongDelegate collectionView:self didSelectItemAtIndexPath:indexPath];
+}
+
+- (void)collectionView:(UICollectionView *)collectionView didDeselectItemAtIndexPath:(NSIndexPath *)indexPath {
+	id<RRSimpleCollectionViewDelegate> strongDelegate = self.delegate;
+	[strongDelegate collectionView:self didDeselectItemAtIndexPath:indexPath];
 }
 
 #pragma mark - layout passthrough properties

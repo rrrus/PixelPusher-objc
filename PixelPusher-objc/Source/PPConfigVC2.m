@@ -15,6 +15,7 @@
 #import "UIImage+RRR.h"
 
 UIColor *gBorderColor;
+UIColor *gSelectedBackgroundColor;
 
 typedef enum {
 	eStateGlobal,
@@ -33,7 +34,7 @@ typedef enum {
 @property (nonatomic, strong) UILabel *subLabel;
 @end
 
-@interface PPConfigVC2 ()
+@interface PPConfigVC2 () <RRSimpleCollectionViewDelegate>
 
 @property (nonatomic, strong) IBOutlet UIButton *globalBtn;
 @property (nonatomic, strong) IBOutlet UIButton *allBtn;
@@ -46,6 +47,16 @@ typedef enum {
 
 @property (nonatomic, strong) NSTimer *debounceTimer;
 @property (nonatomic, assign) ConfigTopState topState;
+
+@property (strong, nonatomic) IBOutlet UILabel *pusherMac;
+@property (strong, nonatomic) IBOutlet UILabel *pusherIP;
+@property (strong, nonatomic) IBOutlet UILabel *pusherSwVers;
+@property (strong, nonatomic) IBOutlet UILabel *pusherHwVers;
+@property (strong, nonatomic) IBOutlet UILabel *pusherNumStrips;
+@property (strong, nonatomic) IBOutlet UILabel *pusherNumPixels;
+@property (strong, nonatomic) IBOutlet UILabel *pusherDeviceType;
+@property (strong, nonatomic) IBOutlet UILabel *pusherGroup;
+@property (strong, nonatomic) IBOutlet UILabel *pusherNumber;
 
 @end
 
@@ -64,12 +75,16 @@ typedef enum {
     [super viewDidLoad];
 
 	gBorderColor = [UIColor colorWithWhite:0 alpha:0.15f];
+	gSelectedBackgroundColor = [UIColor colorWithRed:0.1f green:0.1f blue:1.0 alpha:1.0];
 	
+	self.groupsCollectionView.delegate = self;
 	self.groupsCollectionView.scrollDirection = UICollectionViewScrollDirectionHorizontal;
 	[self.groupsCollectionView registerCellViewClass:PPConfigGroupCell.class forIdentifier:@"groupCell"];
 	self.groupsCollectionView.minimumLineSpacing = 0;
 	self.groupsCollectionView.minimumInteritemSpacing = 0;
 	self.groupsCollectionView.itemSize = CGSizeMake(88, 44);
+
+	self.pushersCollectionView.delegate = self;
 	self.pushersCollectionView.scrollDirection = UICollectionViewScrollDirectionHorizontal;
 	[self.pushersCollectionView registerCellViewClass:PPConfigPusherCell.class forIdentifier:@"pusherInGroup"];
 	[self.pushersCollectionView registerCellViewClass:PPConfigAllPusherCell.class forIdentifier:@"allPusher"];
@@ -78,7 +93,7 @@ typedef enum {
 	self.pushersCollectionView.itemSize = CGSizeMake(88, 44);
 	self.pushersCollectionView.showsScrollIndicator = NO;
 	
-	UIImage *blueImg = [UIImage imageWithColor:UIColor.blueColor size:CGSizeMake(1, 1)];
+	UIImage *blueImg = [UIImage imageWithColor:gSelectedBackgroundColor size:CGSizeMake(1, 1)];
 	[self.topLevelBtns forEach:^(UIButton *btn, NSUInteger idx, BOOL *stop) {
 		[btn setBackgroundImage:blueImg forState:UIControlStateSelected];
 		btn.contentMode = UIViewContentModeScaleToFill;
@@ -110,9 +125,10 @@ typedef enum {
 		self.pushersCollectionView.cellIdentifier = @"pusherInGroup";
 		NSArray *groups = PPDeviceRegistry.sharedRegistry.groups;
 		self.groupsCollectionView.data = groups;
-		if (groups.count > 0) {
-			PPPusherGroup *group = DYNAMIC_CAST(PPPusherGroup, groups[0]);
-			self.pushersCollectionView.data = group.pushers;
+		if (!self.groupsCollectionView.selectedItem && groups.count > 0) {
+			NSIndexPath *defaultItem = [NSIndexPath indexPathForItem:0 inSection:0];
+			self.groupsCollectionView.selectedItem = defaultItem;
+			[self collectionView:self.groupsCollectionView didSelectItemAtIndexPath:defaultItem];
 		} else {
 			self.pushersCollectionView.data = nil;
 		}
@@ -155,7 +171,60 @@ typedef enum {
 	[self selectTopLevelButton:sender];
 }
 
+- (void)collectionView:(RRSimpleCollectionView *)collectionView didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
+	if (collectionView == self.groupsCollectionView) {
+		NSArray *groups = PPDeviceRegistry.sharedRegistry.groups;
+		if (indexPath.item < groups.count) {
+			PPPusherGroup *group = DYNAMIC_CAST(PPPusherGroup, groups[indexPath.item]);
+			self.pushersCollectionView.data = group.pushers;
+		} else {
+			self.pushersCollectionView.data = nil;
+		}
+	}
+	if (collectionView == self.pushersCollectionView) {
+		NSArray *pushers = self.pushersCollectionView.data;
+		if (indexPath.item < pushers.count) {
+			PPPixelPusher *pusher = DYNAMIC_CAST(PPPixelPusher, pushers[indexPath.item]);
+			if (pusher) {
+				self.pusherMac.text = pusher.macAddress;
+				self.pusherIP.text = pusher.ipAddress;
+				self.pusherNumStrips.text = @(pusher.strips.count).description;
+				self.pusherNumPixels.text = @(pusher.pixelsPerStrip).description;
+				self.pusherDeviceType.text = @(pusher.deviceType).description;
+				self.pusherSwVers.text = [NSString stringWithFormat:@"v%1.2f", ((float)pusher.softwareRevision/100.f)];
+				self.pusherHwVers.text = [NSString stringWithFormat:@"r%d", pusher.hardwareRevision];
+				self.pusherGroup.text = @(pusher.groupOrdinal).description;
+				self.pusherNumber.text = @(pusher.controllerOrdinal).description;
+			} else {
+				self.pusherMac.text = nil;
+				self.pusherIP.text = nil;
+				self.pusherNumStrips.text = nil;
+				self.pusherNumPixels.text = nil;
+				self.pusherDeviceType.text = nil;
+				self.pusherSwVers.text = nil;
+				self.pusherHwVers.text = nil;
+				self.pusherGroup.text = nil;
+				self.pusherNumber.text = nil;
+			}
+		}
+	}
+}
+
+- (void)collectionView:(RRSimpleCollectionView *)collectionView didDeselectItemAtIndexPath:(NSIndexPath *)indexPath {
+	self.pusherMac.text = nil;
+	self.pusherIP.text = nil;
+	self.pusherNumStrips.text = nil;
+	self.pusherNumPixels.text = nil;
+	self.pusherDeviceType.text = nil;
+	self.pusherSwVers.text = nil;
+	self.pusherHwVers.text = nil;
+	self.pusherGroup.text = nil;
+	self.pusherNumber.text = nil;
+}
+
 @end
+
+#pragma mark - Cell view classes
 
 @implementation PPConfigGroupCell
 
@@ -190,6 +259,12 @@ typedef enum {
 	} else {
 		self.label.text = @"INVALID";
 	}
+}
+
+- (void)setSelected:(BOOL)selected {
+	[super setSelected:selected];
+	
+	self.backgroundColor = (selected ? gSelectedBackgroundColor : UIColor.clearColor);
 }
 
 @end
