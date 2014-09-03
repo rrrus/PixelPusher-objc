@@ -1,3 +1,4 @@
+/////////////////////////////////////////////////
 //
 //  PPStrip.m
 //  PixelPusher-objc
@@ -5,219 +6,466 @@
 //  Created by Rus Maxham on 5/28/13.
 //  Copyright (c) 2013 rrrus. All rights reserved.
 //
+//	Re-structured by Christopher Schardt on 7/19/14
+//  scalePixelComponents stuff added by Christopher Schardt on 8/11/14
+//
+/////////////////////////////////////////////////
 
-#import "PPPixel.h"
 #import "PPPixelPusher.h"
 #import "PPStrip.h"
 
-static CurveFunction gOutputCurveFunction;
-static const uint8_t * gOutputLUT8 = nil;
-static uint16_t* gOutputLUT16 = nil;
 
-const CurveFunction sCurveLinearFunction =  ^float(float input) {
+/////////////////////////////////////////////////
+#pragma mark - CONSTANTS:
+
+#define BRIGHTNESS_SCALE_1	0x8000
+
+
+/////////////////////////////////////////////////
+#pragma mark - FORWARDS:
+
+extern void VerifyOutputCurve(uint32_t length);
+extern void BuildOutputCurve(uint32_t length);
+extern void FreeOutputCurve(void);
+
+
+/////////////////////////////////////////////////
+#pragma mark - STATIC VARIABLES:
+
+const PPOutputCurveBlock sCurveLinearFunction = ^float(float input)
+{
 	return input;
 };
 
-const CurveFunction sCurveAntilogFunction =  ^float(float input) {
+const PPOutputCurveBlock sCurveAntilogFunction = ^float(float input)
+{
 	// input range 0-1, output range 0-1
-	return (powf(2, 8*input)-1)/255;
+	return (powf(2.0f, 8.0f * input) - 1) * (1.0f / 255);
 };
 
-@interface PPStrip ()
-@property (nonatomic, assign) uint32_t pixelCount;
-@property (nonatomic, assign) int32_t stripNumber;
-@property (nonatomic, assign) int32_t flags;
-@end
+static PPOutputCurveBlock	gOutputCurveFunction = NULL;
+static uint32_t				gOutputCurveTableLength = 0;
+static uint32_t				gOutputCurveTableByteMask;
+static uint16_t*			gOutputCurveTable = NULL;
+
 
 @implementation PPStrip
 
-+ (void)setOutputCurveFunction:(CurveFunction)curveFunction {
-	if (gOutputCurveFunction != curveFunction) {
+
+/////////////////////////////////////////////////
+#pragma mark - CLASS METHODS, STATIC FUNCTIONS:
+
++ (void)setOutputCurveFunction:(PPOutputCurveBlock)curveFunction
+{
+	if (!curveFunction)
+	{
+		curveFunction = sCurveLinearFunction;
+	}
+	
+	// This test can't work since gOutputCurveFunction points to a copy.
+//	if (gOutputCurveFunction != curveFunction)
+	{
 		gOutputCurveFunction = [curveFunction copy];
-		// only rebuild if they already exist
-		if (gOutputLUT8) [PPStrip buildOutputCurve:8];
-		if (gOutputLUT16) [PPStrip buildOutputCurve:16];
+		FreeOutputCurve();
 	}
 }
 
-+ (void)buildOutputCurve:(int)depth {
-	if (!gOutputCurveFunction) gOutputCurveFunction = sCurveAntilogFunction;
-
-	if (depth == 16) {
-		if (gOutputLUT8) free((void*)gOutputLUT8);
-		gOutputLUT8 = nil;
-	} else {
-		if (gOutputLUT8) free((void*)gOutputLUT8);
-		gOutputLUT8 = nil;
-	}
-	
-	// special case linear output function
-	if (!gOutputCurveFunction || gOutputCurveFunction == sCurveLinearFunction) {
-		// give the LUTs a non-nil value so we can check to see if they're in use
-		if (depth == 16) {
-			gOutputLUT16 = malloc(1);
-		} else {
-			gOutputLUT8 = malloc(1);
-		}
-		return;
-	}
-	
-	if (depth == 16) {
-		uint16_t *outputLUT16 = malloc(65536);
-		gOutputLUT16 = outputLUT16;
-		for (int i=0; i<65536; i++) {
-			outputLUT16[i] = (uint16_t)( lroundf( 65535.0f * gOutputCurveFunction(i/65535.0f) ) );
-		}
-	} else {
-		uint8_t *outputLUT8 = malloc(256);
-		gOutputLUT8 = outputLUT8;
-		for (int i=0; i<256; i++) {
-			outputLUT8[i] = (uint8_t)( lroundf( 255.0f * gOutputCurveFunction(i/255.0f) ) );
-		}
+inline void VerifyOutputCurve(uint32_t length)
+{
+	if (gOutputCurveTableLength < length)
+	{
+		BuildOutputCurve(length);
 	}
 }
+void BuildOutputCurve(uint32_t length)
+{
+	FreeOutputCurve();
+	
+	if (!gOutputCurveFunction)
+	{
+		gOutputCurveFunction = sCurveAntilogFunction;
+	}
+	gOutputCurveTableLength = length;
+	gOutputCurveTableByteMask = (length == 256) ? 0 : 0xFFFF;
+	gOutputCurveTable = malloc(length * sizeof(uint16_t));
+	
+	float			const indexScalar = 1.0f / (length - 1);
+	uint32_t		index;
+	
+	for (index = 0; index < length; index++)
+	{
+		uint32_t		const value = lroundf(65535.0f * gOutputCurveFunction(index * indexScalar));
+		
+		assert(value < 65536);
+		gOutputCurveTable[index] = (uint16_t)value;
+	}
+}
+void FreeOutputCurve()
+{
+	if (gOutputCurveTable)
+	{
+		free(gOutputCurveTable);
+		gOutputCurveTable = NULL;
+	}
+	gOutputCurveTableLength = 0;
+}
 
-- (id)initWithStripNumber:(int32_t)stripNum pixelCount:(int32_t)pixCount flags:(int32_t)flags{
+
+/////////////////////////////////////////////////
+#pragma mark - EXISTENCE:
+
+- (id)initWithStripNumber:(uint32_t)stripNumber pixelCount:(uint32_t)pixelCount flags:(uint32_t)flags
+{
 	self = [self init];
-	if (self) {
-		self.stripNumber = stripNum;
-		self.flags = flags;
-		self.touched = YES;
-		self.powerScale = 1.0;
-		self.brightness = 1.0;
 
-		if (self.flags & SFLAG_WIDEPIXELS) {
-			pixCount = (pixCount+1)/2;
-			if (!gOutputLUT16) [PPStrip buildOutputCurve:16];
-		} else {
-			if (!gOutputLUT8) [PPStrip buildOutputCurve:8];
+	//??? Why would NSObject ever fail to initialize?
+//	if (self)
+	{
+		_stripNumber = stripNumber;
+		_flags = flags;
+		_touched = YES;
+		_powerScale = 1.0;
+		_brightnessRed = 1.0;
+		_brightnessGreen = 1.0;
+		_brightnessBlue = 1.0;
+		_brightnessScaleRed = BRIGHTNESS_SCALE_1;
+		_brightnessScaleGreen = BRIGHTNESS_SCALE_1;
+		_brightnessScaleBlue = BRIGHTNESS_SCALE_1;
+		
+		if (flags & SFLAG_WIDEPIXELS)
+		{
+			assert(!(pixelCount & 1));
+			_pixelCount = (pixelCount + 1) / 2;
 		}
-
-		self.pixelCount = pixCount;
-		_pixels = [NSMutableArray arrayWithCapacity:pixCount];
-		for (int i = 0; i < self.pixelCount; i++) {
-			[_pixels addObject:[PPPixel pixelWithRed:0 green:0 blue:0]];
+		else
+		{
+			_pixelCount = pixelCount;
 		}
+		_serializedDataBytes = pixelCount * 3;
+		_serializedData = calloc(pixelCount * 3, 1);
 	}
 	return self;
 }
 
-- (NSString *)description {
+- (void)dealloc
+{
+	if (_serializedData)
+	{
+		free(_serializedData);
+	}
+//	un-comment this if we turn off ARC
+//	[super dealloc];
+}
+
+
+/////////////////////////////////////////////////
+#pragma mark - PROPERTIES:
+
+- (NSString *)description
+{
 	return [NSString stringWithFormat:@"%@ (%d%@)", super.description, self.stripNumber, self.touched?@" dirty":@""];
 }
-
-- (BOOL)isWidePixel {
-	return (self.flags & SFLAG_WIDEPIXELS);
+- (BOOL)isWidePixel
+{
+	return (_flags & SFLAG_WIDEPIXELS) ? YES : NO;
 }
 
-- (void)setPixels:(NSArray *)pixels {
-	[self.pixels setArray:pixels];
-	self.touched = YES;
+- (void)setPowerScale:(float)powerScale
+{
+	_powerScale = powerScale;
+	[self calculateBrightnessScales];
+}
+- (void)setBrightness:(float)brightness
+{
+	_brightnessRed = brightness;
+	_brightnessGreen = brightness;
+	_brightnessBlue = brightness;
+	[self calculateBrightnessScales];
+}
+- (float)brightness
+{
+	return (_brightnessRed + _brightnessGreen + _brightnessBlue) / 3;
 }
 
-- (uint32_t)serialize:(uint8_t*)buffer {
-//	BOOL phase = YES;
-//	if (isRGBOW) {
-//		for (Pixel pixel : pixels) {
-//			if (pixel == null)
-//				pixel = new Pixel();
-//
-//			if (phase) {
-//				msg[i++] = (byte) (((double)pixel.red)   * powerScale);    // C
-//				msg[i++] = (byte) (((double)pixel.green) * powerScale);
-//				msg[i++] = (byte) (((double)pixel.blue)  * powerScale);
-//
-//				msg[i++] = (byte) (((double)pixel.orange) * powerScale);   // O
-//				msg[i++] = (byte) (((double)pixel.orange) * powerScale);
-//				msg[i++] = (byte) (((double)pixel.orange) * powerScale);
-//
-//				msg[i++] = (byte) (((double)pixel.white) * powerScale);    // W
-//				msg[i++] = (byte) (((double)pixel.white) * powerScale);
-//				msg[i++] = (byte) (((double)pixel.white) * powerScale);
-//			} else {
-//				msg[i++] = (byte) (((double)pixel.red)   * powerScale);    // C
-//				msg[i++] = (byte) (((double)pixel.green) * powerScale);
-//				msg[i++] = (byte) (((double)pixel.blue)  * powerScale);
-//
-//				msg[i++] = (byte) (((double)pixel.white) * powerScale);    // W
-//				msg[i++] = (byte) (((double)pixel.white) * powerScale);
-//				msg[i++] = (byte) (((double)pixel.white) * powerScale);
-//
-//				msg[i++] = (byte) (((double)pixel.orange) * powerScale);   // O
-//				msg[i++] = (byte) (((double)pixel.orange) * powerScale);
-//				msg[i++] = (byte) (((double)pixel.orange) * powerScale);
-//			}
-//			phase = !phase;
-//		}
-//	} else {
+- (void)setBrightnessRed:(float)brightness
+{
+	_brightnessRed = brightness;
+	[self calculateBrightnessScales];
+}
+- (void)setBrightnessGreen:(float)brightness
+{
+	_brightnessGreen = brightness;
+	[self calculateBrightnessScales];
+}
+- (void)setBrightnessBlue:(float)brightness
+{
+	_brightnessBlue = brightness;
+	[self calculateBrightnessScales];
+}
 
-	// convert brightness plus powerScale to 16-bit binary fraction
-	uint32_t iPostLutScale = (uint32_t)(self.brightness * self.powerScale * 65536);
-	__block uint8_t *P = buffer;
+- (float)averagePixelComponentValue
+{
+	uint8_t*			const dataEnd = _serializedData + _serializedDataBytes;
+	uint8_t*			data;
+	uint32_t			total;
+
+	assert(_serializedDataBytes % 3 == 0);
+	data = _serializedData;
+	total = 0;
 	
-	// TODO: optimization opportunity -- use a for loop and a standard C-array
-	// and possibly a real pixmap for the source
-	
-	if (self.flags & SFLAG_WIDEPIXELS) {
-		if (gOutputCurveFunction != sCurveLinearFunction) {
-			[self.pixels forEach:^(PPPixel *pixel, NSUInteger idx, BOOL *stop) {
-				uint16_t wide;
-				wide = (uint16_t)(gOutputLUT16[(uint16_t) (pixel.red * 65535)] * iPostLutScale / 65536);
-				*P = (wide & 0xf0) >> 8;
-				*(P+3) = (wide & 0x0f);
-				P++;
-				wide = (uint16_t)(gOutputLUT16[(uint16_t) (pixel.green * 65535)] * iPostLutScale / 65536);
-				*P = (wide & 0xf0) >> 8;
-				*(P+3) = (wide & 0x0f);
-				P++;
-				wide = (uint16_t)(gOutputLUT16[(uint16_t) (pixel.blue * 65535)] * iPostLutScale / 65536);
-				*P = (wide & 0xf0) >> 8;
-				*(P+3) = (wide & 0x0f);
-				P += 4; // skip the next 3 bytes we already filled in
-			}];
-		} else {
-			// since we're skipping the multiply of the pixel channel's float to full range short (65535)
-			// we need to adjust iPostLutScale so full scale is 65535, not 65536.
-			// since it is close enough, we'll just subtract 1 if iPostLutScale > 0
-			if (iPostLutScale > 0) iPostLutScale--;
-			[self.pixels forEach:^(PPPixel *pixel, NSUInteger idx, BOOL *stop) {
-				uint16_t wide;
-				wide = (uint16_t) (pixel.red * iPostLutScale);
-				*P = (wide & 0xf0) >> 8;
-				*(P+3) = (wide & 0x0f);
-				P++;
-				wide = (uint16_t) (pixel.green * iPostLutScale);
-				*P = (wide & 0xf0) >> 8;
-				*(P+3) = (wide & 0x0f);
-				P++;
-				wide = (uint16_t) (pixel.blue * iPostLutScale);
-				*P = (wide & 0xf0) >> 8;
-				*(P+3) = (wide & 0x0f);
-				P += 4; // skip the next 3 bytes we already filled in
-			}];
+	if (_flags & SFLAG_WIDEPIXELS)
+	{
+		while (data < dataEnd)
+		{
+			unsigned int		component;
+			
+			component = (unsigned int)data[0] << 8;
+			component |= data[3];
+			total += component;
+			
+			component = (unsigned int)data[1] << 8;
+			component |= data[4];
+			total += component;
+			
+			component = (unsigned int)data[2] << 8;
+			component |= data[5];
+			total += component;
+			
+			data += 6;
 		}
-	} else {
-		if (gOutputCurveFunction != sCurveLinearFunction) {
-			[self.pixels forEach:^(PPPixel *pixel, NSUInteger idx, BOOL *stop) {
-				*(P++) = (uint8_t)(gOutputLUT8[(uint8_t) (pixel.red * 255)] * iPostLutScale / 65536);
-				*(P++) = (uint8_t)(gOutputLUT8[(uint8_t) (pixel.green * 255)] * iPostLutScale / 65536);
-				*(P++) = (uint8_t)(gOutputLUT8[(uint8_t) (pixel.blue * 255)] * iPostLutScale / 65536);
-			}];
-		} else {
-			// since we're skipping the multiply of the pixel channel's float to full range byte (255)
-			// we need to scale iPostLutScale to the range 0-65280 (255*256) so that the final /256
-			// will render values in the range 0-255 instead of 0-256
-			iPostLutScale = iPostLutScale * 255 / 256;
-			[self.pixels forEach:^(PPPixel *pixel, NSUInteger idx, BOOL *stop) {
-				*(P++) = (uint8_t)( (uint32_t) (pixel.red * iPostLutScale) / 256);
-				*(P++) = (uint8_t)( (uint32_t) (pixel.green * iPostLutScale) / 256);
-				*(P++) = (uint8_t)( (uint32_t) (pixel.blue * iPostLutScale) / 256);
-			}];
+		assert(_serializedDataBytes % 6 == 0);
+		return (float)total / ((_serializedDataBytes / 2) * 65535);
+	}
+	else
+	{
+		while (data < dataEnd)
+		{
+			total += data[0];
+			data++;
+		}
+		return (float)total / (_serializedDataBytes * 255);
+	}
+}
+
+
+/////////////////////////////////////////////////
+#pragma mark - OPERATIONS:
+
+- (void)calculateBrightnessScales
+{
+	float			const scale = _powerScale * BRIGHTNESS_SCALE_1;
+	
+	_brightnessScaleRed = lroundf(scale * _brightnessRed);
+	_brightnessScaleRed = MIN(_brightnessScaleRed, (uint32_t)65536);
+	_brightnessScaleGreen = lroundf(scale * _brightnessGreen);
+	_brightnessScaleGreen = MIN(_brightnessScaleGreen, (uint32_t)65536);
+	_brightnessScaleBlue = lroundf(scale * _brightnessBlue);
+	_brightnessScaleBlue = MIN(_brightnessScaleBlue, (uint32_t)65536);
+}
+
+- (void)setPixelAtIndex:(uint32_t)index withByteRed:(uint8_t)red green:(uint8_t)green blue:(uint8_t)blue
+{
+	VerifyOutputCurve(256);
+	
+	uint32_t			r;
+	uint32_t			g;
+	uint32_t			b;
+	uint8_t*			dst;
+	
+	r = red;
+	g = green;
+	b = blue;
+	if (_flags & SFLAG_LOGARITHMIC)
+	{
+		r |= (r << 8);
+		g |= (g << 8);
+		b |= (b << 8);
+	}
+	else
+	{
+		r |= (r << 8) & gOutputCurveTableByteMask;
+		r = gOutputCurveTable[r];
+		g |= (g << 8) & gOutputCurveTableByteMask;
+		g = gOutputCurveTable[g];
+		b |= (b << 8) & gOutputCurveTableByteMask;
+		b = gOutputCurveTable[b];
+	}
+	r = r * _brightnessScaleRed / BRIGHTNESS_SCALE_1;
+	r = MIN(r, (uint32_t)65535);
+	g = g * _brightnessScaleGreen / BRIGHTNESS_SCALE_1;
+	g = MIN(g, (uint32_t)65535);
+	b = b * _brightnessScaleBlue / BRIGHTNESS_SCALE_1;
+	b = MIN(b, (uint32_t)65535);
+
+	dst = _serializedData;
+	if (_flags & SFLAG_WIDEPIXELS)
+	{
+		dst += index * 6;
+		dst[3] = (uint8_t)r;
+		dst[4] = (uint8_t)g;
+		dst[5] = (uint8_t)b;
+	}
+	else
+	{
+		dst += index * 3;
+	}
+	dst[0] = (uint8_t)(r >> 8);
+	dst[1] = (uint8_t)(g >> 8);
+	dst[2] = (uint8_t)(b >> 8);
+
+	_touched = YES;
+}
+- (void)setPixelAtIndex:(uint32_t)index withWordRed:(uint16_t)red green:(uint16_t)green blue:(uint16_t)blue
+{
+	VerifyOutputCurve(65536);
+	
+	uint32_t			r;
+	uint32_t			g;
+	uint32_t			b;
+	uint8_t*			dst;
+	
+	r = red;
+	g = green;
+	b = blue;
+	if (!(_flags & SFLAG_LOGARITHMIC))
+	{
+		r = gOutputCurveTable[r];
+		g = gOutputCurveTable[g];
+		b = gOutputCurveTable[b];
+	}
+	r = r * _brightnessScaleRed / BRIGHTNESS_SCALE_1;
+	r = MIN(r, (uint32_t)65535);
+	g = g * _brightnessScaleGreen / BRIGHTNESS_SCALE_1;
+	g = MIN(g, (uint32_t)65535);
+	b = b * _brightnessScaleBlue / BRIGHTNESS_SCALE_1;
+	b = MIN(b, (uint32_t)65535);
+	
+	dst = _serializedData;
+	if (_flags & SFLAG_WIDEPIXELS)
+	{
+		dst += index * 6;
+		dst[3] = (uint8_t)r;
+		dst[4] = (uint8_t)g;
+		dst[5] = (uint8_t)b;
+	}
+	else
+	{
+		dst += index * 3;
+	}
+	dst[0] = (uint8_t)(r >> 8);
+	dst[1] = (uint8_t)(g >> 8);
+	dst[2] = (uint8_t)(b >> 8);
+
+	_touched = YES;
+}
+- (void)setPixelAtIndex:(uint32_t)index withFloatRed:(float)red green:(float)green blue:(float)blue
+{
+	VerifyOutputCurve(65536);
+	
+	uint32_t			r;
+	uint32_t			g;
+	uint32_t			b;
+	uint8_t*			dst;
+	
+	r = lroundf(red * 65535);
+	r = MIN(r, (uint32_t)65535);
+	g = lroundf(green * 65535);
+	g = MIN(r, (uint32_t)65535);
+	b = lroundf(blue * 65535);
+	b = MIN(b, (uint32_t)65535);
+	if (!(_flags & SFLAG_LOGARITHMIC))
+	{
+		r = gOutputCurveTable[r];
+		g = gOutputCurveTable[g];
+		b = gOutputCurveTable[b];
+	}
+	r = r * _brightnessScaleRed / BRIGHTNESS_SCALE_1;
+	r = MIN(r, (uint32_t)65535);
+	g = g * _brightnessScaleGreen / BRIGHTNESS_SCALE_1;
+	g = MIN(g, (uint32_t)65535);
+	b = b * _brightnessScaleBlue / BRIGHTNESS_SCALE_1;
+	b = MIN(b, (uint32_t)65535);
+
+	dst = _serializedData;
+	if (_flags & SFLAG_WIDEPIXELS)
+	{
+		dst += index * 6;
+		dst[3] = (uint8_t)r;
+		dst[4] = (uint8_t)g;
+		dst[5] = (uint8_t)b;
+	}
+	else
+	{
+		dst += index * 3;
+	}
+	dst[0] = (uint8_t)(r >> 8);
+	dst[1] = (uint8_t)(g >> 8);
+	dst[2] = (uint8_t)(b >> 8);
+
+	_touched = YES;
+}
+
+- (void)scalePixelComponentValues:(float)scale;		// 1.0f for no scaling
+{
+	if (scale != 1.0f)
+	{
+		uint32_t			const iScale = (uint32_t)(scale * 65536);
+		uint8_t*			const dataEnd = _serializedData + _serializedDataBytes;
+		uint8_t*			data;
+
+		data = _serializedData;
+		
+		if (_flags & SFLAG_WIDEPIXELS)
+		{
+			while (data < dataEnd)
+			{
+				uint32_t		component;
+				
+				component = (uint16_t)data[0] << 8;
+				component |= data[3];
+				component *= iScale;
+				data[0] = (uint8_t)(component >> 24);
+				data[3] = (uint8_t)(component >> 16);
+				
+				component = (uint16_t)data[1] << 8;
+				component |= data[4];
+				component *= iScale;
+				data[1] = (uint8_t)(component >> 24);
+				data[4] = (uint8_t)(component >> 16);
+				
+				component = (uint16_t)data[2] << 8;
+				component |= data[5];
+				component *= iScale;
+				data[2] = (uint8_t)(component >> 24);
+				data[5] = (uint8_t)(component >> 16);
+				
+				data += 6;
+			}
+		}
+		else
+		{
+			while (data < dataEnd)
+			{
+				uint32_t		component;
+				
+				component = data[0];
+				component *= iScale;
+				data[0] = (uint8_t)(component >> 16);
+				data++;
+			}
 		}
 	}
-	
-    self.touched = NO;
-	return (uint32_t)self.pixels.count*3;
+}
+
+
+/////////////////////////////////////////////////
+#pragma mark - OPERATIONS CALLED ONLY BY PP LIBRARY:
+
+- (uint32_t)serialize:(uint8_t*)buffer
+{
+    _touched = NO;
+	memcpy(buffer, _serializedData, _serializedDataBytes);
+	return _serializedDataBytes;
 }
 
 

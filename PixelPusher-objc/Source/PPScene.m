@@ -5,6 +5,9 @@
 //  Created by Rus Maxham on 5/31/13.
 //  Copyright (c) 2013 rrrus. All rights reserved.
 //
+//  globalBrightnessRGB added by Christopher Schardt on 7/19/14
+//  scalePixelComponents stuff added by Christopher Schardt on 8/11/14
+//
 
 #import "HLDeferredList.h"
 #import "PPCard.h"
@@ -50,6 +53,11 @@ static uint32_t sFrameCount = 0;
 		self.drain = NO;
 		self.isRunning = NO;
 		self.globalBrightness = 1.0;
+		self.globalBrightnessRed = 1.0;
+		self.globalBrightnessGreen = 1.0;
+		self.globalBrightnessBlue = 1.0;
+		self.globalBrightnessBlue = 1.0;
+//		self.globalBrightnessLimit = 1.0;	// maybe someday
 		self.lastFrameFlush = [HLDeferred deferredWithResult:nil];
 
 		[NSNotificationCenter.defaultCenter addObserver:self
@@ -89,15 +97,6 @@ static uint32_t sFrameCount = 0;
 			//System.err.println("Setting card "+pusher.getControllerOrdinal()+" group "+pusher.getGroupOrdinal()+" to "+
 			//      (autothrottle?"throttle":"not throttle"));
 			pusher.autoThrottle = autothrottle;
-		}];
-	}
-}
-
-- (void)setGlobalBrightness:(float)globalBrightness {
-	if (_globalBrightness != globalBrightness) {
-		_globalBrightness = globalBrightness;
-		[self.pusherMap forEach:^(id key, PPPixelPusher *pusher, BOOL *stop) {
-			pusher.brightness = globalBrightness;
 		}];
 	}
 }
@@ -219,7 +218,9 @@ static uint32_t sFrameCount = 0;
 			newCard.extraDelay = self.extraDelay;
 			newCard.record = self.record;
 			pusher.autoThrottle = self.autoThrottle;
-			pusher.brightness = self.globalBrightness;
+			pusher.brightnessRed = self.globalBrightnessRed;
+			pusher.brightnessGreen = self.globalBrightnessGreen;
+			pusher.brightnessBlue = self.globalBrightnessBlue;
 		}
 		self.pusherMap[pusher.macAddress] = pusher;
 		self.cardMap[pusher.macAddress] = newCard;
@@ -245,5 +246,96 @@ static uint32_t sFrameCount = 0;
 		}
 	}
 }
+
+
+/////////////////////////////////////////////////
+#pragma mark - BRIGHTNESS PROPERTIES, OPERATIONS
+
+- (void)setGlobalBrightness:(float)globalBrightness
+{
+	self.globalBrightnessRed = globalBrightness;
+	self.globalBrightnessGreen = globalBrightness;
+	self.globalBrightnessBlue = globalBrightness;
+}
+- (float)globalBrightness
+{
+	return (_globalBrightnessRed + _globalBrightnessGreen + _globalBrightnessBlue) / 3;
+}
+- (void)setGlobalBrightnessRed:(float)globalBrightness {
+	if (_globalBrightnessRed != globalBrightness) {
+		_globalBrightnessRed = globalBrightness;
+		[self.pusherMap forEach:^(id key, PPPixelPusher *pusher, BOOL *stop) {
+			pusher.brightnessRed = globalBrightness;
+		}];
+	}
+}
+- (void)setGlobalBrightnessGreen:(float)globalBrightness {
+	if (_globalBrightnessGreen != globalBrightness) {
+		_globalBrightnessGreen = globalBrightness;
+		[self.pusherMap forEach:^(id key, PPPixelPusher *pusher, BOOL *stop) {
+			pusher.brightnessGreen = globalBrightness;
+		}];
+	}
+}
+- (void)setGlobalBrightnessBlue:(float)globalBrightness {
+	if (_globalBrightnessBlue != globalBrightness) {
+		_globalBrightnessBlue = globalBrightness;
+		[self.pusherMap forEach:^(id key, PPPixelPusher *pusher, BOOL *stop) {
+			pusher.brightnessBlue = globalBrightness;
+		}];
+	}
+}
+
+- (BOOL)scalePixelComponentsForAverageBrightnessLimit:(float)brightnessLimit	// >=1.0 for no scaling
+										forEachPusher:(BOOL)forEachPusher		// compute average for each pusher
+{
+	if (brightnessLimit < 1.0f)
+	{
+		NSDictionary*		const pushers = self.pusherMap;
+		__block float		average;
+		
+		average = 0;
+		if (forEachPusher)
+		{
+			[pushers forEach:^(id key, PPPixelPusher *pusher, BOOL *stop)
+				{
+					float		const a = pusher.averagePixelComponentValue;
+					
+					if (a > average)
+					{
+						average = a;
+					}
+				}
+			];
+		}
+		else
+		{
+			[pushers forEach:^(id key, PPPixelPusher *pusher, BOOL *stop)
+				{
+					average += pusher.averagePixelComponentValue;
+				}
+			];
+			average /= pushers.count;
+		}
+		assert(average <= 1.0f);
+		
+		if (average > 0)
+		{
+			float				const scale = brightnessLimit / average;
+			
+			if (scale < 1.0f)
+			{
+				[pushers forEach:^(id key, PPPixelPusher *pusher, BOOL *stop)
+					{
+						[pusher scalePixelComponentValues:scale];
+					}
+				];
+				return YES;
+			}
+		}
+	}
+	return NO;
+}
+
 
 @end

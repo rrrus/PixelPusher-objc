@@ -175,7 +175,7 @@ INIT_LOG_LEVEL_INFO
 	float powerScale = PPDeviceRegistry.sharedRegistry.powerScale;
 
 	const NSUInteger nStrips = self.pusher.strips.count;
-	int32_t stripIdx = 0;
+	NSUInteger stripIdx = 0;
 	const int32_t requestedStripsPerPacket = self.pusher.maxStripsPerPacket;
 	const int32_t stripPerPacket = MIN(requestedStripsPerPacket, (int32_t)nStrips);
 

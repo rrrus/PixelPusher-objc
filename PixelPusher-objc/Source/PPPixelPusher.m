@@ -5,6 +5,9 @@
 //  Created by Rus Maxham on 5/27/13.
 //  Copyright (c) 2013 rrrus. All rights reserved.
 //
+//  globalBrightnessRGB added by Christopher Schardt on 7/19/14
+//  scalePixelComponents stuff added by Christopher Schardt on 8/11/14
+//
 
 #import "NSData+Utils.h"
 #import "PPDeviceHeader.h"
@@ -42,7 +45,9 @@ static const int32_t ACCEPTABLE_LOWEST_SW_REV = 121;
 - (id)initWithHeader:(PPDeviceHeader*)header {
 	self = [super initWithHeader:header];
 	if (self) {
-		self.brightness = 1.0;
+		self.brightnessRed = 1.0;
+		self.brightnessGreen = 1.0;
+		self.brightnessBlue = 1.0;
 		
 		NSData *packet = header.packetRemainder;
 		if (self.softwareRevision < ACCEPTABLE_LOWEST_SW_REV) {
@@ -82,7 +87,7 @@ static const int32_t ACCEPTABLE_LOWEST_SW_REV = 121;
 		
 		NSMutableArray *theStripFlags = NSMutableArray.new;
 		self.stripFlags = theStripFlags;
-		if (packet.length >= (30+stripFlagSize) && self.softwareRevision > 108) {
+		if ((int)packet.length >= (30+stripFlagSize) && self.softwareRevision > 108) {
 			for (int i=0; i<stripFlagSize; i++) {
 				uint8_t flag = [packet ubyteAtOffset:30+i];
 				[theStripFlags addObject:@(flag)];
@@ -99,7 +104,7 @@ static const int32_t ACCEPTABLE_LOWEST_SW_REV = 121;
 		// fixed struct and insert this padding to comply with this spec, so we can safely
 		// add this 2-byte padding regardless of strip count.
 		int postStripFlagOffset = 30 + stripFlagSize + 2;
-		if (packet.length >= (postStripFlagOffset+(4*3)) && self.softwareRevision > 116) {
+		if ((int)packet.length >= (postStripFlagOffset+(4*3)) && self.softwareRevision > 116) {
 			self.pusherFlags = [packet uintAtOffset:postStripFlagOffset];
 			self.segments = [packet uintAtOffset:postStripFlagOffset+4];
 			self.powerDomain = [packet uintAtOffset:postStripFlagOffset+8];
@@ -114,24 +119,15 @@ static const int32_t ACCEPTABLE_LOWEST_SW_REV = 121;
 			self.powerTotal, self.pusherFlags, self.softwareRevision/100.0f, self.hardwareRevision];
 }
 
-- (void)setBrightness:(float)brightness {
-	if (_brightness != brightness) {
-		_brightness = brightness;
-		if (_strips) {
-			[_strips forEach:^(PPStrip* strip, NSUInteger idx, BOOL *stop) {
-				strip.brightness = brightness;
-			}];
-		}
-	}
-}
-
 - (void)allocateStrips {
 	if (!_strips) {
 		NSMutableArray *array = NSMutableArray.new;
 		for (int i=0; i<self.stripsAttached; i++) {
 			int32_t stripFlags = [self.stripFlags[i] intValue];
 			PPStrip *strip = [PPStrip.alloc initWithStripNumber:i pixelCount:self.pixelsPerStrip flags:stripFlags];
-			strip.brightness = self.brightness;
+			strip.brightnessRed = _brightnessRed;
+			strip.brightnessGreen = _brightnessGreen;
+			strip.brightnessBlue = _brightnessBlue;
 			[array addObject:strip];
 		}
 		_strips = array;
@@ -236,5 +232,89 @@ static const int32_t ACCEPTABLE_LOWEST_SW_REV = 121;
 		self.extraDelay = MAX(0, self.extraDelay);
 	}
 }
+
+
+/////////////////////////////////////////////////
+#pragma mark - BRIGHTNESS PROPERTIES, OPERATIONS
+
+- (float)brightness
+{
+	return (_brightnessRed + _brightnessGreen + _brightnessBlue) / 3;
+}
+- (void)setBrightness:(float)brightness
+{
+	if ((_brightnessRed != brightness) ||
+		(_brightnessGreen != brightness) ||
+		(_brightnessBlue != brightness))
+	{
+		_brightnessRed = brightness;
+		_brightnessGreen = brightness;
+		_brightnessBlue = brightness;
+		if (_strips)
+		{
+			[_strips forEach:^(PPStrip* strip, NSUInteger idx, BOOL *stop)
+				{
+					strip.brightnessRed = brightness;
+					strip.brightnessGreen = brightness;
+					strip.brightnessBlue = brightness;
+				}
+			];
+		}
+	}
+}
+- (void)setBrightnessRed:(float)brightness {
+	if (_brightnessRed != brightness) {
+		_brightnessRed = brightness;
+		if (_strips) {
+			[_strips forEach:^(PPStrip* strip, NSUInteger idx, BOOL *stop) {
+				strip.brightnessRed = brightness;
+			}];
+		}
+	}
+}
+- (void)setBrightnessGreen:(float)brightness {
+	if (_brightnessGreen != brightness) {
+		_brightnessGreen = brightness;
+		if (_strips) {
+			[_strips forEach:^(PPStrip* strip, NSUInteger idx, BOOL *stop) {
+				strip.brightnessGreen = brightness;
+			}];
+		}
+	}
+}
+- (void)setBrightnessBlue:(float)brightness {
+	if (_brightnessBlue != brightness) {
+		_brightnessBlue = brightness;
+		if (_strips) {
+			[_strips forEach:^(PPStrip* strip, NSUInteger idx, BOOL *stop) {
+				strip.brightnessBlue = brightness;
+			}];
+		}
+	}
+}
+
+- (float)averagePixelComponentValue
+{
+	float			total;
+	PPStrip*		strip;
+	
+	total = 0;
+	for (strip in _strips)
+	{
+		total += strip.averagePixelComponentValue;
+	}
+	return total / _strips.count;
+}
+
+- (void)scalePixelComponentValues:(float)scale;		// 1.0f for no scaling
+{
+	PPStrip*		strip;
+	
+	for (strip in _strips)
+	{
+		[strip scalePixelComponentValues:scale];
+	}
+}
+
 
 @end
