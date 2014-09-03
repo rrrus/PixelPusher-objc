@@ -5,6 +5,9 @@
 //  Created by Rus Maxham on 5/27/13.
 //  Copyright (c) 2013 rrrus. All rights reserved.
 //
+//  globalBrightnessRGB added by Christopher Schardt on 7/19/14
+//  scalePixelComponents stuff added by Christopher Schardt on 8/11/14
+//
 
 #import "PPDeviceHeader.h"
 #import "PPDeviceRegistry.h"
@@ -84,10 +87,38 @@ static PPDeviceRegistry *gSharedRegistry;
 - (void)setGlobalBrightness:(float)globalBrightness {
 	self.scene.globalBrightness = globalBrightness;
 }
+- (void)setGlobalBrightnessRed:(float)globalBrightness {
+	self.scene.globalBrightnessRed = globalBrightness;
+}
+- (void)setGlobalBrightnessGreen:(float)globalBrightness {
+	self.scene.globalBrightnessGreen = globalBrightness;
+}
+- (void)setGlobalBrightnessBlue:(float)globalBrightness {
+	self.scene.globalBrightnessBlue = globalBrightness;
+}
+/*		// maybe someday
+- (void)setGlobalBrightnessLimit:(float)brightnessLimit {
+	self.scene.globalBrightnessLimit = brightnessLimit;
+}
+*/
 
 - (float)globalBrightness {
 	return self.scene.globalBrightness;
 }
+- (float)globalBrightnessRed {
+	return self.scene.globalBrightnessRed;
+}
+- (float)globalBrightnessGreen {
+	return self.scene.globalBrightnessGreen;
+}
+- (float)globalBrightnessBlue {
+	return self.scene.globalBrightnessBlue;
+}
+/*	// maybe someday
+- (float)globalBrightnessLimit {
+	return self.scene.globalBrightnessLimit;
+}
+*/
 
 - (int64_t)getTotalBandwidth {
 	return self.scene.totalBandwidth;
@@ -245,6 +276,33 @@ static PPDeviceRegistry *gSharedRegistry;
 	if (self.scene.isRunning) [self.scene cancel];
 }
 
+
+/////////////////////////////////////////////////
+#pragma mark - BRIGHTNESS-LIMITING OPERATIONS
+
+- (BOOL)scalePixelComponentsForAverageBrightnessLimit:(float)brightnessLimit	// >=1.0 for no scaling
+										forEachPusher:(BOOL)forEachPusher		// compute average for each pusher
+{
+	return [self.scene scalePixelComponentsForAverageBrightnessLimit:brightnessLimit
+														forEachPusher:forEachPusher];
+}
+
+
+/////////////////////////////////////////////////
+#pragma mark - GCDAsyncUdpSocketDelegate methods
+
+- (void)udpSocket:(GCDAsyncUdpSocket *)sock
+   didReceiveData:(NSData *)data
+	  fromAddress:(NSData *)address
+withFilterContext:(id)filterContext
+{
+	[self receive:data];
+}
+
+- (void)udpSocketDidClose:(GCDAsyncUdpSocket *)sock withError:(NSError *)error {
+	DDLogError(@"updSocketDidClose: %@", error);
+}
+
 - (void)receive:(NSData*)data {
     // This is for the UDP callback, this should not be called directly
 	PPDeviceHeader *header = [PPDeviceHeader.alloc initWithPacket:data];
@@ -278,15 +336,18 @@ static PPDeviceRegistry *gSharedRegistry;
 	}
 
 	// update the power limit variables
-	if (gTotalPowerLimit > 0) {
+	gPowerScale = 1.0;
+	if (gTotalPowerLimit > 0)
+	{
 		gTotalPower = 0;
-		[self.sortedPushers forEach:^(PPPixelPusher *pusher, NSUInteger idx, BOOL *stop) {
-			gTotalPower += pusher.powerTotal;
-		}];
-		if (gTotalPower > gTotalPowerLimit) {
+		[self.sortedPushers forEach:^(PPPixelPusher *pusher, NSUInteger idx, BOOL *stop)
+			{
+				gTotalPower += pusher.powerTotal;
+			}
+		];
+		if (gTotalPower > gTotalPowerLimit)
+		{
 			gPowerScale = gTotalPowerLimit / gTotalPower;
-		} else {
-			gPowerScale = 1.0;
 		}
 	}
 }
@@ -349,18 +410,5 @@ static PPDeviceRegistry *gSharedRegistry;
 	};
 }
 
-#pragma mark - GCDAsyncUdpSocketDelegate methods
-
-- (void)udpSocket:(GCDAsyncUdpSocket *)sock
-   didReceiveData:(NSData *)data
-	  fromAddress:(NSData *)address
-withFilterContext:(id)filterContext
-{
-	[self receive:data];
-}
-
-- (void)udpSocketDidClose:(GCDAsyncUdpSocket *)sock withError:(NSError *)error {
-	DDLogError(@"updSocketDidClose: %@", error);
-}
 
 @end
