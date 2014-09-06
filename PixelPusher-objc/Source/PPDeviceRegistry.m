@@ -140,7 +140,7 @@ static PPDeviceRegistry *gSharedRegistry;
 }
 
 - (void)appDidBackground {
-	[self unbind];
+//	[self unbind];
 }
 
 - (void)bind {
@@ -149,6 +149,14 @@ static PPDeviceRegistry *gSharedRegistry;
 		self.discoverySocket = [GCDAsyncUdpSocket.alloc initWithDelegate:self delegateQueue:dispatch_get_main_queue()];
 		[self.discoverySocket setIPv6Enabled:NO];
 		NSError *error;
+		[self.discoverySocket enableReusePort:YES error:&error];
+		if (error) {
+			[NSException raise:NSGenericException format:@"error enabling reuse port on discovery port: %@", error];
+		}
+		[self.discoverySocket enableBroadcast:YES error:&error];
+		if (error) {
+			[NSException raise:NSGenericException format:@"error enabling broadcast on discovery port: %@", error];
+		}
 		[self.discoverySocket bindToPort:kDiscoveryPort error:&error];
 		if (error) {
 			UIAlertView *alert = [UIAlertView.alloc initWithTitle:@"PixelPusher"
@@ -159,10 +167,6 @@ static PPDeviceRegistry *gSharedRegistry;
 			[alert show];
 			return;
 //			self.discoverySocket = nil;
-		}
-		[self.discoverySocket enableBroadcast:YES error:&error];
-		if (error) {
-			[NSException raise:NSGenericException format:@"error enabling broadcast on discovery port: %@", error];
 		}
 		[self.discoverySocket beginReceiving:&error];
 		if (error) {
