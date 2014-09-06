@@ -80,13 +80,13 @@ OptionParser.new do |opts|
 end.parse!
 
 $lastMAC = 1
-$lastPort = 64203
+$lastPort = 64223
 def makePusher(options)
 	ipaddrstr = Socket::getaddrinfo(Socket.gethostname,"echo",Socket::AF_INET)[0][3]
 	ipaddr = ipaddrstr.split(".").map { |e| e.to_i }
 
 	pusher = options.merge({
-		:mac => [0xff,0xff,0xff,0xff,0xff, $lastMAC],
+		:mac => [0xff,0xff,0xff,0xff,0xfe, $lastMAC],
 		:ipaddr => ipaddr,
 		:port => $lastPort,
 	})
@@ -101,7 +101,7 @@ def makePusher(options)
 	# device type, protocol_version, vendor_id, product_id
 	data += [PIXELPUSHER, 1, 99, 98].pack("CCvv")
 	# hw_revision, sw_revision, link_speed
-	data += [2, 121, 100000000].pack("vvV")
+	data += [2, 111, 100000000].pack("vvV")
 
 	### PixelPusher packet header
 	# strips attached, max_strips_per_packet, pixels_per_strip, update_period, power_total, delta_sequence

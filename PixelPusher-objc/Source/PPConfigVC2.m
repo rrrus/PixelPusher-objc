@@ -14,8 +14,27 @@
 #import "RRSimpleCollectionView.h"
 #import "UIImage+RRR.h"
 
+
+/*
+	GLOBAL config:
+ 
+	- pushing [toggle]
+	- record [toggle]
+	
+	RATE:
+	- auto throttle [toggle]
+	- frame rate limit [slider]
+
+	DYNAMICS:
+	- output curve [slider]
+	- global brightness [slider]
+	- total power limit [slider]
+ 
+ */
+
 UIColor *gBorderColor;
 UIColor *gSelectedBackgroundColor;
+NSDictionary *gDeviceTypeLabels;
 
 typedef enum {
 	eStateGlobal,
@@ -44,23 +63,36 @@ typedef enum {
 @property (nonatomic, strong) IBOutlet UIView *groupsMenu;
 @property (nonatomic, strong) IBOutlet RRSimpleCollectionView *groupsCollectionView;
 @property (nonatomic, strong) IBOutlet RRSimpleCollectionView *pushersCollectionView;
+@property (nonatomic, strong) IBOutlet NSLayoutConstraint *groupsCollectionHeightConstraint;
+@property (nonatomic, assign) CGFloat groupsCollectionHeight;
 
 @property (nonatomic, strong) NSTimer *debounceTimer;
 @property (nonatomic, assign) ConfigTopState topState;
 
-@property (strong, nonatomic) IBOutlet UILabel *pusherMac;
-@property (strong, nonatomic) IBOutlet UILabel *pusherIP;
-@property (strong, nonatomic) IBOutlet UILabel *pusherSwVers;
-@property (strong, nonatomic) IBOutlet UILabel *pusherHwVers;
-@property (strong, nonatomic) IBOutlet UILabel *pusherNumStrips;
-@property (strong, nonatomic) IBOutlet UILabel *pusherNumPixels;
-@property (strong, nonatomic) IBOutlet UILabel *pusherDeviceType;
-@property (strong, nonatomic) IBOutlet UILabel *pusherGroup;
-@property (strong, nonatomic) IBOutlet UILabel *pusherNumber;
+@property (nonatomic, strong) IBOutlet UILabel *pusherMac;
+@property (nonatomic, strong) IBOutlet UILabel *pusherIP;
+@property (nonatomic, strong) IBOutlet UILabel *pusherSwVers;
+@property (nonatomic, strong) IBOutlet UILabel *pusherHwVers;
+@property (nonatomic, strong) IBOutlet UILabel *pusherNumStrips;
+@property (nonatomic, strong) IBOutlet UILabel *pusherNumPixels;
+@property (nonatomic, strong) IBOutlet UILabel *pusherDeviceType;
+@property (nonatomic, strong) IBOutlet UILabel *pusherGroup;
+@property (nonatomic, strong) IBOutlet UILabel *pusherNumber;
 
 @end
 
 @implementation PPConfigVC2
+
++ (void)load {
+	// setup global objects
+	gBorderColor = [UIColor colorWithWhite:0 alpha:0.15f];
+	gSelectedBackgroundColor = [UIColor colorWithRed:0.1f green:0.1f blue:1.0 alpha:1.0];
+	gDeviceTypeLabels = @{	@(eEtherDream): @"EtherDream",
+							@(eLumiaBridge): @"LumiaBridge",
+							@(ePixelPusher): @"PixelPusher"};
+
+	
+}
 
 + (NSBundle*)pixelPusherBundle {
 	return [NSBundle bundleWithURL:
@@ -74,15 +106,13 @@ typedef enum {
 - (void)viewDidLoad {
     [super viewDidLoad];
 
-	gBorderColor = [UIColor colorWithWhite:0 alpha:0.15f];
-	gSelectedBackgroundColor = [UIColor colorWithRed:0.1f green:0.1f blue:1.0 alpha:1.0];
-	
 	self.groupsCollectionView.delegate = self;
 	self.groupsCollectionView.scrollDirection = UICollectionViewScrollDirectionHorizontal;
 	[self.groupsCollectionView registerCellViewClass:PPConfigGroupCell.class forIdentifier:@"groupCell"];
 	self.groupsCollectionView.minimumLineSpacing = 0;
 	self.groupsCollectionView.minimumInteritemSpacing = 0;
-	self.groupsCollectionView.itemSize = CGSizeMake(88, 44);
+	self.groupsCollectionHeight = self.groupsCollectionView.bounds.size.height;
+	self.groupsCollectionView.itemSize = CGSizeMake(self.groupsCollectionHeight*2, self.groupsCollectionHeight);
 
 	self.pushersCollectionView.delegate = self;
 	self.pushersCollectionView.scrollDirection = UICollectionViewScrollDirectionHorizontal;
@@ -154,7 +184,13 @@ typedef enum {
 	
 	if (self.topState != newState) {
 		self.topState = newState;
-		self.groupsCollectionView.hidden = (self.topState != eStateGroups);
+		if (self.topState == eStateGroups) {
+			self.groupsCollectionHeightConstraint.constant = self.groupsCollectionHeight;
+		} else {
+			self.groupsCollectionHeightConstraint.constant = 0;
+		}
+//		self.groupsCollectionView.hidden = (self.topState != eStateGroups);
+		[self collectionView:self.pushersCollectionView didDeselectItemAtIndexPath:nil];
 		[self onDeviceListChangeDebounced:nil];
 	}
 }
@@ -186,15 +222,26 @@ typedef enum {
 		if (indexPath.item < pushers.count) {
 			PPPixelPusher *pusher = DYNAMIC_CAST(PPPixelPusher, pushers[indexPath.item]);
 			if (pusher) {
+				NSNumber *devNum = @(pusher.deviceType);
+				NSString *devTypeName = gDeviceTypeLabels[devNum];
+				if (!devTypeName) devTypeName = devNum.description;
+				
+				self.pusherDeviceType.text = devTypeName;
 				self.pusherMac.text = pusher.macAddress;
 				self.pusherIP.text = pusher.ipAddress;
 				self.pusherNumStrips.text = @(pusher.strips.count).description;
 				self.pusherNumPixels.text = @(pusher.pixelsPerStrip).description;
-				self.pusherDeviceType.text = @(pusher.deviceType).description;
 				self.pusherSwVers.text = [NSString stringWithFormat:@"v%1.2f", ((float)pusher.softwareRevision/100.f)];
 				self.pusherHwVers.text = [NSString stringWithFormat:@"r%d", pusher.hardwareRevision];
 				self.pusherGroup.text = @(pusher.groupOrdinal).description;
 				self.pusherNumber.text = @(pusher.controllerOrdinal).description;
+
+				// color unsupported firmware versions red
+				if (pusher.softwareRevision < PP_ACCEPTABLE_LOWEST_SW_REV) {
+					self.pusherSwVers.textColor = UIColor.redColor;
+				} else {
+					self.pusherSwVers.textColor = UIColor.whiteColor;
+				}
 			} else {
 				self.pusherMac.text = nil;
 				self.pusherIP.text = nil;
