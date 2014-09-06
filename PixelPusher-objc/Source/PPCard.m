@@ -117,7 +117,7 @@ INIT_LOG_LEVEL_INFO
 }
 
 - (void)appWillBackground {
-	[self closeWriteStream];
+//	[self closeWriteStream];
 }
 
 - (NSMutableData*)packetFromPool {
