@@ -130,16 +130,19 @@ const PPCurveBlock sCurveAntilogFunction =  ^float(float input) {
 }
 
 - (void)setPixelAtIndex:(uint32_t)index withByteRed:(uint8_t)red green:(uint8_t)green blue:(uint8_t)blue {
+	if (!self.setPixWithByte) [self configureSetPix];
 	self.setPixWithByte(index, red, green, blue);
 	self.touched = YES;
 }
 
 - (void)setPixelAtIndex:(uint32_t)index withShortRed:(uint16_t)red green:(uint16_t)green blue:(uint16_t)blue {
+	if (!self.setPixWithShort) [self configureSetPix];
 	self.setPixWithShort(index, red, green, blue);
 	self.touched = YES;
 }
 
 - (void)setPixelAtIndex:(uint32_t)index withFloatRed:(float)red green:(float)green blue:(float)blue {
+	if (!self.setPixWithFloat) [self configureSetPix];
 	self.setPixWithFloat(index, red, green, blue);
 	self.touched = YES;
 }
@@ -193,7 +196,10 @@ const PPCurveBlock sCurveAntilogFunction =  ^float(float input) {
 	self.buffer = buffer;
 	self.bufferSize = size;
 	
-	[self configureSetPix];
+	// reset the pixel setters.  don't configure them if they're not being used.
+	self.setPixWithByte = nil;
+	self.setPixWithShort = nil;
+	self.setPixWithFloat = nil;
 }
 
 - (void)configureSetPix {
