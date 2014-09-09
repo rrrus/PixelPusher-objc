@@ -11,7 +11,7 @@
 #import "PPStrip.h"
 #import "Animator.h"
 
-INIT_LOG_LEVEL_INFO
+//INIT_LOG_LEVEL_INFO
 
 @interface Twinkle : NSObject
 @property (nonatomic) uint32_t idx;
@@ -71,8 +71,8 @@ INIT_LOG_LEVEL_INFO
     return self;
 }
 
--(uint32_t)length {
-	return self.baseStrip.count;
+- (uint32_t)length {
+	return (uint32_t)self.baseStrip.count;
 }
 
 - (void)setLength:(uint32_t)length {
@@ -135,7 +135,7 @@ INIT_LOG_LEVEL_INFO
 }
 
 - (void)drawInStrip:(PPStrip*)strip {
-	[self drawInStrip:strip length:strip.pixels.count];
+	[self drawInStrip:strip length:strip.pixelCount];
 }
 
 - (void)drawInStrip:(PPStrip*)strip length:(uint32_t)length {
@@ -153,7 +153,7 @@ INIT_LOG_LEVEL_INFO
 }
 
 - (void)draw1:(PPStrip*)strip {
-	uint32_t baseLen = self.baseStrip.count;
+	uint32_t baseLen = (uint32_t)self.baseStrip.count;
 #if 0
 	// reset strip to base values
 	[strip.pixels forEach:^(PPPixel* dpix, NSUInteger idx, BOOL *stop) {
@@ -177,13 +177,13 @@ INIT_LOG_LEVEL_INFO
 				}
 			}
 #else
-			twnkl.idx = idx;
+			twnkl.idx = (uint32_t)idx;
 #endif
 			[twnkl.anim fadeTo:GLKVector4Make(-1, 0, 0, 0) duration:0];
 			float dur = randf(1);
 			dur = dur*30;
 			[twnkl.anim fadeTo:GLKVector4Make(1, 0, 0, 0) duration:dur];
-			[((PPPixel*)strip.pixels[twnkl.idx]) setColor:UIColor.blackColor];
+			[strip setPixelAtIndex:twnkl.idx withFloatRed:0 green:0 blue:0];
 		} else {
 			float interp = (float)twnkl.idx / (baseLen-1);
 			float interpInv = 1.0f-interp;
@@ -204,10 +204,10 @@ INIT_LOG_LEVEL_INFO
 			}
 			
 			// interpolate color in RGB
-			PPPixel* p = strip.pixels[twnkl.idx];
-			p.red = (self.color1.red*interpInv + self.color2.red*interp)*lum;
-			p.green = (self.color1.green*interpInv + self.color2.green*interp)*lum;
-			p.blue = (self.color1.blue*interpInv + self.color2.blue*interp)*lum;
+			[strip setPixelAtIndex:twnkl.idx
+					  withFloatRed:(self.color1.red*interpInv + self.color2.red*interp)*lum
+							 green:(self.color1.green*interpInv + self.color2.green*interp)*lum
+							  blue:(self.color1.blue*interpInv + self.color2.blue*interp)*lum];
 #endif
 		}
 	}];

@@ -195,7 +195,7 @@ INIT_LOG_LEVEL_INFO
 	// TODO: dynamically determine this from map pixel density vs rendered image size
 	int avgRadius = 4;
 	[strips forEach:^(PPStrip *strip, NSUInteger idx, BOOL *stop) {
-		int pixcount = strip.pixels.count;
+		int pixcount = strip.pixelCount;
 		if (stripsMap.count > idx) {
 			NSArray *stripMap = stripsMap[idx];
 			for (int i=0; i<pixcount; i++) {
@@ -225,10 +225,10 @@ INIT_LOG_LEVEL_INFO
 							}
 						}
 
-						PPPixel *pix = strip.pixels[i];
-						pix.red = (float)sr/count/255.0;
-						pix.green = (float)sg/count/255.0;
-						pix.blue = (float)sb/count/255.0;
+						[strip setPixelAtIndex:i
+								   withByteRed:(uint8_t)(sr/count)
+										 green:(uint8_t)(sg/count)
+										  blue:(uint8_t)(sb/count)];
 					}
 				}
 			}

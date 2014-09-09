@@ -8,6 +8,7 @@
 
 #import "HLDeferred.h"
 #import "PPDeviceRegistry.h"
+#import "PPPixelPusher.h"
 #import "PPPixel.h"
 #import "PPStrip.h"
 #import "RRAppDelegate.h"
@@ -15,7 +16,7 @@
 #import "RRForEach.h"
 #import "RRMainViewController.h"
 
-INIT_LOG_LEVEL_INFO
+//INIT_LOG_LEVEL_INFO
 
 @interface RRMainViewController () <PPFrameDelegate, UIGestureRecognizerDelegate>
 @property (nonatomic, strong) IBOutlet UIImageView *imageView;
@@ -29,15 +30,20 @@ INIT_LOG_LEVEL_INFO
 {
     [super viewDidLoad];
 
-	PPDeviceRegistry.sharedRegistry.frameRateLimit = 30;
-	PPDeviceRegistry.sharedRegistry.frameDelegate = self;
-	[PPDeviceRegistry.sharedRegistry startPushing];
-
 	self.numStrips = 4;
 	self.Xmas = NSMutableArray.array;
 	for (int i=0; i<self.numStrips; i++) {
 		[self.Xmas addObject:RRXmas.new];
 	}
+	
+	[NSNotificationCenter.defaultCenter addObserver:self
+										   selector:@selector(registryAddedPusher:)
+											   name:PPDeviceRegistryAddedPusher
+											 object:nil];
+	
+	PPDeviceRegistry.sharedRegistry.frameRateLimit = 30;
+	PPDeviceRegistry.sharedRegistry.frameDelegate = self;
+	[PPDeviceRegistry.sharedRegistry startPushing];
 	
 	double delayInSeconds = 5.0;
 	dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, (int64_t)(delayInSeconds * NSEC_PER_SEC));
@@ -52,10 +58,12 @@ INIT_LOG_LEVEL_INFO
 	[super viewDidUnload];
 }
 
-- (void)didReceiveMemoryWarning
-{
-    [super didReceiveMemoryWarning];
-    // Dispose of any resources that can be recreated.
+- (void)registryAddedPusher:(NSNotification*)notif {
+//	PPPixelPusher *pusher = DYNAMIC_CAST(PPPixelPusher, notif.object);
+//	// ensure the strips are using float pixel buffers
+//	[pusher.strips forEach:^(PPStrip *strip, NSUInteger idx, BOOL *stop) {
+//		[strip setPixelBuffer:nil size:0 pixelType:ePPPixTypeRGB componentType:ePPCompTypeFloat pixelStride:0];
+//	}];
 }
 
 #pragma mark - PPFrameDelegate

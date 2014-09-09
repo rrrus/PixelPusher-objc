@@ -263,9 +263,9 @@ const PPCurveBlock sCurveAntilogFunction =  ^float(float input) {
 		
 		self.setPixWithFloat = [^(uint32_t index, float red, float green, float blue) {
 			PPFloatPixel *pix = (PPFloatPixel*)(stripBuffer + (index*stride));
-			pix->red = (float)red;
-			pix->green = (float)green;
-			pix->blue = (float)blue;
+			pix->red = red;
+			pix->green = green;
+			pix->blue = blue;
 		} copy];
 		
 	}
