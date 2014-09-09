@@ -17,8 +17,7 @@
 		DB4D486718132F3000788518 /* PPPixelPusher.m in Sources */ = {isa = PBXBuildFile; fileRef = DB4D485518132F3000788518 /* PPPixelPusher.m */; };
 		DB4D486818132F3000788518 /* PPPusherGroup.m in Sources */ = {isa = PBXBuildFile; fileRef = DB4D485718132F3000788518 /* PPPusherGroup.m */; };
 		DB4D486918132F3000788518 /* PPScene.m in Sources */ = {isa = PBXBuildFile; fileRef = DB4D485918132F3000788518 /* PPScene.m */; };
-		DB4D486A18132F3000788518 /* PPStrip.m in Sources */ = {isa = PBXBuildFile; fileRef = DB4D485B18132F3000788518 /* PPStrip.m */; };
-		DB4D486B18132F3000788518 /* PPVStrip.m in Sources */ = {isa = PBXBuildFile; fileRef = DB4D485D18132F3000788518 /* PPVStrip.m */; };
+		DB4D486A18132F3000788518 /* PPStrip.m in Sources */ = {isa = PBXBuildFile; fileRef = DB4D485B18132F3000788518 /* PPStrip.m */; settings = {COMPILER_FLAGS = "-Os"; }; };
 		DB4D486C18132F3000788518 /* RRForEach.m in Sources */ = {isa = PBXBuildFile; fileRef = DB4D485F18132F3000788518 /* RRForEach.m */; };
 		DB4D487F1813301900788518 /* DDAbstractDatabaseLogger.m in Sources */ = {isa = PBXBuildFile; fileRef = DB4D48701813301900788518 /* DDAbstractDatabaseLogger.m */; };
 		DB4D48801813301900788518 /* DDASLLogger.m in Sources */ = {isa = PBXBuildFile; fileRef = DB4D48721813301900788518 /* DDASLLogger.m */; };
@@ -340,7 +339,6 @@
 				DB4D486818132F3000788518 /* PPPusherGroup.m in Sources */,
 				DB4D486918132F3000788518 /* PPScene.m in Sources */,
 				DB4D486A18132F3000788518 /* PPStrip.m in Sources */,
-				DB4D486B18132F3000788518 /* PPVStrip.m in Sources */,
 				DB4D486C18132F3000788518 /* RRForEach.m in Sources */,
 				DB4D487F1813301900788518 /* DDAbstractDatabaseLogger.m in Sources */,
 				DB4D48801813301900788518 /* DDASLLogger.m in Sources */,

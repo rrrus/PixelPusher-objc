@@ -190,7 +190,7 @@ static uint32_t sFrameCount = 0;
 				CFTimeInterval idle = minFrameInterval-sumThrottle-sumRender-sumFlush;
 	//			DDLogInfo(@"avg render %1.1f%%, flush %1.1f%%, send %1.1f%%, idle %1.1f%%",
 	//					  sumRender/minFrameInterval*100, sumFlush/minFrameInterval*100, sumSend/minFrameInterval*100, idle/minFrameInterval*100);
-				DDLogInfo(@"avg render %1.2fms, flush %1.2fms, throttle %1.2fms, idle %1.2fms",
+				DDLogInfo(@"avg render %1.2fms, flush %1.2fms, throttle %1.3fms, idle %1.2fms",
 						  sumRender*1000, sumFlush*1000, sumThrottle*1000, idle*1000);
 			}
 #endif

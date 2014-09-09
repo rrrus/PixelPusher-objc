@@ -45,10 +45,14 @@
 }
 
 - (BOOL)drawInStrip:(PPStrip*)strip {
+	NSAssert(strip.bufferCompType == ePPCompTypeFloat, @"buffer must have float pixels");
+	NSAssert(strip.bufferPixType == ePPPixTypeRGB, @"buffer must be RGB");
+	NSAssert(strip.bufferPixStride == sizeof(PPFloatPixel), @"buffer stride must be packed float pixel");
+	
 	float head = self.headPosition;
 	float tail = self.tailPosition;
 	if (head < 0 && tail < 0) return NO;
-	int pixcount = (int)strip.pixels.count;
+	uint32_t pixcount = strip.pixelCount;
 	if (head > pixcount && tail > pixcount) return NO;
 	
 	int start, end, lead;
@@ -64,14 +68,33 @@
 		leadfrac = 1-leadfrac;
 	}
 	float range = head-tail;
+	PPFloatPixel *pixels = (PPFloatPixel*)strip.buffer;
 	for (int i=start; i<=end; i++) {
 		float lum = ((float)i - tail)/range;
-		PPPixel *pix = strip.pixels[i];
-		[pix addPixel:[self.color pixelScalingLuminance:lum]];
+#if 1
+		float red = self.color.red * lum;
+		float green = self.color.green * lum;
+		float blue = self.color.blue * lum;
+		addToFloatPixel(pixels+i, red, green, blue);
+#else
+		uint8_t red = self.color.red * lum * 255.0f;
+		uint8_t green = self.color.green * lum * 255.0f;
+		uint8_t blue = self.color.blue * lum * 255.0f;
+		addToBytePixel(pixels+i, red, green, blue);
+#endif
 	}
 	if (lead >= 0 && lead < pixcount) {
-		PPPixel *pix = strip.pixels[lead];
-		[pix addPixel:[self.color pixelScalingLuminance:leadfrac]];
+#if 1
+		float red = self.color.red * leadfrac;
+		float green = self.color.green * leadfrac;
+		float blue = self.color.blue * leadfrac;
+		addToFloatPixel(pixels+lead, red, green, blue);
+#else
+		uint8_t red = self.color.red * leadfrac * 255.0f;
+		uint8_t green = self.color.green * leadfrac * 255.0f;
+		uint8_t blue = self.color.blue * leadfrac * 255.0f;
+		addToBytePixel(pixels+lead, red, green, blue);
+#endif
 	}
 	return YES;
 }

@@ -146,7 +146,7 @@ static const int32_t ACCEPTABLE_LOWEST_SW_REV = 121;
 		_strips = nil;
 	}
 	NSMutableString *changes = NSMutableString.new;
-	if (self.updatePeriod != device.updatePeriod) [changes appendFormat:@" updatePeriod: %f", device.updatePeriod];
+	if (self.updatePeriod != device.updatePeriod) [changes appendFormat:@" updatePeriod: %1.2fms", device.updatePeriod*1000];
 	if (self.deltaSequence != device.deltaSequence) [changes appendFormat:@" deltaSeq: %lld", device.deltaSequence];
 	if (self.powerTotal != device.powerTotal) [changes appendFormat:@" power: %lld", device.powerTotal];
 	if (changes.length > 0) DDLogInfo(@"update pusher %@: %@", self.ipAddress, changes);

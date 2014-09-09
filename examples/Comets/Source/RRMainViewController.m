@@ -8,6 +8,7 @@
 
 #import "HLDeferred.h"
 #import "PPDeviceRegistry.h"
+#import "PPPixelPusher.h"
 #import "PPPixel.h"
 #import "PPStrip.h"
 #import "RRAppDelegate.h"
@@ -15,7 +16,7 @@
 #import "RRForEach.h"
 #import "RRMainViewController.h"
 
-INIT_LOG_LEVEL_INFO
+//INIT_LOG_LEVEL_INFO
 
 @interface RRMainViewController () <PPFrameDelegate, UIGestureRecognizerDelegate>
 @property (nonatomic, strong) IBOutlet UIImageView *imageView;
@@ -29,14 +30,20 @@ INIT_LOG_LEVEL_INFO
 {
     [super viewDidLoad];
 
-	PPDeviceRegistry.sharedRegistry.frameDelegate = self;
-	[PPDeviceRegistry.sharedRegistry startPushing];
-
 	self.numStrips = 8;
 	self.comets = NSMutableArray.array;
 	for (int i=0; i<self.numStrips; i++) {
 		[self.comets addObject:NSMutableArray.array];
 	}
+
+	[NSNotificationCenter.defaultCenter addObserver:self
+										   selector:@selector(registryAddedPusher:)
+											   name:PPDeviceRegistryAddedPusher
+											 object:nil];
+	
+	PPDeviceRegistry.sharedRegistry.frameDelegate = self;
+	//	[PPStrip setOutputCurveFunction:sCurveLinearFunction];
+	[PPDeviceRegistry.sharedRegistry startPushing];
 }
 
 - (void)viewDidUnload {
@@ -45,10 +52,12 @@ INIT_LOG_LEVEL_INFO
 	[super viewDidUnload];
 }
 
-- (void)didReceiveMemoryWarning
-{
-    [super didReceiveMemoryWarning];
-    // Dispose of any resources that can be recreated.
+- (void)registryAddedPusher:(NSNotification*)notif {
+	PPPixelPusher *pusher = DYNAMIC_CAST(PPPixelPusher, notif.object);
+	// ensure the strips are using float pixel buffers
+	[pusher.strips forEach:^(PPStrip *strip, NSUInteger idx, BOOL *stop) {
+		[strip setPixelBuffer:nil size:0 pixelType:ePPPixTypeRGB componentType:ePPCompTypeFloat pixelStride:0];
+	}];
 }
 
 #pragma mark - PPFrameDelegate
@@ -58,10 +67,7 @@ INIT_LOG_LEVEL_INFO
 	if (strips.count >= self.numStrips) {
 		for (NSUInteger s=0; s<self.numStrips; s++) {
 			PPStrip *strip = strips[s];
-			for (int i=0; i<strip.pixels.count; i++) {
-				PPPixel *pix = strip.pixels[i];
-				pix.red = pix.green = pix.blue = 0;
-			}
+			memset(strip.buffer, 0, strip.pixelCount * sizeof(PPFloatPixel));
 			NSMutableArray *stripComets = self.comets[s];
 			while (stripComets.count < 10) {
 				RRComet *comet = RRComet.alloc.init;
@@ -78,7 +84,7 @@ INIT_LOG_LEVEL_INFO
 
 - (HLDeferred*)pixelPusherRender {
 #if 0
-	__block HLDeferred* deferred = HLDeferred.new;
+	HLDeferred* deferred = HLDeferred.new;
 	dispatch_async(your_worker_queue, ^{
 		// do your rendering stuff here
 		dispatch_async(dispatch_get_main_queue(), ^{
