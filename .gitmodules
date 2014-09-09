@@ -1,6 +1,6 @@
 [submodule "PixelPusher-objc/3rd Party/CocoaAsyncSocket"]
 	path = PixelPusher-objc/3rd Party/CocoaAsyncSocket
-	url = https://github.com/robbiehanson/CocoaAsyncSocket.git
+	url=https://github.com/rrrus/CocoaAsyncSocket.git
 [submodule "PixelPusher-objc/3rd Party/HLDeferred-objc"]
 	path = PixelPusher-objc/3rd Party/HLDeferred-objc
 	url = https://github.com/heavylifters/HLDeferred-objc.git
