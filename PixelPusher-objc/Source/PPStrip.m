@@ -158,8 +158,9 @@ const PPCurveBlock sCurveAntilogFunction =  ^float(float input) {
 	if (self.bufferCompType == compType
 		&& self.bufferPixType == pixType
 		&& self.bufferPixStride == stride
-		&& ( (buffer == nil && self.internallyAllocatedBuffer)
-			 || buffer == self.buffer)
+		&& (	(buffer == nil && self.internallyAllocatedBuffer)
+			 || (buffer != nil && buffer == self.buffer)
+			)
 		)
 	{
 		return;
