@@ -83,9 +83,9 @@ typedef enum : NSUInteger {
  * the pixel's color components.
  *
  * If `buffer` is nil, setPixelBuffer will allocate a pixel buffer with the specified
- * pixelType and compType.  pixelStride will be ignored and will instead be calculated from
- * the pixel's packed size.
- * Use the -[setPixelAt***:] methods to set values in the internally allocated buffer.
+ * `pixelType`, `compType`, and `pixelStride`.
+ * Use the -[setPixelAt***:] methods to set values in the internally allocated buffer or access
+ * the buffer directly via the .buffer property.
  */
 - (void)setPixelBuffer:(void*)buffer
 				  size:(size_t)size

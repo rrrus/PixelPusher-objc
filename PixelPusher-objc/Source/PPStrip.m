@@ -116,7 +116,7 @@ const PPCurveBlock sCurveAntilogFunction =  ^float(float input) {
 						size:0
 				   pixelType:ePPPixTypeRGB
 			   componentType:compType
-				 pixelStride:sizeof(PPFloatPixel)];
+				 pixelStride:0];
 	}
 	return self;
 }
@@ -150,18 +150,19 @@ const PPCurveBlock sCurveAntilogFunction =  ^float(float input) {
 		 componentType:(PPComponentType)compType
 		   pixelStride:(size_t)stride
 {
-	// if this is a request for a specific format of internal buffer,
-	// we already have an internal buffer, and it is already of the format
-	// requested, do nothing.
-	if (buffer == nil
-		&& self.internallyAllocatedBuffer
-		&& self.bufferCompType == compType
-		&& self.bufferPixType == pixType)
+	// if the requested format is the same as what we have already and
+	// either the buffer is the basically the same, early exit.
+	if (self.bufferCompType == compType
+		&& self.bufferPixType == pixType
+		&& self.bufferPixStride == stride
+		&& ( (buffer == nil && self.internallyAllocatedBuffer)
+			 || buffer == self.buffer)
+		)
 	{
 		return;
 	}
 	
-	if (stride == 0 || buffer == nil) {
+	if (stride == 0) {
 		int nComps = (pixType == ePPPixTypeRGBOW) ? 5 : 3;
 		int compSize;
 		switch (compType) {
