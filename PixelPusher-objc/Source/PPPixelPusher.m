@@ -61,7 +61,7 @@ static const int32_t kDefaultPusherPort = 9897;
 - (id)initWithHeader:(PPDeviceHeader*)header {
 	self = [super initWithHeader:header];
 	if (self) {
-		self.brightness = 1.0;
+		self.brightness = PPFloatPixelMake(1, 1, 1);
 		
 		NSData *packet = header.packetRemainder;
 		if (self.softwareRevision < PP_ACCEPTABLE_LOWEST_SW_REV) {
@@ -134,8 +134,8 @@ static const int32_t kDefaultPusherPort = 9897;
 			self.powerTotal, self.pusherFlags, self.softwareRevision/100.0f, self.hardwareRevision];
 }
 
-- (void)setBrightness:(float)brightness {
-	if (_brightness != brightness) {
+- (void)setBrightness:(PPFloatPixel)brightness {
+	if (!PPFloatPixelEqual(_brightness, brightness)) {
 		_brightness = brightness;
 		if (_strips) {
 			[_strips forEach:^(PPStrip* strip, NSUInteger idx, BOOL *stop) {

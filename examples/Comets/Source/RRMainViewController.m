@@ -43,8 +43,9 @@
 											 object:nil];
 	
 	PPDeviceRegistry.sharedRegistry.frameDelegate = self;
-	//	[PPStrip setOutputCurveFunction:sCurveLinearFunction];
+//	[PPStrip setOutputCurveFunction:sCurveLinearFunction];
 	[PPDeviceRegistry.sharedRegistry startPushing];
+//	PPDeviceRegistry.sharedRegistry.globalBrightness = PPFloatPixelMake(0.1, 0.02, 1);
 }
 
 - (void)viewDidUnload {

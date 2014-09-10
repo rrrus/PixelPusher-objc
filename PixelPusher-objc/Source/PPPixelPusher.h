@@ -8,6 +8,7 @@
 
 #import <Foundation/Foundation.h>
 #import "PPDevice.h"
+#import "PPPixel.h"
 
 @class PPDeviceHeader;
 
@@ -40,9 +41,9 @@ typedef enum {
 @property (nonatomic, readonly) uint32_t segments;
 @property (nonatomic, readonly) uint32_t powerDomain;
 
-@property (nonatomic, assign)	float	brightness;
-@property (nonatomic, assign)	BOOL	autoThrottle;
-@property (nonatomic, assign)	NSTimeInterval extraDelay;
+@property (nonatomic, assign)	PPFloatPixel	brightness;
+@property (nonatomic, assign)	BOOL			autoThrottle;
+@property (nonatomic, assign)	NSTimeInterval	extraDelay;
 
 // for sorting pushers
 + (NSComparator)sortComparator;

@@ -49,7 +49,7 @@ static uint32_t sFrameCount = 0;
 		self.cardMap = NSMutableDictionary.new;
 		self.drain = NO;
 		self.isRunning = NO;
-		self.globalBrightness = 1.0;
+		self.globalBrightness = PPFloatPixelMake(1, 1, 1);
 		self.lastFrameFlush = [HLDeferred deferredWithResult:nil];
 
 		[NSNotificationCenter.defaultCenter addObserver:self
@@ -93,8 +93,8 @@ static uint32_t sFrameCount = 0;
 	}
 }
 
-- (void)setGlobalBrightness:(float)globalBrightness {
-	if (_globalBrightness != globalBrightness) {
+- (void)setGlobalBrightness:(PPFloatPixel)globalBrightness {
+	if (!PPFloatPixelEqual(_globalBrightness, globalBrightness)) {
 		_globalBrightness = globalBrightness;
 		[self.pusherMap forEach:^(id key, PPPixelPusher *pusher, BOOL *stop) {
 			pusher.brightness = globalBrightness;

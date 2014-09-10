@@ -47,7 +47,7 @@ void PPStripBuildOutputCurve(int depth);
 		self.flags = flags;
 		self.touched = YES;
 		self.powerScale = 1.0;
-		self.brightness = 1.0;
+		self.brightness = PPFloatPixelMake(1, 1, 1);
 
 		PPComponentType compType = ePPCompTypeByte;
 		if (self.flags & SFLAG_WIDEPIXELS) {
@@ -232,28 +232,28 @@ void PPStripBuildOutputCurve(int depth);
 }
 
 #define COPY_PIX_WITH_LUT(scale) \
-*(P++) = (uint8_t)(gOutputLUT8[(uint8_t) ((uint16_t)(srcPix->red * scale) / 256)] * iPostLutScale / 65536); \
-*(P++) = (uint8_t)(gOutputLUT8[(uint8_t) ((uint16_t)(srcPix->green * scale) / 256)] * iPostLutScale / 65536); \
-*(P++) = (uint8_t)(gOutputLUT8[(uint8_t) ((uint16_t)(srcPix->blue * scale) / 256)] * iPostLutScale / 65536); \
+*(P++) = (uint8_t)(gOutputLUT8[(uint8_t) ((uint16_t)(srcPix->red * scale) / 256)] * iPostLutScaleRed / 65536); \
+*(P++) = (uint8_t)(gOutputLUT8[(uint8_t) ((uint16_t)(srcPix->green * scale) / 256)] * iPostLutScaleGrn / 65536); \
+*(P++) = (uint8_t)(gOutputLUT8[(uint8_t) ((uint16_t)(srcPix->blue * scale) / 256)] * iPostLutScaleBlu / 65536); \
 srcP += self.bufferPixStride;
 
 #define COPY_PIX(scale) \
-*(P++) = (uint8_t)( (uint16_t)(srcPix->red * scale) * iPostLutScale / (256*65536)); \
-*(P++) = (uint8_t)( (uint16_t)(srcPix->green * scale) * iPostLutScale / (256*65536)); \
-*(P++) = (uint8_t)( (uint16_t)(srcPix->blue * scale) * iPostLutScale / (256*65536)); \
+*(P++) = (uint8_t)( (uint16_t)(srcPix->red * scale) * iPostLutScaleRed / (256*65536)); \
+*(P++) = (uint8_t)( (uint16_t)(srcPix->green * scale) * iPostLutScaleGrn / (256*65536)); \
+*(P++) = (uint8_t)( (uint16_t)(srcPix->blue * scale) * iPostLutScaleBlu / (256*65536)); \
 srcP += self.bufferPixStride;
 
 #define COPY_PIX_WIDE_WITH_LUT(scale) \
 uint16_t wide; \
-wide = (uint16_t)(gOutputLUT16[(uint16_t) (srcPix->red * scale)] * iPostLutScale / 65536); \
+wide = (uint16_t)(gOutputLUT16[(uint16_t) (srcPix->red * scale)] * iPostLutScaleRed / 65536); \
 *P = (wide & 0xff00) >> 8; \
 *(P+3) = (wide & 0x00ff); \
 P++; \
-wide = (uint16_t)(gOutputLUT16[(uint16_t) (srcPix->green * scale)] * iPostLutScale / 65536); \
+wide = (uint16_t)(gOutputLUT16[(uint16_t) (srcPix->green * scale)] * iPostLutScaleGrn / 65536); \
 *P = (wide & 0xff00) >> 8; \
 *(P+3) = (wide & 0x00ff); \
 P++; \
-wide = (uint16_t)(gOutputLUT16[(uint16_t) (srcPix->blue * scale)] * iPostLutScale / 65536); \
+wide = (uint16_t)(gOutputLUT16[(uint16_t) (srcPix->blue * scale)] * iPostLutScaleBlu / 65536); \
 *P = (wide & 0xff00) >> 8; \
 *(P+3) = (wide & 0x00ff); \
 P += 4; /* skip the next 3 bytes we already filled in */ \
@@ -261,15 +261,15 @@ srcP += self.bufferPixStride;
 
 #define COPY_PIX_WIDE(scale) \
 uint16_t wide; \
-wide = (uint16_t) ((uint16_t)(srcPix->red * scale) * iPostLutScale / 65536); \
+wide = (uint16_t) ((uint16_t)(srcPix->red * scale) * iPostLutScaleRed / 65536); \
 *P = (wide & 0xf0) >> 8; \
 *(P+3) = (wide & 0x0f); \
 P++; \
-wide = (uint16_t) ((uint16_t)(srcPix->green * scale) * iPostLutScale / 65536); \
+wide = (uint16_t) ((uint16_t)(srcPix->green * scale) * iPostLutScaleGrn / 65536); \
 *P = (wide & 0xf0) >> 8; \
 *(P+3) = (wide & 0x0f); \
 P++; \
-wide = (uint16_t) ((uint16_t)(srcPix->blue * scale) * iPostLutScale / 65536); \
+wide = (uint16_t) ((uint16_t)(srcPix->blue * scale) * iPostLutScaleBlu / 65536); \
 *P = (wide & 0xf0) >> 8; \
 *(P+3) = (wide & 0x0f); \
 P += 4; /* skip the next 3 bytes we already filled in */ \
@@ -279,7 +279,9 @@ srcP += self.bufferPixStride;
 - (uint32_t)serialize:(uint8_t*)buffer size:(size_t)size {
 
 	// convert brightness plus powerScale to 16-bit binary fraction
-	uint32_t iPostLutScale = (uint32_t)(self.brightness * self.powerScale * 65536);
+	uint32_t iPostLutScaleRed = (uint32_t)(self.brightness.red * self.powerScale * 65536);
+	uint32_t iPostLutScaleGrn = (uint32_t)(self.brightness.green * self.powerScale * 65536);
+	uint32_t iPostLutScaleBlu = (uint32_t)(self.brightness.blue * self.powerScale * 65536);
 	__block uint8_t *P = buffer;
 	uint32_t pixToCopy = MIN(self.bufferPixCount, self.pixelCount);
 	uint8_t *srcP = self.buffer;

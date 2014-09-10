@@ -7,6 +7,7 @@
 //
 
 #import <Foundation/Foundation.h>
+#import "PPPixel.h"
 
 extern NSString * const PPDeviceRegistryAddedPusher;
 extern NSString * const PPDeviceRegistryUpdatedPusher;
@@ -32,7 +33,7 @@ extern const PPCurveBlock sCurveAntilogFunction;
 @property (nonatomic, readonly) NSDictionary *pusherMap;
 @property (nonatomic, readonly) NSDictionary *groupMap;
 @property (nonatomic) uint32_t frameRateLimit;
-@property (nonatomic, assign) float globalBrightness;
+@property (nonatomic, assign) PPFloatPixel globalBrightness;
 @property (nonatomic) BOOL record;
 
 + (PPDeviceRegistry*)sharedRegistry;

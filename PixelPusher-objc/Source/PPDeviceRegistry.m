@@ -89,11 +89,11 @@ extern void PPStripSetOutputCurveFunction(PPCurveBlock curveFunction);
 	[self.scene setAutoThrottle:autothrottle];
 }
 
-- (void)setGlobalBrightness:(float)globalBrightness {
+- (void)setGlobalBrightness:(PPFloatPixel)globalBrightness {
 	self.scene.globalBrightness = globalBrightness;
 }
 
-- (float)globalBrightness {
+- (PPFloatPixel)globalBrightness {
 	return self.scene.globalBrightness;
 }
 

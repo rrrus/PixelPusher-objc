@@ -28,8 +28,11 @@ typedef struct {
 	float blue;
 } PPFloatPixel;
 
-void addToBytePixel(PPBytePixel *pix, uint8_t red, uint8_t green, uint8_t blue);
-void addToFloatPixel(PPFloatPixel *pix, float red, float green, float blue);
+PPFloatPixel PPFloatPixelMake(float red, float green, float blue);
+BOOL PPFloatPixelEqual(PPFloatPixel a, PPFloatPixel b);
+void PPAddToFloatPixel(PPFloatPixel *pix, float red, float green, float blue);
+
+void PPAddToBytePixel(PPBytePixel *pix, uint8_t red, uint8_t green, uint8_t blue);
 
 @interface PPPixel : NSObject
 

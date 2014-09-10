@@ -75,12 +75,12 @@
 		float red = self.color.red * lum;
 		float green = self.color.green * lum;
 		float blue = self.color.blue * lum;
-		addToFloatPixel(pixels+i, red, green, blue);
+		PPAddToFloatPixel(pixels+i, red, green, blue);
 #else
 		uint8_t red = self.color.red * lum * 255.0f;
 		uint8_t green = self.color.green * lum * 255.0f;
 		uint8_t blue = self.color.blue * lum * 255.0f;
-		addToBytePixel(pixels+i, red, green, blue);
+		PPAddToBytePixel(pixels+i, red, green, blue);
 #endif
 	}
 	if (lead >= 0 && lead < pixcount) {
@@ -88,12 +88,12 @@
 		float red = self.color.red * leadfrac;
 		float green = self.color.green * leadfrac;
 		float blue = self.color.blue * leadfrac;
-		addToFloatPixel(pixels+lead, red, green, blue);
+		PPAddToFloatPixel(pixels+lead, red, green, blue);
 #else
 		uint8_t red = self.color.red * leadfrac * 255.0f;
 		uint8_t green = self.color.green * leadfrac * 255.0f;
 		uint8_t blue = self.color.blue * leadfrac * 255.0f;
-		addToBytePixel(pixels+lead, red, green, blue);
+		PPAddToBytePixel(pixels+lead, red, green, blue);
 #endif
 	}
 	return YES;

@@ -30,7 +30,7 @@ typedef enum : NSUInteger {
 @property (nonatomic, readonly) BOOL isRGBOWPixel;
 @property (nonatomic, assign) BOOL touched;
 @property (nonatomic, assign) float powerScale;
-@property (nonatomic, assign) float brightness;
+@property (nonatomic, assign) PPFloatPixel brightness;
 
 @property (nonatomic, readonly) void* buffer;
 @property (nonatomic, readonly) size_t bufferSize;
