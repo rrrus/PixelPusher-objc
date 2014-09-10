@@ -54,6 +54,7 @@ INIT_LOG_LEVEL_INFO
 		self.packetPromises = NSMutableDictionary.new;
 
 		self.udpsocket = [GCDAsyncUdpSocket.alloc initWithDelegate:self delegateQueue:self.packetQueue];
+		[self.udpsocket setIPv6Enabled:NO];
 		NSError *error;
 		[self.udpsocket connectToHost:self.pusher.ipAddress onPort:self.pusher.port error:&error];
 		if (error) {
@@ -76,6 +77,7 @@ INIT_LOG_LEVEL_INFO
 
 - (void)dealloc {
 	[self cancelAllInFlight];
+	[self.udpsocket close];
 }
 
 - (void)setRecord:(BOOL)record {
@@ -328,6 +330,7 @@ INIT_LOG_LEVEL_INFO
 	DDLogError(@"card socket closed with error: %@", error);
 	dispatch_async(dispatch_get_main_queue(), ^{
 		[self cancelAllInFlight];
+		[self.udpsocket close];
 
 		[PPDeviceRegistry.sharedRegistry expireDevice:self.pusher.macAddress];
 	});
