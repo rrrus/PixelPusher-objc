@@ -262,13 +262,28 @@ static PPDeviceRegistry *gSharedRegistry;
 
 - (void)receive:(NSData*)data {
     // This is for the UDP callback, this should not be called directly
-	PPDeviceHeader *header = [PPDeviceHeader.alloc initWithPacket:data];
+	PPDeviceHeader *header;
+	@try {
+		header = [PPDeviceHeader.alloc initWithPacket:data];
+	}
+	@catch (NSException *exception) {
+		NSLog(@"while parsing discovery packet: %@", exception);
+	}
+	if (!header) return;
+
 	NSString *macAddr = header.macAddressString;
 	if (header.deviceType != ePixelPusher) {
 		DDLogInfo(@"Ignoring non-PixelPusher discovery packet from %@", header);
 		return;
 	}
-	PPPixelPusher *device = [PPPixelPusher.alloc initWithHeader:header];
+	PPPixelPusher *device;
+	@try {
+		device = [PPPixelPusher.alloc initWithHeader:header];
+	}
+	@catch (NSException *exception) {
+		NSLog(@"while parsing pixel pusher discovery packet: %@", exception);
+	}
+	if (!device) return;
 	DDLogVerbose(@"squitter %@", device);
 	// Set the timestamp for the last time this device checked in
 	self.pusherLastSeenMap[macAddr] = NSDate.date;

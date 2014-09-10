@@ -27,14 +27,14 @@ typedef enum {
 @interface PPPixelPusher : PPDeviceImpl
 
 @property (nonatomic, readonly) NSArray *strips;
-@property (nonatomic, readonly) int32_t pixelsPerStrip;
-@property (nonatomic, readonly) int32_t groupOrdinal;
-@property (nonatomic, readonly) int32_t controllerOrdinal;
+@property (nonatomic, readonly) uint32_t pixelsPerStrip;
+@property (nonatomic, readonly) uint32_t groupOrdinal;
+@property (nonatomic, readonly) uint32_t controllerOrdinal;
 @property (nonatomic, readonly) NSTimeInterval updatePeriod;
-@property (nonatomic, readonly) int64_t powerTotal;
-@property (nonatomic, readonly) int64_t deltaSequence;
-@property (nonatomic, readonly) int32_t maxStripsPerPacket;
-@property (nonatomic, readonly) int16_t myPort;
+@property (nonatomic, readonly) uint64_t powerTotal;
+@property (nonatomic, readonly) uint64_t deltaSequence;
+@property (nonatomic, readonly) uint32_t maxStripsPerPacket;
+@property (nonatomic, readonly) uint16_t port;
 @property (nonatomic, readonly) NSArray *stripFlags;
 @property (nonatomic, readonly) uint32_t pusherFlags;
 @property (nonatomic, readonly) uint32_t segments;

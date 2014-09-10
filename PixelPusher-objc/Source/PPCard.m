@@ -31,7 +31,6 @@ INIT_LOG_LEVEL_INFO
 @property (nonatomic, strong) NSMutableDictionary *packetsInFlight;
 @property (nonatomic, strong) GCDAsyncUdpSocket *udpsocket;
 @property (nonatomic, assign) BOOL canceled;
-@property (nonatomic, assign) uint16_t pusherPort;
 @property (nonatomic, assign) NSString *cardAddress;
 @property (nonatomic, assign) int64_t packetNumber;
 @property (nonatomic, strong) NSOutputStream* writeStream;
@@ -50,14 +49,13 @@ INIT_LOG_LEVEL_INFO
 		self.packetQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0);
 
 		self.pusher = pusher;
-		self.pusherPort = self.pusher.myPort;
 
 		self.flushPromise = [HLDeferred deferredWithResult:nil];
 		self.packetPromises = NSMutableDictionary.new;
 
 		self.udpsocket = [GCDAsyncUdpSocket.alloc initWithDelegate:self delegateQueue:self.packetQueue];
 		NSError *error;
-		[self.udpsocket connectToHost:self.pusher.ipAddress onPort:self.pusherPort error:&error];
+		[self.udpsocket connectToHost:self.pusher.ipAddress onPort:self.pusher.port error:&error];
 		if (error) {
 			[NSException raise:NSGenericException format:@"error connecting to pusher (%@): %@", self.pusher.ipAddress, error];
 		}
@@ -169,6 +167,9 @@ INIT_LOG_LEVEL_INFO
 }
 
 - (HLDeferred*)flush {
+	if (!self.udpsocket.isConnected || self.udpsocket.isClosed) {
+		return self.flushPromise;
+	}
 	int32_t totalLength = 0;
 	BOOL payload;
 	BOOL sentPacket = NO;
@@ -328,13 +329,7 @@ INIT_LOG_LEVEL_INFO
 	dispatch_async(dispatch_get_main_queue(), ^{
 		[self cancelAllInFlight];
 
-		CFTimeInterval delayInSeconds = 1;
-		dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, (int64_t)(delayInSeconds * NSEC_PER_SEC));
-		dispatch_after(popTime, dispatch_get_main_queue(), ^(void){
-			DDLogInfo(@"attempting to reconnect card socket");
-			NSError *error2;
-			[self.udpsocket connectToHost:self.pusher.ipAddress onPort:self.pusherPort error:&error2];
-		});
+		[PPDeviceRegistry.sharedRegistry expireDevice:self.pusher.macAddress];
 	});
 }
 @end
