@@ -11,6 +11,8 @@
 
 @class PPDeviceHeader;
 
+static const int32_t PP_ACCEPTABLE_LOWEST_SW_REV = 121;
+
 typedef enum {
 	PFLAG_PROTECTED = (1<<0),
 	PFLAG_FIXEDSIZE = (1<<1)
@@ -41,6 +43,9 @@ typedef enum {
 @property (nonatomic, assign)	float	brightness;
 @property (nonatomic, assign)	BOOL	autoThrottle;
 @property (nonatomic, assign)	NSTimeInterval extraDelay;
+
+// for sorting pushers
++ (NSComparator)sortComparator;
 
 - (id)initWithHeader:(PPDeviceHeader*)header;
 - (void)copyHeader:(PPPixelPusher*)device;

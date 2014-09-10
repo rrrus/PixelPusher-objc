@@ -111,7 +111,7 @@ const PPCurveBlock sCurveAntilogFunction =  ^float(float input) {
 		}
 
 		self.pixelCount = pixCount;
-		// default to high-precision float pixels
+
 		[self setPixelBuffer:nil
 						size:0
 				   pixelType:ePPPixTypeRGB
@@ -126,7 +126,11 @@ const PPCurveBlock sCurveAntilogFunction =  ^float(float input) {
 }
 
 - (BOOL)isWidePixel {
-	return (self.flags & SFLAG_WIDEPIXELS);
+	return (self.flags & SFLAG_WIDEPIXELS) != 0;
+}
+
+- (BOOL)isRGBOWPixel {
+	return (self.flags & SFLAG_RGBOW) != 0;
 }
 
 - (void)setPixelAtIndex:(uint32_t)index withByteRed:(uint8_t)red green:(uint8_t)green blue:(uint8_t)blue {

@@ -33,10 +33,11 @@ static PPDeviceRegistry *gSharedRegistry;
 
 @interface PPDeviceRegistry () <GCDAsyncUdpSocketDelegate> {
 	NSMutableDictionary *_pusherMap;
+	NSMutableDictionary *_groupMap;
 }
 @property (nonatomic, strong) NSMutableDictionary *pusherLastSeenMap;
-@property (nonatomic, strong) NSMutableDictionary *groupMap;
 @property (nonatomic, strong) NSMutableOrderedSet *sortedPushers;
+@property (nonatomic, strong) NSMutableOrderedSet *sortedGroups;
 @property (nonatomic, strong) NSMutableArray *stripsCache;
 
 @property (nonatomic, strong) GCDAsyncUdpSocket	*discoverySocket;
@@ -107,8 +108,9 @@ static PPDeviceRegistry *gSharedRegistry;
     if (self) {
 		self.frameRateLimit = 60;
 		_pusherMap = NSMutableDictionary.new;
-		self.groupMap = NSMutableDictionary.new;
+		_groupMap = NSMutableDictionary.new;
 		self.sortedPushers = NSMutableOrderedSet.new;
+		self.sortedGroups = NSMutableOrderedSet.new;
 		self.pusherLastSeenMap = NSMutableDictionary.new;
 		self.scene = PPScene.new;
 
@@ -196,18 +198,21 @@ static PPDeviceRegistry *gSharedRegistry;
 	return self.sortedPushers.array;
 }
 
+- (NSArray*)groups {
+	return self.sortedGroups.array;
+}
+
 - (NSArray*)pushersInGroup:(int32_t)groupNumber {
-	NSMutableArray *pushers = NSMutableArray.new;
-	[self.sortedPushers forEach:^(PPPixelPusher *pusher, NSUInteger idx, BOOL *stop) {
-		if (pusher.groupOrdinal == groupNumber) [pushers addObject:pusher];
-	}];
-	return pushers;
+	PPPusherGroup *group = DYNAMIC_CAST(PPPusherGroup, self.groupMap[@(groupNumber)]);
+
+	if (group != nil)	return group.pushers;
+	else				return @[];
 }
 
 - (NSArray*)stripsInGroup:(int32_t)groupNumber {
-	id group = self.groupMap[@(groupNumber)];
+	PPPusherGroup *group = DYNAMIC_CAST(PPPusherGroup, self.groupMap[@(groupNumber)]);
 
-	if (group != nil)	return [group strips];
+	if (group != nil)	return group.strips;
 	else				return @[];
 }
 
@@ -230,7 +235,13 @@ static PPDeviceRegistry *gSharedRegistry;
 		[self.pusherLastSeenMap removeObjectForKey:macAddr];
 		[self.sortedPushers removeObject:pusher];
 		self.stripsCache = nil;
-		[self.groupMap[@(pusher.groupOrdinal)] removePusher:pusher];
+		PPPusherGroup *group = self.groupMap[@(pusher.groupOrdinal)];
+		[group removePusher:pusher];
+		if (group.pushers.count == 0) {
+			[_groupMap removeObjectForKey:@(pusher.groupOrdinal)];
+			[self.sortedGroups removeObject:group];
+		}
+
 		if (self.scene.isRunning) [self.scene removePusher:pusher];
 
 		[NSNotificationCenter.defaultCenter postNotificationName:PPDeviceRegistryRemovedPusher object:pusher];
@@ -301,7 +312,7 @@ static PPDeviceRegistry *gSharedRegistry;
 	DDLogVerbose(@"Device changed: %@", macAddr);
 	PPPixelPusher *pusher = self.pusherMap[macAddr];
 	[pusher copyHeader:device];
-	[self.sortedPushers sortUsingComparator:self.pusherComparator];
+	[self.sortedPushers sortUsingComparator:PPPixelPusher.sortComparator];
 
 	// NOTE: dispatch on main queue if ever udp receive is handled on non-main queue
 	[NSNotificationCenter.defaultCenter postNotificationName:PPDeviceRegistryUpdatedPusher object:pusher];
@@ -315,7 +326,7 @@ static PPDeviceRegistry *gSharedRegistry;
 	_pusherMap[macAddr] = pusher;
 	[self.sortedPushers addObject:pusher];
 	// TODO: would be nice to use a tree-based set that inserts in sort order
-	[self.sortedPushers sortUsingComparator:self.pusherComparator];
+	[self.sortedPushers sortUsingComparator:PPPixelPusher.sortComparator];
 	self.stripsCache = nil;
 
 	if (self.groupMap[@(pusher.groupOrdinal)] != nil) {
@@ -323,34 +334,21 @@ static PPDeviceRegistry *gSharedRegistry;
 		[self.groupMap[@(pusher.groupOrdinal)] addPusher:pusher];
 	} else {
 		// we need to create a PusherGroup since it doesn't exist yet.
-		PPPusherGroup *pg = PPPusherGroup.new;
+		PPPusherGroup *pg = [PPPusherGroup.alloc initWithOrdinal:pusher.groupOrdinal];
 		DDLogVerbose(@"Creating group and adding pusher to group %d", pusher.groupOrdinal);
 		[pg addPusher:pusher];
-		self.groupMap[@(pusher.groupOrdinal)] = pg;
+		_groupMap[@(pusher.groupOrdinal)] = pg;
+		[self.sortedGroups addObject:pg];
+		[self.sortedGroups sortUsingComparator:^NSComparisonResult(PPPusherGroup *group0, PPPusherGroup *group1) {
+			if (group0.ordinal == group1.ordinal) return NSOrderedSame;
+			if (group0.ordinal  < group1.ordinal) return NSOrderedAscending;
+			return NSOrderedDescending;
+		}];
 	}
+
 	pusher.autoThrottle = gAutoThrottle;
 
 	[NSNotificationCenter.defaultCenter postNotificationName:PPDeviceRegistryAddedPusher object:pusher];
-}
-
-- (NSComparator)pusherComparator {
-	return ^NSComparisonResult(PPPixelPusher *obj1, PPPixelPusher *obj2) {
-		int32_t group0 = obj1.groupOrdinal;
-		int32_t group1 = obj2.groupOrdinal;
-		if (group0 != group1) {
-			if (group0 < group1) return NSOrderedAscending;
-			return NSOrderedDescending;
-		}
-
-		int32_t ord1 = obj1.controllerOrdinal;
-		int32_t ord2 = obj2.controllerOrdinal;
-		if (ord1 != ord2) {
-			if (ord1 < ord2) return NSOrderedAscending;
-			return NSOrderedDescending;
-		}
-
-		return [obj1.macAddress compare:obj2.macAddress];
-	};
 }
 
 #pragma mark - GCDAsyncUdpSocketDelegate methods

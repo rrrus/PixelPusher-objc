@@ -12,8 +12,11 @@
 
 @interface PPPusherGroup : NSObject
 
-- (NSSet*)pushers;
-- (NSUInteger)size;
+- (id)initWithOrdinal:(int32_t)ordinal;
+
+- (int32_t)ordinal;
+// pushers array is sorted by controller ordinal
+- (NSArray*)pushers;
 - (NSArray*)strips;
 - (void)removePusher:(PPPixelPusher*)pusher;
 - (void)addPusher:(PPPixelPusher*)pusher;
