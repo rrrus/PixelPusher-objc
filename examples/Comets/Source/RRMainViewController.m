@@ -10,6 +10,7 @@
 #import "PPDeviceRegistry.h"
 #import "PPPixelPusher.h"
 #import "PPPixel.h"
+#import "PPPusherGroup.h"
 #import "PPStrip.h"
 #import "RRAppDelegate.h"
 #import "RRComet.h"
@@ -63,7 +64,9 @@
 #pragma mark - PPFrameDelegate
 
 - (void)renderComets {
-	NSArray *strips = PPDeviceRegistry.sharedRegistry.strips;
+	// play on only group 0 strips
+	PPPusherGroup *group = PPDeviceRegistry.sharedRegistry.groupMap[@(0)];
+	NSArray *strips = group.strips;
 	if (strips.count >= self.numStrips) {
 		for (NSUInteger s=0; s<self.numStrips; s++) {
 			PPStrip *strip = strips[s];

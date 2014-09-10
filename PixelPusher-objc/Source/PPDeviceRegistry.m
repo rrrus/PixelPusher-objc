@@ -31,6 +31,9 @@ static float gPowerScale = 1.0;
 static BOOL gAutoThrottle = NO;
 static PPDeviceRegistry *gSharedRegistry;
 
+// private method to PPStrip.m
+extern void PPStripSetOutputCurveFunction(PPCurveBlock curveFunction);
+
 @interface PPDeviceRegistry () <GCDAsyncUdpSocketDelegate> {
 	NSMutableDictionary *_pusherMap;
 	NSMutableDictionary *_groupMap;
@@ -51,6 +54,10 @@ static PPDeviceRegistry *gSharedRegistry;
 + (PPDeviceRegistry*)sharedRegistry {
 	if (!gSharedRegistry) gSharedRegistry = PPDeviceRegistry.new;
 	return gSharedRegistry;
+}
+
++ (void)setOutputCurveFunction:(PPCurveBlock)curveFunction {
+	PPStripSetOutputCurveFunction(curveFunction);
 }
 
 - (int64_t)totalPower {

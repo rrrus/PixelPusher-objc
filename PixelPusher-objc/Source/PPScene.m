@@ -174,7 +174,7 @@ static uint32_t sFrameCount = 0;
 			dispatch_after(popTime, dispatch_get_main_queue(), ^(void){
 				[self frameTask];
 			});
-#if 0	// enable for render/flush/send stats
+#if 1	// enable for render/flush/send stats
 			if (timesIdx == 0) {
 				CFTimeInterval sumRender = 0;
 				CFTimeInterval sumFlush = 0;
