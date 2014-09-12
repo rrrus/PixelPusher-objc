@@ -58,6 +58,9 @@ extern const PPCurveBlock sCurveAntilogFunction;
 - (int64_t)totalPowerLimit;
 - (float)powerScale;
 
+- (BOOL)scalePixelComponentsForAverageBrightnessLimit:(float)brightnessLimit	// >=1.0 for no scaling
+										forEachPusher:(BOOL)forEachPusher;		// compute average for each pusher
+
 - (NSArray*)strips;
 - (NSArray*)pushers;
 - (NSArray*)groups;

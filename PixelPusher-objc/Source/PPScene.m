@@ -174,7 +174,7 @@ static uint32_t sFrameCount = 0;
 			dispatch_after(popTime, dispatch_get_main_queue(), ^(void){
 				[self frameTask];
 			});
-#if 1	// enable for render/flush/send stats
+#if 0	// enable for render/flush/send stats
 			if (timesIdx == 0) {
 				CFTimeInterval sumRender = 0;
 				CFTimeInterval sumFlush = 0;
@@ -245,5 +245,42 @@ static uint32_t sFrameCount = 0;
 		}
 	}
 }
+
+- (BOOL)scalePixelComponentsForAverageBrightnessLimit:(float)brightnessLimit	// >=1.0 for no scaling
+										forEachPusher:(BOOL)forEachPusher		// compute average for each pusher
+{
+	if (brightnessLimit < 1.0f)
+	{
+		NSDictionary* const pushers = self.pusherMap;
+		__block float average = 0;
+		
+		if (forEachPusher) {
+			
+			[pushers forEach:^(id key, PPPixelPusher *pusher, BOOL *stop) {
+				 const float a = [pusher calcAverageBrightnessValue];
+				 if (a > average) average = a;
+			 }];
+
+		} else {
+		
+			[pushers forEach:^(id key, PPPixelPusher *pusher, BOOL *stop) {
+				average += [pusher calcAverageBrightnessValue];
+			}];
+			average /= pushers.count;
+			
+		}
+		NSAssert(average <= 1.0f, @"brightness average shouldn't exceed 1.0");
+		
+		float scale = 1;
+		if (average > 0) scale = MIN(brightnessLimit / average, 1);
+
+		[pushers forEach:^(id key, PPPixelPusher *pusher, BOOL *stop) {
+			[pusher scaleBrightnessValues:scale];
+		}];
+		return (scale < 1.0f);
+	}
+	return NO;
+}
+
 
 @end

@@ -257,4 +257,23 @@ static const int32_t kDefaultPusherPort = 9897;
 	}
 }
 
+- (float)calcAverageBrightnessValue {
+	float total = 0;
+
+	// TODO: dispatch concurrently
+	for (PPStrip* strip in _strips)	{
+		total += [strip calcAverageBrightnessValue];
+	}
+	return total / _strips.count;
+
+}
+
+- (void)scaleBrightnessValues:(float)scale {
+	if (scale > 1) scale = 1;
+	
+	for (PPStrip* strip in _strips)	{
+		strip.brightnessScale = scale;
+	}
+}
+
 @end

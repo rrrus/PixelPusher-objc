@@ -29,4 +29,7 @@
 - (void)start;
 - (BOOL)cancel;
 
+- (BOOL)scalePixelComponentsForAverageBrightnessLimit:(float)brightnessLimit	// >=1.0 for no scaling
+										forEachPusher:(BOOL)forEachPusher;		// compute average for each pusher
+
 @end

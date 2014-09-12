@@ -57,4 +57,9 @@ typedef enum {
 - (void)increaseExtraDelay:(NSTimeInterval)i;
 - (void)decreaseExtraDelay:(NSTimeInterval)i;
 
+/// calculates the average brightness value of all pixels in all strips
+/// as a float in the range from 0 - 1
+- (float)calcAverageBrightnessValue;
+- (void)scaleBrightnessValues:(float)scale;
+
 @end

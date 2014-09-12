@@ -46,7 +46,8 @@ void PPStripBuildOutputCurve(int depth);
 		self.stripNumber = stripNum;
 		self.flags = flags;
 		self.touched = YES;
-		self.powerScale = 1.0;
+		self.powerScale = 1;
+		self.brightnessScale = 1;
 		self.brightness = PPFloatPixelMake(1, 1, 1);
 
 		PPComponentType compType = ePPCompTypeByte;
@@ -74,29 +75,29 @@ void PPStripBuildOutputCurve(int depth);
 }
 
 - (BOOL)isWidePixel {
-	return (self.flags & SFLAG_WIDEPIXELS) != 0;
+	return (_flags & SFLAG_WIDEPIXELS) != 0;
 }
 
 - (BOOL)isRGBOWPixel {
-	return (self.flags & SFLAG_RGBOW) != 0;
+	return (_flags & SFLAG_RGBOW) != 0;
 }
 
 - (void)setPixelAtIndex:(uint32_t)index withByteRed:(uint8_t)red green:(uint8_t)green blue:(uint8_t)blue {
-	if (!self.setPixWithByte) [self configureSetPix];
-	self.setPixWithByte(index, red, green, blue);
-	self.touched = YES;
+	if (!_setPixWithByte) [self configureSetPix];
+	_setPixWithByte(index, red, green, blue);
+	_touched = YES;
 }
 
 - (void)setPixelAtIndex:(uint32_t)index withShortRed:(uint16_t)red green:(uint16_t)green blue:(uint16_t)blue {
-	if (!self.setPixWithShort) [self configureSetPix];
-	self.setPixWithShort(index, red, green, blue);
-	self.touched = YES;
+	if (!_setPixWithShort) [self configureSetPix];
+	_setPixWithShort(index, red, green, blue);
+	_touched = YES;
 }
 
 - (void)setPixelAtIndex:(uint32_t)index withFloatRed:(float)red green:(float)green blue:(float)blue {
-	if (!self.setPixWithFloat) [self configureSetPix];
-	self.setPixWithFloat(index, red, green, blue);
-	self.touched = YES;
+	if (!_setPixWithFloat) [self configureSetPix];
+	_setPixWithFloat(index, red, green, blue);
+	_touched = YES;
 }
 
 - (void)setPixelBuffer:(void*)buffer
@@ -106,12 +107,12 @@ void PPStripBuildOutputCurve(int depth);
 		   pixelStride:(size_t)stride
 {
 	// if the requested format is the same as what we have already and
-	// either the buffer is the basically the same, early exit.
-	if (self.bufferCompType == compType
-		&& self.bufferPixType == pixType
-		&& self.bufferPixStride == stride
-		&& (	(buffer == nil && self.internallyAllocatedBuffer)
-			 || (buffer != nil && buffer == self.buffer)
+	// the buffer is the basically the same, early exit.
+	if (_bufferCompType == compType
+		&& _bufferPixType == pixType
+		&& _bufferPixStride == stride
+		&& (	(buffer == nil && _internallyAllocatedBuffer)
+			 || (buffer != nil && buffer == _buffer)
 			)
 		)
 	{
@@ -137,7 +138,7 @@ void PPStripBuildOutputCurve(int depth);
 	
 	if (buffer == nil) {
 		// allocate buffer internally using specified pixel types
-		size = self.pixelCount*stride;
+		size = _pixelCount * stride;
 		self.internallyAllocatedBuffer = [NSMutableData dataWithCapacity:size];
 		buffer = self.internallyAllocatedBuffer.mutableBytes;
 	} else if (self.internallyAllocatedBuffer && buffer != self.internallyAllocatedBuffer.mutableBytes) {
@@ -231,132 +232,211 @@ void PPStripBuildOutputCurve(int depth);
 	}
 }
 
+- (float)calcAverageBrightnessValue {
+
+#define SUM_PIX_WITH_LUT(scale) \
+sum += gOutputLUT8[ (uint8_t)((uint16_t)(srcPix->red   * scale) / 256) ]; \
+sum += gOutputLUT8[ (uint8_t)((uint16_t)(srcPix->green * scale) / 256) ]; \
+sum += gOutputLUT8[ (uint8_t)((uint16_t)(srcPix->blue  * scale) / 256) ];
+
+	uint8_t *srcP = self.buffer;
+	uint32_t numPix = MIN(self.bufferPixCount, self.pixelCount);
+	uint8_t* endP = srcP + numPix*_bufferPixStride;
+	const size_t stride = _bufferPixStride;
+	float average;
+
+	// use output curve to map to brightness
+	if (gOutputCurveFunction != sCurveLinearFunction) {
+		// this may fire with 16-bit pixels.  fix it when we have some to test with
+		NSAssert(gOutputLUT8 != nil, @"no 8-bit lookup table!");
+		if (self.bufferCompType == ePPCompTypeByte) {
+			uint32_t sum = 0;
+			while (srcP < endP) {
+				PPBytePixel *srcPix = (PPBytePixel*)srcP;
+				SUM_PIX_WITH_LUT(256);
+				srcP += stride;
+			}
+			average = (float)sum / (numPix * 3 * 255);
+		} else if (self.bufferCompType == ePPCompTypeShort) {
+			uint32_t sum = 0;
+			while (srcP < endP) {
+				PPShortPixel *srcPix = (PPShortPixel*)srcP;
+				SUM_PIX_WITH_LUT(1);
+				srcP += stride;
+			}
+			average = (float)sum / (numPix * 3 * 255);
+		} else {
+			float sum = 0;
+			while (srcP < endP) {
+				PPFloatPixel *srcPix = (PPFloatPixel*)srcP;
+				SUM_PIX_WITH_LUT(65535);
+				srcP += stride;
+			}
+			average = sum / (numPix * 3 * 255);
+		}
+	} else {
+		if (self.bufferCompType == ePPCompTypeByte) {
+			uint32_t sum = 0;
+			while (srcP < endP) {
+				PPBytePixel *srcPix = (PPBytePixel*)srcP;
+				sum += srcPix->red; sum += srcPix->green; sum += srcPix->blue;
+				srcP += stride;
+			}
+			average = (float)sum / (numPix * 3 * 255);
+		} else if (self.bufferCompType == ePPCompTypeShort) {
+			uint32_t sum = 0;
+			while (srcP < endP) {
+				PPShortPixel *srcPix = (PPShortPixel*)srcP;
+				sum += srcPix->red; sum += srcPix->green; sum += srcPix->blue;
+				srcP += stride;
+			}
+			average = (float)sum / (numPix * 3 * 65535);
+		} else {
+			float sum = 0;
+			while (srcP < endP) {
+				PPFloatPixel *srcPix = (PPFloatPixel*)srcP;
+				sum += srcPix->red; sum += srcPix->green; sum += srcPix->blue;
+				srcP += stride;
+			}
+			average = sum / (numPix * 3);
+		}
+	}
+	
+	return average;
+}
+
+- (uint32_t)serialize:(uint8_t*)buffer size:(size_t)size {
+	
 #define COPY_PIX_WITH_LUT(scale) \
-*(P++) = (uint8_t)(gOutputLUT8[(uint8_t) ((uint16_t)(srcPix->red * scale) / 256)] * iPostLutScaleRed / 65536); \
-*(P++) = (uint8_t)(gOutputLUT8[(uint8_t) ((uint16_t)(srcPix->green * scale) / 256)] * iPostLutScaleGrn / 65536); \
-*(P++) = (uint8_t)(gOutputLUT8[(uint8_t) ((uint16_t)(srcPix->blue * scale) / 256)] * iPostLutScaleBlu / 65536); \
-srcP += self.bufferPixStride;
+*(P++) = (uint8_t)(gOutputLUT8[ (uint8_t)((uint16_t)(srcPix->red   * scale) / 256) ] * iPostLutScaleRed / 65536); \
+*(P++) = (uint8_t)(gOutputLUT8[ (uint8_t)((uint16_t)(srcPix->green * scale) / 256) ] * iPostLutScaleGrn / 65536); \
+*(P++) = (uint8_t)(gOutputLUT8[ (uint8_t)((uint16_t)(srcPix->blue  * scale) / 256) ] * iPostLutScaleBlu / 65536); \
+srcP += stride;
 
 #define COPY_PIX(scale) \
-*(P++) = (uint8_t)( (uint16_t)(srcPix->red * scale) * iPostLutScaleRed / (256*65536)); \
+*(P++) = (uint8_t)( (uint16_t)(srcPix->red   * scale) * iPostLutScaleRed / (256*65536)); \
 *(P++) = (uint8_t)( (uint16_t)(srcPix->green * scale) * iPostLutScaleGrn / (256*65536)); \
-*(P++) = (uint8_t)( (uint16_t)(srcPix->blue * scale) * iPostLutScaleBlu / (256*65536)); \
-srcP += self.bufferPixStride;
+*(P++) = (uint8_t)( (uint16_t)(srcPix->blue  * scale) * iPostLutScaleBlu / (256*65536)); \
+srcP += stride;
 
 #define COPY_PIX_WIDE_WITH_LUT(scale) \
 uint16_t wide; \
-wide = (uint16_t)(gOutputLUT16[(uint16_t) (srcPix->red * scale)] * iPostLutScaleRed / 65536); \
+wide = (uint16_t)(gOutputLUT16[ (uint16_t)(srcPix->red   * scale) ] * iPostLutScaleRed / 65536); \
 *P = (wide & 0xff00) >> 8; \
 *(P+3) = (wide & 0x00ff); \
 P++; \
-wide = (uint16_t)(gOutputLUT16[(uint16_t) (srcPix->green * scale)] * iPostLutScaleGrn / 65536); \
+wide = (uint16_t)(gOutputLUT16[ (uint16_t)(srcPix->green * scale) ] * iPostLutScaleGrn / 65536); \
 *P = (wide & 0xff00) >> 8; \
 *(P+3) = (wide & 0x00ff); \
 P++; \
-wide = (uint16_t)(gOutputLUT16[(uint16_t) (srcPix->blue * scale)] * iPostLutScaleBlu / 65536); \
+wide = (uint16_t)(gOutputLUT16[ (uint16_t)(srcPix->blue  * scale) ] * iPostLutScaleBlu / 65536); \
 *P = (wide & 0xff00) >> 8; \
 *(P+3) = (wide & 0x00ff); \
 P += 4; /* skip the next 3 bytes we already filled in */ \
-srcP += self.bufferPixStride;
+srcP += stride;
 
 #define COPY_PIX_WIDE(scale) \
 uint16_t wide; \
-wide = (uint16_t) ((uint16_t)(srcPix->red * scale) * iPostLutScaleRed / 65536); \
-*P = (wide & 0xf0) >> 8; \
-*(P+3) = (wide & 0x0f); \
+wide = (uint16_t) ((uint16_t)(srcPix->red   * scale) * iPostLutScaleRed / 65536); \
+*P = (wide & 0xff00) >> 8; \
+*(P+3) = (wide & 0x00ff); \
 P++; \
 wide = (uint16_t) ((uint16_t)(srcPix->green * scale) * iPostLutScaleGrn / 65536); \
-*P = (wide & 0xf0) >> 8; \
-*(P+3) = (wide & 0x0f); \
+*P = (wide & 0xff00) >> 8; \
+*(P+3) = (wide & 0x00ff); \
 P++; \
-wide = (uint16_t) ((uint16_t)(srcPix->blue * scale) * iPostLutScaleBlu / 65536); \
-*P = (wide & 0xf0) >> 8; \
-*(P+3) = (wide & 0x0f); \
+wide = (uint16_t) ((uint16_t)(srcPix->blue  * scale) * iPostLutScaleBlu / 65536); \
+*P = (wide & 0xff00) >> 8; \
+*(P+3) = (wide & 0x00ff); \
 P += 4; /* skip the next 3 bytes we already filled in */ \
-srcP += self.bufferPixStride;
-
-
-- (uint32_t)serialize:(uint8_t*)buffer size:(size_t)size {
+srcP += stride;
 
 	// convert brightness plus powerScale to 16-bit binary fraction
-	uint32_t iPostLutScaleRed = (uint32_t)(self.brightness.red * self.powerScale * 65536);
-	uint32_t iPostLutScaleGrn = (uint32_t)(self.brightness.green * self.powerScale * 65536);
-	uint32_t iPostLutScaleBlu = (uint32_t)(self.brightness.blue * self.powerScale * 65536);
-	__block uint8_t *P = buffer;
-	uint32_t pixToCopy = MIN(self.bufferPixCount, self.pixelCount);
-	uint8_t *srcP = self.buffer;
+	const uint32_t iPostLutScaleRed = (uint32_t)(_brightness.red   * _powerScale * _brightnessScale * 65536);
+	const uint32_t iPostLutScaleGrn = (uint32_t)(_brightness.green * _powerScale * _brightnessScale * 65536);
+	const uint32_t iPostLutScaleBlu = (uint32_t)(_brightness.blue  * _powerScale * _brightnessScale * 65536);
+
+	// figure out how much to copy based on the smallest of the strip's pixels,
+	// the destination buffer size, the source buffer size.
+	size_t destPix = size/3;
+	if (_flags & SFLAG_WIDEPIXELS) destPix /= 2;
+	destPix = MIN(destPix, _pixelCount);
+	uint32_t pixToCopy = MIN(_bufferPixCount, destPix);
 	
-	if (self.flags & SFLAG_WIDEPIXELS) {
-		uint8_t *endP = P + (pixToCopy*2*3);
+	const size_t stride = _bufferPixStride;
+	uint8_t *srcP = _buffer;
+	uint8_t *endP = srcP + pixToCopy * stride;
+	uint8_t *P = buffer;
+	
+	if (_flags & SFLAG_WIDEPIXELS) {
 		if (gOutputCurveFunction != sCurveLinearFunction) {
 			
-			if (self.bufferCompType == ePPCompTypeByte) {
-				while (P < endP) {
+			if (_bufferCompType == ePPCompTypeByte) {
+				while (srcP < endP) {
 					PPBytePixel *srcPix = (PPBytePixel*)srcP;
 					COPY_PIX_WIDE_WITH_LUT(256);
 				}
-			} else if (self.bufferCompType == ePPCompTypeShort) {
-				while (P < endP) {
+			} else if (_bufferCompType == ePPCompTypeShort) {
+				while (srcP < endP) {
 					PPShortPixel *srcPix = (PPShortPixel*)srcP;
 					COPY_PIX_WIDE_WITH_LUT(1);
 				}
 			} else {
-				while (P < endP) {
+				while (srcP < endP) {
 					PPFloatPixel *srcPix = (PPFloatPixel*)srcP;
 					COPY_PIX_WIDE_WITH_LUT(65535);
 				}
 			}
 		} else {
-			if (self.bufferCompType == ePPCompTypeByte) {
-				while (P < endP) {
+			if (_bufferCompType == ePPCompTypeByte) {
+				while (srcP < endP) {
 					PPBytePixel *srcPix = (PPBytePixel*)srcP;
 					COPY_PIX_WIDE(256);
 				}
-			} else if (self.bufferCompType == ePPCompTypeShort) {
-				while (P < endP) {
+			} else if (_bufferCompType == ePPCompTypeShort) {
+				while (srcP < endP) {
 					PPShortPixel *srcPix = (PPShortPixel*)srcP;
 					COPY_PIX_WIDE(1);
 				}
 			} else {
-				while (P < endP) {
+				while (srcP < endP) {
 					PPFloatPixel *srcPix = (PPFloatPixel*)srcP;
 					COPY_PIX_WIDE(65535);
 				}
 			}
 		}
 	} else {
-		uint8_t *endP = P + (pixToCopy*3);
 		if (gOutputCurveFunction != sCurveLinearFunction) {
-			if (self.bufferCompType == ePPCompTypeByte) {
-				while (P < endP) {
+			if (_bufferCompType == ePPCompTypeByte) {
+				while (srcP < endP) {
 					PPBytePixel *srcPix = (PPBytePixel*)srcP;
 					COPY_PIX_WITH_LUT(256);
 				}
-			} else if (self.bufferCompType == ePPCompTypeShort) {
-				while (P < endP) {
+			} else if (_bufferCompType == ePPCompTypeShort) {
+				while (srcP < endP) {
 					PPShortPixel *srcPix = (PPShortPixel*)srcP;
 					COPY_PIX_WITH_LUT(1);
 				}
 			} else {
-				while (P < endP) {
+				while (srcP < endP) {
 					PPFloatPixel *srcPix = (PPFloatPixel*)srcP;
 					COPY_PIX_WITH_LUT(65535);
 				}
 			}
 		} else {
-			if (self.bufferCompType == ePPCompTypeByte) {
-				while (P < endP) {
+			if (_bufferCompType == ePPCompTypeByte) {
+				while (srcP < endP) {
 					PPBytePixel *srcPix = (PPBytePixel*)srcP;
 					COPY_PIX(256);
 				}
-			} else if (self.bufferCompType == ePPCompTypeShort) {
-				while (P < endP) {
+			} else if (_bufferCompType == ePPCompTypeShort) {
+				while (srcP < endP) {
 					PPShortPixel *srcPix = (PPShortPixel*)srcP;
 					COPY_PIX(1);
 				}
 			}
-			if (self.bufferCompType == ePPCompTypeFloat) {
-				while (P < endP) {
+			if (_bufferCompType == ePPCompTypeFloat) {
+				while (srcP < endP) {
 					PPFloatPixel *srcPix = (PPFloatPixel*)srcP;
 					COPY_PIX(65535);
 				}
@@ -365,15 +445,15 @@ srcP += self.bufferPixStride;
 	}
 	
 	// if the pixel buffer isn't big enough, pad it out with 0's
-	if (pixToCopy < self.pixelCount) {
-		uint32_t padding = self.pixelCount - pixToCopy;
-		if (self.flags & SFLAG_WIDEPIXELS) padding *= 2;
+	if (pixToCopy < destPix) {
+		uint32_t padding = destPix - pixToCopy;
+		if (_flags & SFLAG_WIDEPIXELS) padding *= 2;
 		padding *= 3;
 		memset(P, 0, padding);
 		P += padding;
 	}
 	
-    self.touched = NO;
+    _touched = NO;
 	return (uint32_t)(P-buffer);
 }
 

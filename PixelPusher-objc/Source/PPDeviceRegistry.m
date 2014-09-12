@@ -255,10 +255,6 @@ extern void PPStripSetOutputCurveFunction(PPCurveBlock curveFunction);
 	}
 }
 
-- (void)setStrip:(NSString*)macAddress index:(int32_t)stripNumber pixels:(NSArray*)pixels {
-//	[self.pusherMap[macAddress] setStrip:stripNumber pixels:pixels];
-}
-
 - (void)startPushing {
 	if (!self.scene.isRunning) [self.scene start];
 }
@@ -371,6 +367,13 @@ extern void PPStripSetOutputCurveFunction(PPCurveBlock curveFunction);
 	pusher.autoThrottle = gAutoThrottle;
 
 	[NSNotificationCenter.defaultCenter postNotificationName:PPDeviceRegistryAddedPusher object:pusher];
+}
+
+- (BOOL)scalePixelComponentsForAverageBrightnessLimit:(float)brightnessLimit	// >=1.0 for no scaling
+										forEachPusher:(BOOL)forEachPusher		// compute average for each pusher
+{
+	return [self.scene scalePixelComponentsForAverageBrightnessLimit:brightnessLimit
+													   forEachPusher:forEachPusher];
 }
 
 #pragma mark - GCDAsyncUdpSocketDelegate methods

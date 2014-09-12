@@ -30,6 +30,7 @@ typedef enum : NSUInteger {
 @property (nonatomic, readonly) BOOL isRGBOWPixel;
 @property (nonatomic, assign) BOOL touched;
 @property (nonatomic, assign) float powerScale;
+@property (nonatomic, assign) float brightnessScale;
 @property (nonatomic, assign) PPFloatPixel brightness;
 
 @property (nonatomic, readonly) void* buffer;
@@ -53,7 +54,6 @@ typedef enum : NSUInteger {
 /// set a pixel with floats
 - (void)setPixelAtIndex:(uint32_t)index withFloatRed:(float)red green:(float)green blue:(float)blue;
 
-
 /** specify an external pixel buffer
  * 
  * Buffers should be in RGB order.  Color components can be byte, short, or float.  You may use
@@ -72,5 +72,9 @@ typedef enum : NSUInteger {
 		 componentType:(PPComponentType)compType
 		   pixelStride:(size_t)stride;
 
+
+/// calculates the average brightness value of all pixels in the strip
+/// as a float in the range from 0 - 1.  brightness is the post-output-curve value.
+- (float)calcAverageBrightnessValue;
 
 @end
