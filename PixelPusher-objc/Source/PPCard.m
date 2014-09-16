@@ -169,45 +169,45 @@ INIT_LOG_LEVEL_INFO
 }
 
 - (HLDeferred*)flush {
-	if (!self.udpsocket.isConnected || self.udpsocket.isClosed) {
-		return self.flushPromise;
+	if (!_udpsocket.isConnected || _udpsocket.isClosed) {
+		return _flushPromise;
 	}
 	int32_t totalLength = 0;
 	BOOL payload;
 	BOOL sentPacket = NO;
 	float powerScale = PPDeviceRegistry.sharedRegistry.powerScale;
 
-	const NSUInteger nStrips = self.pusher.strips.count;
+	const NSUInteger nStrips = _pusher.strips.count;
 	int32_t stripIdx = 0;
-	const int32_t requestedStripsPerPacket = self.pusher.maxStripsPerPacket;
+	const int32_t requestedStripsPerPacket = _pusher.maxStripsPerPacket;
 	const int32_t stripPerPacket = MIN(requestedStripsPerPacket, (int32_t)nStrips);
 
-	if (self.pusher.updatePeriod > 0.0001) {
-		self.threadSleep = self.pusher.updatePeriod + 0.001;
+	if (_pusher.updatePeriod > 0.0001) {
+		_threadSleep = _pusher.updatePeriod + 0.001;
 	} else {
 		// Shoot for the framelimit.
-		self.threadSleep = ((1.0/PPDeviceRegistry.sharedRegistry.frameRateLimit) / (nStrips / stripPerPacket));
+		_threadSleep = ((1.0/PPDeviceRegistry.sharedRegistry.frameRateLimit) / (nStrips / stripPerPacket));
 	}
 	
 	// Handle errant delay calculation in the firmware.
-	if (self.pusher.updatePeriod > 0.1) {
-		self.threadSleep = (0.016 / (nStrips / stripPerPacket));
+	if (_pusher.updatePeriod > 0.1) {
+		_threadSleep = (0.016 / (nStrips / stripPerPacket));
 	}
 	
-	CFTimeInterval totalDelay = self.threadSleep + self.threadExtraDelay + self.pusher.extraDelay;
+	CFTimeInterval totalDelay = _threadSleep + _threadExtraDelay + _pusher.extraDelay;
 
 	CFTimeInterval frameTime = CACurrentMediaTime();
-	self.lastFrameTime = frameTime;
+	_lastFrameTime = frameTime;
 	CFTimeInterval packetTime = frameTime;
 //	DDLogInfo(@"flushing card with inter-packet delay %1.3fms", totalDelay*1000);
 	while (stripIdx < nStrips) {
 		payload = NO;
-		NSMutableData *packet = self.packetFromPool;
+		NSMutableData *packet = [self packetFromPool];
 		uint8_t *P = packet.mutableBytes;
 		uint8_t *endP = P + packet.length;
 		int32_t packetLength = 0;
 
-		packetLength += addIntToBuffer(&P, (int32_t)self.packetNumber);
+		packetLength += addIntToBuffer(&P, (int32_t)_packetNumber);
 		
 		// TODO: PusherCommands sent here!
 		
@@ -215,31 +215,31 @@ INIT_LOG_LEVEL_INFO
 			if (stripIdx >= nStrips) {
 				break;
 			}
-			PPStrip *strip = self.pusher.strips[stripIdx];
+			PPStrip *strip = _pusher.strips[stripIdx];
 			stripIdx++;
 			// output the strip if is touched, or if this is a fixed packet size pusher.
-			if (strip.touched || (self.pusher.pusherFlags & PFLAG_FIXEDSIZE)) {
+			if (strip.touched || (_pusher.pusherFlags & PFLAG_FIXEDSIZE)) {
 				strip.powerScale = powerScale;
 				*(P++) = (uint8_t)strip.stripNumber;
 				packetLength++;
 				uint32_t stripPacketSize = [strip serialize:P size:(endP-P)];
-				if (self.writeStream) {
+				if (_writeStream) {
 					// TODO: update to canfile format 2
 					
 					// we need to make the pusher wait on playback the same length of time between strips as we wait between packets
 					// this number is in microseconds.
 					uint32_t buf = 0;
-					if (i == 0 && self.lastSendTime != 0 ) {  // only write the delay in the first strip in a datagram.
-						buf = NSSwapHostIntToLittle( (uint32_t)((packetTime-self.lastSendTime)*1000000.) );
+					if (i == 0 && _lastSendTime != 0 ) {  // only write the delay in the first strip in a datagram.
+						buf = NSSwapHostIntToLittle( (uint32_t)((packetTime-_lastSendTime)*1000000.) );
 					}
-					[self.writeStream write:(uint8_t*)&buf maxLength:sizeof(buf)];
-
-					[self.writeStream write:P-1 maxLength:stripPacketSize+1];
+					[_writeStream write:(uint8_t*)&buf maxLength:sizeof(buf)];
+					
+					[_writeStream write:P-1 maxLength:stripPacketSize+1];
 				}
 				packetLength += stripPacketSize;
 				P += stripPacketSize;
 
-				NSAssert(packetLength <= self.maxPacketSize, @"packet buffer overrun!");
+				NSAssert(packetLength <= _maxPacketSize, @"packet buffer overrun!");
 				payload = true;
 				i++;
 			}
@@ -247,38 +247,38 @@ INIT_LOG_LEVEL_INFO
 		if (payload) {
 			// make a promise for this packet send
 			HLDeferred *packetPromise = HLDeferred.new;
-			id key = @(self.packetNumber);
-			self.packetPromises[key] = packetPromise;
+			id key = @(_packetNumber);
+			_packetPromises[key] = packetPromise;
 			// remember this packet
-			self.packetsInFlight[key] = packet;
+			_packetsInFlight[key] = packet;
 			// make a new NSData object with the actual number of bytes packaged
 			NSData *outGoing = [NSData dataWithBytesNoCopy:packet.mutableBytes length:packetLength freeWhenDone:NO];
 			// send the packet
-			int64_t packetNumber = self.packetNumber;
+			int64_t packetNumber = _packetNumber;
 
 			// calculate the send time of the packet
 			CFTimeInterval now = CACurrentMediaTime();
-			CFTimeInterval lastInterval = now - self.lastSendTime;
+			CFTimeInterval lastInterval = now - _lastSendTime;
 			CFTimeInterval delay = totalDelay;
 			if (lastInterval > totalDelay) {
 				delay = 0;
 			} else {
 				delay = totalDelay - lastInterval;
 			}
-			self.lastSendTime = now + delay;
-			dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(delay * NSEC_PER_SEC)), self.packetQueue, ^{
-//				CFTimeInterval delta = CACurrentMediaTime() - self.lastFrameTime;
-				[self.udpsocket sendData:outGoing withTimeout:1 tag:packetNumber];
+			_lastSendTime = now + delay;
+			dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(delay * NSEC_PER_SEC)), _packetQueue, ^{
+//				CFTimeInterval delta = CACurrentMediaTime() - _lastFrameTime;
+				[_udpsocket sendData:outGoing withTimeout:1 tag:packetNumber];
 				dispatch_async(dispatch_get_main_queue(), ^{
 					// resolve packet promise
-					HLDeferred *promise = self.packetPromises[key];
-					[self.packetPromises removeObjectForKey:key];
+					HLDeferred *promise = _packetPromises[key];
+					[_packetPromises removeObjectForKey:key];
 					[promise takeResult:nil];
 				});
 //				DDLogInfo(@"packet %lld queue time %1.3fms", packetNumber, delta*1000);
 			});
 			// bump the packet count
-			self.packetNumber++;
+			_packetNumber++;
 			sentPacket = YES;
 			totalLength += packetLength;
 			packetTime += totalDelay;
@@ -292,10 +292,10 @@ INIT_LOG_LEVEL_INFO
 		// packet promises.
 		// if flush is called before a previous flush completes, the returned promise
 		// will wait for all uncompleted packet promises to complete.
-		self.flushPromise = [HLDeferredList.alloc initWithDeferreds:[self.packetPromises allValues]];
+		_flushPromise = [HLDeferredList.alloc initWithDeferreds:[_packetPromises allValues]];
 	}
 
-	return self.flushPromise;
+	return _flushPromise;
 }
 
 #pragma mark - GCDAsyncUdpSocketDelegate methods

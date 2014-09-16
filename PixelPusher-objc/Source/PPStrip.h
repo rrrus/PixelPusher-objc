@@ -7,6 +7,7 @@
 //
 
 #import <Foundation/Foundation.h>
+#import "PPPixel.h"
 
 typedef enum : NSUInteger {
     ePPCompTypeByte,

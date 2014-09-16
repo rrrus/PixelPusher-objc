@@ -16,10 +16,10 @@ typedef void (^PPSetPixWithShortBlock)(uint32_t index, uint16_t red, uint16_t gr
 typedef void (^PPSetPixWithByteBlock)(uint32_t index, uint8_t red, uint8_t green, uint8_t blue);
 
 static PPCurveBlock gOutputCurveFunction;
-static const uint8_t * gOutputLUT8 = nil;
-static uint16_t* gOutputLUT16 = nil;
+static const uint16_t* gOutputLUT8 = nil;
+static const uint16_t* gOutputLUT16 = nil;
 
-void PPStripBuildOutputCurve(int depth);
+void PPStripBuildOutputCurves();
 
 @interface PPStrip ()
 @property (nonatomic, assign) uint32_t pixelCount;
@@ -40,6 +40,10 @@ void PPStripBuildOutputCurve(int depth);
 
 @implementation PPStrip
 
++ (void)load {
+	PPStripBuildOutputCurves();
+}
+
 - (id)initWithStripNumber:(int32_t)stripNum pixelCount:(int32_t)pixCount flags:(int32_t)flags{
 	self = [self init];
 	if (self) {
@@ -54,11 +58,7 @@ void PPStripBuildOutputCurve(int depth);
 		if (self.flags & SFLAG_WIDEPIXELS) {
 			compType = ePPCompTypeShort;
 			pixCount = (pixCount+1)/2;
-			if (!gOutputLUT16) PPStripBuildOutputCurve(16);
-		} else {
-			if (!gOutputLUT8) PPStripBuildOutputCurve(8);
 		}
-
 		self.pixelCount = pixCount;
 
 		[self setPixelBuffer:nil
@@ -140,6 +140,7 @@ void PPStripBuildOutputCurve(int depth);
 		// allocate buffer internally using specified pixel types
 		size = _pixelCount * stride;
 		self.internallyAllocatedBuffer = [NSMutableData dataWithCapacity:size];
+		memset(self.internallyAllocatedBuffer.mutableBytes, 0, size);
 		buffer = self.internallyAllocatedBuffer.mutableBytes;
 	} else if (self.internallyAllocatedBuffer && buffer != self.internallyAllocatedBuffer.mutableBytes) {
 		// using an external buffer, don't need this anymore
@@ -234,11 +235,6 @@ void PPStripBuildOutputCurve(int depth);
 
 - (float)calcAverageBrightnessValue {
 
-#define SUM_PIX_WITH_LUT(scale) \
-sum += gOutputLUT8[ (uint8_t)((uint16_t)(srcPix->red   * scale) / 256) ]; \
-sum += gOutputLUT8[ (uint8_t)((uint16_t)(srcPix->green * scale) / 256) ]; \
-sum += gOutputLUT8[ (uint8_t)((uint16_t)(srcPix->blue  * scale) / 256) ];
-
 	uint8_t *srcP = self.buffer;
 	uint32_t numPix = MIN(self.bufferPixCount, self.pixelCount);
 	uint8_t* endP = srcP + numPix*_bufferPixStride;
@@ -247,33 +243,33 @@ sum += gOutputLUT8[ (uint8_t)((uint16_t)(srcPix->blue  * scale) / 256) ];
 
 	// use output curve to map to brightness
 	if (gOutputCurveFunction != sCurveLinearFunction) {
-		// this may fire with 16-bit pixels.  fix it when we have some to test with
-		NSAssert(gOutputLUT8 != nil, @"no 8-bit lookup table!");
+		uint32_t sum = 0;
 		if (self.bufferCompType == ePPCompTypeByte) {
-			uint32_t sum = 0;
 			while (srcP < endP) {
 				PPBytePixel *srcPix = (PPBytePixel*)srcP;
-				SUM_PIX_WITH_LUT(256);
+				sum += gOutputLUT8[ srcPix->red ];
+				sum += gOutputLUT8[ srcPix->green ];
+				sum += gOutputLUT8[ srcPix->blue ];
 				srcP += stride;
 			}
-			average = (float)sum / (numPix * 3 * 255);
 		} else if (self.bufferCompType == ePPCompTypeShort) {
-			uint32_t sum = 0;
 			while (srcP < endP) {
 				PPShortPixel *srcPix = (PPShortPixel*)srcP;
-				SUM_PIX_WITH_LUT(1);
+				sum += gOutputLUT16[ srcPix->red ];
+				sum += gOutputLUT16[ srcPix->green ];
+				sum += gOutputLUT16[ srcPix->blue ];
 				srcP += stride;
 			}
-			average = (float)sum / (numPix * 3 * 255);
 		} else {
-			float sum = 0;
 			while (srcP < endP) {
 				PPFloatPixel *srcPix = (PPFloatPixel*)srcP;
-				SUM_PIX_WITH_LUT(65535);
+				sum += gOutputLUT16[ (uint16_t)(srcPix->red * 65535) ];
+				sum += gOutputLUT16[ (uint16_t)(srcPix->green * 65535) ];
+				sum += gOutputLUT16[ (uint16_t)(srcPix->blue * 65535) ];
 				srcP += stride;
 			}
-			average = sum / (numPix * 3 * 255);
 		}
+		average = sum / (numPix * 3 * 65535);
 	} else {
 		if (self.bufferCompType == ePPCompTypeByte) {
 			uint32_t sum = 0;
@@ -307,45 +303,45 @@ sum += gOutputLUT8[ (uint8_t)((uint16_t)(srcPix->blue  * scale) / 256) ];
 
 - (uint32_t)serialize:(uint8_t*)buffer size:(size_t)size {
 	
-#define COPY_PIX_WITH_LUT(scale) \
-*(P++) = (uint8_t)(gOutputLUT8[ (uint8_t)((uint16_t)(srcPix->red   * scale) / 256) ] * iPostLutScaleRed / 65536); \
-*(P++) = (uint8_t)(gOutputLUT8[ (uint8_t)((uint16_t)(srcPix->green * scale) / 256) ] * iPostLutScaleGrn / 65536); \
-*(P++) = (uint8_t)(gOutputLUT8[ (uint8_t)((uint16_t)(srcPix->blue  * scale) / 256) ] * iPostLutScaleBlu / 65536); \
+#define COPY_PIX_WITH_LUT(__LUT, __scale) \
+*(P++) = (uint8_t) MIN(255, (__LUT[ (uint32_t)(srcPix->red   * __scale) ] * iPostLutScaleRed) >> 24); \
+*(P++) = (uint8_t) MIN(255, (__LUT[ (uint32_t)(srcPix->green * __scale) ] * iPostLutScaleGrn) >> 24); \
+*(P++) = (uint8_t) MIN(255, (__LUT[ (uint32_t)(srcPix->blue  * __scale) ] * iPostLutScaleBlu) >> 24); \
 srcP += stride;
 
-#define COPY_PIX(scale) \
-*(P++) = (uint8_t)( (uint16_t)(srcPix->red   * scale) * iPostLutScaleRed / (256*65536)); \
-*(P++) = (uint8_t)( (uint16_t)(srcPix->green * scale) * iPostLutScaleGrn / (256*65536)); \
-*(P++) = (uint8_t)( (uint16_t)(srcPix->blue  * scale) * iPostLutScaleBlu / (256*65536)); \
+#define COPY_PIX(__scale) \
+*(P++) = (uint8_t) MIN(255, ( (uint32_t)(srcPix->red   * __scale) * iPostLutScaleRed) >> 24); \
+*(P++) = (uint8_t) MIN(255, ( (uint32_t)(srcPix->green * __scale) * iPostLutScaleGrn) >> 24); \
+*(P++) = (uint8_t) MIN(255, ( (uint32_t)(srcPix->blue  * __scale) * iPostLutScaleBlu) >> 24); \
 srcP += stride;
 
-#define COPY_PIX_WIDE_WITH_LUT(scale) \
+#define COPY_PIX_WIDE_WITH_LUT(__LUT, __scale) \
 uint16_t wide; \
-wide = (uint16_t)(gOutputLUT16[ (uint16_t)(srcPix->red   * scale) ] * iPostLutScaleRed / 65536); \
+wide = (uint16_t) MIN(65535, (__LUT[ (uint32_t)(srcPix->red   * __scale) ] * iPostLutScaleRed) >> 16); \
 *P = (wide & 0xff00) >> 8; \
 *(P+3) = (wide & 0x00ff); \
 P++; \
-wide = (uint16_t)(gOutputLUT16[ (uint16_t)(srcPix->green * scale) ] * iPostLutScaleGrn / 65536); \
+wide = (uint16_t) MIN(65535, (__LUT[ (uint32_t)(srcPix->green * __scale) ] * iPostLutScaleGrn) >> 16); \
 *P = (wide & 0xff00) >> 8; \
 *(P+3) = (wide & 0x00ff); \
 P++; \
-wide = (uint16_t)(gOutputLUT16[ (uint16_t)(srcPix->blue  * scale) ] * iPostLutScaleBlu / 65536); \
+wide = (uint16_t) MIN(65535, (__LUT[ (uint32_t)(srcPix->blue  * __scale) ] * iPostLutScaleBlu) >> 16); \
 *P = (wide & 0xff00) >> 8; \
 *(P+3) = (wide & 0x00ff); \
 P += 4; /* skip the next 3 bytes we already filled in */ \
 srcP += stride;
 
-#define COPY_PIX_WIDE(scale) \
+#define COPY_PIX_WIDE(__scale) \
 uint16_t wide; \
-wide = (uint16_t) ((uint16_t)(srcPix->red   * scale) * iPostLutScaleRed / 65536); \
+wide = (uint16_t) MIN(65535, ( (uint32_t)(srcPix->red   * __scale) * iPostLutScaleRed) >> 16); \
 *P = (wide & 0xff00) >> 8; \
 *(P+3) = (wide & 0x00ff); \
 P++; \
-wide = (uint16_t) ((uint16_t)(srcPix->green * scale) * iPostLutScaleGrn / 65536); \
+wide = (uint16_t) MIN(65535, ( (uint32_t)(srcPix->green * __scale) * iPostLutScaleGrn) >> 16); \
 *P = (wide & 0xff00) >> 8; \
 *(P+3) = (wide & 0x00ff); \
 P++; \
-wide = (uint16_t) ((uint16_t)(srcPix->blue  * scale) * iPostLutScaleBlu / 65536); \
+wide = (uint16_t) MIN(65535, ( (uint32_t)(srcPix->blue  * __scale) * iPostLutScaleBlu) >> 16); \
 *P = (wide & 0xff00) >> 8; \
 *(P+3) = (wide & 0x00ff); \
 P += 4; /* skip the next 3 bytes we already filled in */ \
@@ -358,7 +354,7 @@ srcP += stride;
 
 	// figure out how much to copy based on the smallest of the strip's pixels,
 	// the destination buffer size, the source buffer size.
-	size_t destPix = size/3;
+	uint32_t destPix = (uint32_t)(size/3);
 	if (_flags & SFLAG_WIDEPIXELS) destPix /= 2;
 	destPix = MIN(destPix, _pixelCount);
 	uint32_t pixToCopy = MIN(_bufferPixCount, destPix);
@@ -374,17 +370,17 @@ srcP += stride;
 			if (_bufferCompType == ePPCompTypeByte) {
 				while (srcP < endP) {
 					PPBytePixel *srcPix = (PPBytePixel*)srcP;
-					COPY_PIX_WIDE_WITH_LUT(256);
+					COPY_PIX_WIDE_WITH_LUT(gOutputLUT8, 1);
 				}
 			} else if (_bufferCompType == ePPCompTypeShort) {
 				while (srcP < endP) {
 					PPShortPixel *srcPix = (PPShortPixel*)srcP;
-					COPY_PIX_WIDE_WITH_LUT(1);
+					COPY_PIX_WIDE_WITH_LUT(gOutputLUT16, 1);
 				}
 			} else {
 				while (srcP < endP) {
 					PPFloatPixel *srcPix = (PPFloatPixel*)srcP;
-					COPY_PIX_WIDE_WITH_LUT(65535);
+					COPY_PIX_WIDE_WITH_LUT(gOutputLUT16, 65535);
 				}
 			}
 		} else {
@@ -410,17 +406,17 @@ srcP += stride;
 			if (_bufferCompType == ePPCompTypeByte) {
 				while (srcP < endP) {
 					PPBytePixel *srcPix = (PPBytePixel*)srcP;
-					COPY_PIX_WITH_LUT(256);
+					COPY_PIX_WITH_LUT(gOutputLUT8, 1);
 				}
 			} else if (_bufferCompType == ePPCompTypeShort) {
 				while (srcP < endP) {
 					PPShortPixel *srcPix = (PPShortPixel*)srcP;
-					COPY_PIX_WITH_LUT(1);
+					COPY_PIX_WITH_LUT(gOutputLUT16, 1);
 				}
 			} else {
 				while (srcP < endP) {
 					PPFloatPixel *srcPix = (PPFloatPixel*)srcP;
-					COPY_PIX_WITH_LUT(65535);
+					COPY_PIX_WITH_LUT(gOutputLUT16, 65535);
 				}
 			}
 		} else {
@@ -470,49 +466,54 @@ const PPCurveBlock sCurveAntilogFunction =  ^float(float input) {
 	return (powf(2, 8*input)-1)/255;
 };
 
-void PPStripBuildOutputCurve(int depth) {
+void PPStripBuildOutputCurves() {
 	if (!gOutputCurveFunction) gOutputCurveFunction = sCurveAntilogFunction;
 	
-	if (depth == 16) {
-		if (gOutputLUT8) free((void*)gOutputLUT8);
-		gOutputLUT8 = nil;
-	} else {
-		if (gOutputLUT8) free((void*)gOutputLUT8);
-		gOutputLUT8 = nil;
-	}
+	if (gOutputLUT16) free((void*)gOutputLUT16);
+	gOutputLUT16 = nil;
+	if (gOutputLUT8) free((void*)gOutputLUT8);
+	gOutputLUT8 = nil;
 	
 	// special case linear output function
 	if (!gOutputCurveFunction || gOutputCurveFunction == sCurveLinearFunction) {
 		// give the LUTs a non-nil value so we can check to see if they're in use
-		if (depth == 16) {
-			gOutputLUT16 = malloc(1);
-		} else {
-			gOutputLUT8 = malloc(1);
-		}
+		gOutputLUT16 = malloc(1);
+		gOutputLUT8 = malloc(1);
 		return;
 	}
+
+	// build both 8 & 16-bit LUTs at the same time.  use dispatch to take advantage of multi-core.
+	// this runs in about 7ms on a dual-core iPad3.
 	
-	if (depth == 16) {
-		uint16_t *outputLUT16 = malloc(65536);
-		gOutputLUT16 = outputLUT16;
-		for (int i=0; i<65536; i++) {
+	uint16_t *outputLUT16 = malloc(65536*sizeof(uint16_t));
+	gOutputLUT16 = outputLUT16;
+	uint16_t *outputLUT8 = malloc(256*sizeof(uint16_t));
+	gOutputLUT8 = outputLUT8;
+
+	// i experimented with a wide range of values for pieces.  i didn't really notice any
+	// significant overhead slowdown until i got up to 2048 pieces.  64 should be fine for
+	// the forseeable future of mobile processors.
+	const int pieces = 64;
+	const int psize = 65536 / pieces;
+	// compute the LUT in pieces in parallel
+	dispatch_queue_t calcQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
+	dispatch_apply(pieces, calcQueue, ^(size_t piece) {
+		int istart = piece*psize;
+		int ifinish = (piece+1)*psize;
+		for (int i=istart; i<ifinish; i++) {
 			outputLUT16[i] = (uint16_t)( lroundf( 65535.0f * gOutputCurveFunction(i/65535.0f) ) );
+			if ( (i & 0xff) == (i >> 8) ) {
+				outputLUT8[i>>8] = outputLUT16[i];
+			}
 		}
-	} else {
-		uint8_t *outputLUT8 = malloc(256);
-		gOutputLUT8 = outputLUT8;
-		for (int i=0; i<256; i++) {
-			outputLUT8[i] = (uint8_t)( lroundf( 255.0f * gOutputCurveFunction(i/255.0f) ) );
-		}
-	}
+	});
 }
 
 void PPStripSetOutputCurveFunction(PPCurveBlock curveFunction) {
 	if (!curveFunction) curveFunction = sCurveLinearFunction;
 	
 	gOutputCurveFunction = [curveFunction copy];
-	// only rebuild if they already exist
-	if (gOutputLUT8) PPStripBuildOutputCurve(8);
-	if (gOutputLUT16) PPStripBuildOutputCurve(16);
+
+	PPStripBuildOutputCurves();
 }
 
