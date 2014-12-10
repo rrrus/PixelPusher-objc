@@ -5,9 +5,6 @@
 //  Created by Rus Maxham on 5/31/13.
 //  Copyright (c) 2013 rrrus. All rights reserved.
 //
-//  globalBrightnessRGB added by Christopher Schardt on 7/19/14
-//  scalePixelComponents stuff added by Christopher Schardt on 8/11/14
-//
 
 #import "HLDeferredList.h"
 #import "PPCard.h"
@@ -52,12 +49,7 @@ static uint32_t sFrameCount = 0;
 		self.cardMap = NSMutableDictionary.new;
 		self.drain = NO;
 		self.isRunning = NO;
-		self.globalBrightness = 1.0;
-		self.globalBrightnessRed = 1.0;
-		self.globalBrightnessGreen = 1.0;
-		self.globalBrightnessBlue = 1.0;
-		self.globalBrightnessBlue = 1.0;
-//		self.globalBrightnessLimit = 1.0;	// maybe someday
+		self.globalBrightness = PPFloatPixelMake(1, 1, 1);
 		self.lastFrameFlush = [HLDeferred deferredWithResult:nil];
 
 		[NSNotificationCenter.defaultCenter addObserver:self
@@ -101,6 +93,15 @@ static uint32_t sFrameCount = 0;
 	}
 }
 
+- (void)setGlobalBrightness:(PPFloatPixel)globalBrightness {
+	if (!PPFloatPixelEqual(_globalBrightness, globalBrightness)) {
+		_globalBrightness = globalBrightness;
+		[self.pusherMap forEach:^(id key, PPPixelPusher *pusher, BOOL *stop) {
+			pusher.brightness = globalBrightness;
+		}];
+	}
+}
+
 - (int64_t)totalBandwidth {
 	__block int64_t totalBandwidth = 0;
 	[self.cardMap forEach:^(id key, PPCard* card, BOOL *stop) {
@@ -136,68 +137,101 @@ static uint32_t sFrameCount = 0;
 	[self frameTask];
 }
 
-- (void)frameTask {
-	uint32_t frameRateLimit = PPDeviceRegistry.sharedRegistry.frameRateLimit;
-	CFTimeInterval minFrameInterval = 1.0/frameRateLimit;
-
-	CFTimeInterval start = CACurrentMediaTime();
+- (void)frameTask
+{
+	uint32_t			const frameRateLimit = PPDeviceRegistry.sharedRegistry.frameRateLimit;
+	CFTimeInterval		const minFrameInterval = 1.0 / frameRateLimit;
+	CFTimeInterval		const start = CACurrentMediaTime();
+	
 	// call the frame delegate to render a frame
-	HLDeferred *frameRenderPromise = self.defaultFramePromise;
-	id<PPFrameDelegate> strongFrameDelegate = self.frameDelegate;
-	if (strongFrameDelegate) {
+	id<PPFrameDelegate>	const strongFrameDelegate = self.frameDelegate;
+	HLDeferred*			frameRenderPromise;
+	
+	frameRenderPromise = self.defaultFramePromise;
+	if (strongFrameDelegate)
+	{
 		// allow frame render tasks to return nil
-		HLDeferred * renderPromise = [strongFrameDelegate pixelPusherRender];
-		if (renderPromise) frameRenderPromise = renderPromise;
+		HLDeferred*			const renderPromise = [strongFrameDelegate pixelPusherRender];
+		
+		if (renderPromise)
+		{
+			frameRenderPromise = renderPromise;
+		}
 	}
-	[frameRenderPromise then:^id(id result2) {
-		uint32_t timesIdx = sFrameCount % frameRateLimit;
-		sFrameTimes[timesIdx].render = CACurrentMediaTime()	- start;
-		// wait for all card tasks from last frame to finish flushing
-		[self.lastFrameFlush then:^id(id result) {
-			sFrameTimes[timesIdx].throttle = CACurrentMediaTime() - start - sFrameTimes[timesIdx].render;
+	[frameRenderPromise then:
+		^id(id result2)
+		{
+			uint32_t		const timesIdx = sFrameCount % frameRateLimit;
+			
+			sFrameTimes[timesIdx].render = CACurrentMediaTime()	- start;
+			
+			// wait for all card tasks from last frame to finish flushing
+			[self.lastFrameFlush then:
+				^id(id result)
+				{
+					// lastFrameFlush was waiting for promises in [PPCard flush] to be fulfilled.
+					// One tricky thing about this complex, promise-based architecture is that it will
+					// now cause a recursive call from a block in [PPCard flush] to [PPCard flush].
+					// One has to be very careful about instance variables in PPCard.
+					
+					sFrameTimes[timesIdx].throttle = CACurrentMediaTime() - start - sFrameTimes[timesIdx].render;
 
-			NSMutableArray *promises = [NSMutableArray arrayWithCapacity:self.cardMap.count];
-			[self.cardMap forEach:^(id key, PPCard* card, BOOL *stop) {
-				[promises addObject:card.flush];
-			}];
-			sFrameTimes[timesIdx].flush = CACurrentMediaTime() - start - sFrameTimes[timesIdx].render - sFrameTimes[timesIdx].throttle;
-			self.lastFrameFlush = [HLDeferredList.alloc initWithDeferreds:promises];
+					NSMutableArray*		const promises = [NSMutableArray arrayWithCapacity:self.cardMap.count];
+					
+					[self.cardMap forEach:
+						^(id key, PPCard* card, BOOL *stop)
+						{
+							[promises addObject:card.flush];
+						}
+					];
+					sFrameTimes[timesIdx].flush = CACurrentMediaTime() - start - sFrameTimes[timesIdx].render - sFrameTimes[timesIdx].throttle;
+					self.lastFrameFlush = [HLDeferredList.alloc initWithDeferreds:promises];
 
-			// delay to our min frame interval if we haven't exceeded it yet
-			CFTimeInterval delayTilNextFrame = minFrameInterval - (CACurrentMediaTime()-start);
-			if (delayTilNextFrame < 0) {
-	//			DDLogInfo(@"frame deadline blown by %fs", -delayTilNextFrame);
-			}
-			CFTimeInterval delayInSeconds = MAX(0, delayTilNextFrame);
-			dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, (int64_t)(delayInSeconds * NSEC_PER_SEC));
-			dispatch_after(popTime, dispatch_get_main_queue(), ^(void){
-				[self frameTask];
-			});
+					// delay to our min frame interval if we haven't exceeded it yet
+					CFTimeInterval		const delayTilNextFrame = minFrameInterval - (CACurrentMediaTime() - start);
+					
+					if (delayTilNextFrame < 0)
+					{
+			//			DDLogInfo(@"frame deadline blown by %fs", -delayTilNextFrame);
+					}
+					
+					CFTimeInterval		const delayInSeconds = MAX(0, delayTilNextFrame);
+					dispatch_time_t		const popTime = dispatch_time(DISPATCH_TIME_NOW,
+																		(int64_t)(delayInSeconds * NSEC_PER_SEC));
+					dispatch_after(popTime, dispatch_get_main_queue(),
+						^{
+							[self frameTask];
+						}
+					);
 #if 0	// enable for render/flush/send stats
-			if (timesIdx == 0) {
-				CFTimeInterval sumRender = 0;
-				CFTimeInterval sumFlush = 0;
-				CFTimeInterval sumThrottle = 0;
-				for (uint32_t idx = 0; idx < frameRateLimit; idx++) {
-					sumRender += sFrameTimes[idx].render;
-					sumFlush += sFrameTimes[idx].flush;
-					sumThrottle += sFrameTimes[idx].throttle;
-				}
-				sumRender /= frameRateLimit;
-				sumThrottle /= frameRateLimit;
-				sumFlush /= frameRateLimit;
-				CFTimeInterval idle = minFrameInterval-sumThrottle-sumRender-sumFlush;
-	//			DDLogInfo(@"avg render %1.1f%%, flush %1.1f%%, send %1.1f%%, idle %1.1f%%",
-	//					  sumRender/minFrameInterval*100, sumFlush/minFrameInterval*100, sumSend/minFrameInterval*100, idle/minFrameInterval*100);
-				DDLogInfo(@"avg render %1.2fms, flush %1.2fms, throttle %1.2fms, idle %1.2fms",
-						  sumRender*1000, sumFlush*1000, sumThrottle*1000, idle*1000);
-			}
+					if (timesIdx == 0)
+					{
+						CFTimeInterval sumRender = 0;
+						CFTimeInterval sumFlush = 0;
+						CFTimeInterval sumThrottle = 0;
+						for (uint32_t idx = 0; idx < frameRateLimit; idx++)
+						{
+							sumRender += sFrameTimes[idx].render;
+							sumFlush += sFrameTimes[idx].flush;
+							sumThrottle += sFrameTimes[idx].throttle;
+						}
+						sumRender /= frameRateLimit;
+						sumThrottle /= frameRateLimit;
+						sumFlush /= frameRateLimit;
+						CFTimeInterval idle = minFrameInterval-sumThrottle-sumRender-sumFlush;
+//						DDLogInfo(@"avg render %1.1f%%, flush %1.1f%%, send %1.1f%%, idle %1.1f%%",
+//								  sumRender/minFrameInterval*100, sumFlush/minFrameInterval*100, sumSend/minFrameInterval*100, idle/minFrameInterval*100);
+//						DDLogInfo(@"avg render %1.2fms, flush %1.2fms, throttle %1.3fms, idle %1.2fms",
+//								  sumRender*1000, sumFlush*1000, sumThrottle*1000, idle*1000);
+					}
 #endif
+					return nil;
+				}
+			];
+			sFrameCount++;
 			return nil;
-		}];
-		sFrameCount++;
-		return nil;
-	}];
+		}
+	];
 }
 
 - (BOOL)cancel {
@@ -218,9 +252,7 @@ static uint32_t sFrameCount = 0;
 			newCard.extraDelay = self.extraDelay;
 			newCard.record = self.record;
 			pusher.autoThrottle = self.autoThrottle;
-			pusher.brightnessRed = self.globalBrightnessRed;
-			pusher.brightnessGreen = self.globalBrightnessGreen;
-			pusher.brightnessBlue = self.globalBrightnessBlue;
+			pusher.brightness = self.globalBrightness;
 		}
 		self.pusherMap[pusher.macAddress] = pusher;
 		self.cardMap[pusher.macAddress] = newCard;
@@ -247,92 +279,38 @@ static uint32_t sFrameCount = 0;
 	}
 }
 
-
-/////////////////////////////////////////////////
-#pragma mark - BRIGHTNESS PROPERTIES, OPERATIONS
-
-- (void)setGlobalBrightness:(float)globalBrightness
-{
-	self.globalBrightnessRed = globalBrightness;
-	self.globalBrightnessGreen = globalBrightness;
-	self.globalBrightnessBlue = globalBrightness;
-}
-- (float)globalBrightness
-{
-	return (_globalBrightnessRed + _globalBrightnessGreen + _globalBrightnessBlue) / 3;
-}
-- (void)setGlobalBrightnessRed:(float)globalBrightness {
-	if (_globalBrightnessRed != globalBrightness) {
-		_globalBrightnessRed = globalBrightness;
-		[self.pusherMap forEach:^(id key, PPPixelPusher *pusher, BOOL *stop) {
-			pusher.brightnessRed = globalBrightness;
-		}];
-	}
-}
-- (void)setGlobalBrightnessGreen:(float)globalBrightness {
-	if (_globalBrightnessGreen != globalBrightness) {
-		_globalBrightnessGreen = globalBrightness;
-		[self.pusherMap forEach:^(id key, PPPixelPusher *pusher, BOOL *stop) {
-			pusher.brightnessGreen = globalBrightness;
-		}];
-	}
-}
-- (void)setGlobalBrightnessBlue:(float)globalBrightness {
-	if (_globalBrightnessBlue != globalBrightness) {
-		_globalBrightnessBlue = globalBrightness;
-		[self.pusherMap forEach:^(id key, PPPixelPusher *pusher, BOOL *stop) {
-			pusher.brightnessBlue = globalBrightness;
-		}];
-	}
-}
-
 - (BOOL)scalePixelComponentsForAverageBrightnessLimit:(float)brightnessLimit	// >=1.0 for no scaling
 										forEachPusher:(BOOL)forEachPusher		// compute average for each pusher
 {
 	if (brightnessLimit < 1.0f)
 	{
-		NSDictionary*		const pushers = self.pusherMap;
-		__block float		average;
+		NSDictionary* const pushers = self.pusherMap;
+		__block float average = 0;
 		
-		average = 0;
 		if (forEachPusher)
 		{
-			[pushers forEach:^(id key, PPPixelPusher *pusher, BOOL *stop)
-				{
-					float		const a = pusher.averagePixelComponentValue;
-					
-					if (a > average)
-					{
-						average = a;
-					}
-				}
-			];
+			[pushers forEach:^(id key, PPPixelPusher *pusher, BOOL *stop) {
+				 const float a = [pusher averagePixelComponentValue];
+				 if (a > average) average = a;
+			 }];
 		}
 		else
 		{
-			[pushers forEach:^(id key, PPPixelPusher *pusher, BOOL *stop)
-				{
-					average += pusher.averagePixelComponentValue;
-				}
-			];
+			[pushers forEach:^(id key, PPPixelPusher *pusher, BOOL *stop) {
+				average += [pusher averagePixelComponentValue];
+			}];
 			average /= pushers.count;
 		}
-		assert(average <= 1.0f);
+		NSAssert(average <= 1.0f, @"brightness average shouldn't exceed 1.0");
 		
-		if (average > 0)
+		float scale = 1;
+		if (average > 0) scale = MIN(brightnessLimit / average, 1);
+
+		[pushers forEach:^(id key, PPPixelPusher *pusher, BOOL *stop)
 		{
-			float				const scale = brightnessLimit / average;
-			
-			if (scale < 1.0f)
-			{
-				[pushers forEach:^(id key, PPPixelPusher *pusher, BOOL *stop)
-					{
-						[pusher scalePixelComponentValues:scale];
-					}
-				];
-				return YES;
-			}
-		}
+			[pusher scalePixelComponentValues:scale];
+		}];
+		return (scale < 1.0f);
 	}
 	return NO;
 }

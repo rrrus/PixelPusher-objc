@@ -10,29 +10,28 @@
 #import "PPPixelPusher.h"
 
 @interface PPPusherGroup ()
-@property (nonatomic, strong) NSMutableSet *pushers;
+@property (nonatomic) uint32_t ordinal;
+@property (nonatomic, strong) NSMutableArray *pushers;
+@property (nonatomic, strong) NSArray *stripCache;
 @end
 
 @implementation PPPusherGroup
 
-- (id)initWithPushers:(NSSet*)pushers {
+- (id)initWithOrdinal:(uint32_t)ordinal {
 	self = [super init];
 	if (self) {
-		self.pushers = pushers.mutableCopy;
+		self.ordinal = ordinal;
+		self.pushers = NSMutableArray.new;
 	}
 	return self;
 }
 
-- (id)init {
-	self = [super init];
-	if (self) {
-		self.pushers = NSMutableSet.new;
-	}
-	return self;
+- (uint32_t)ordinal {
+	return _ordinal;
 }
 
-- (NSSet*)pushers {
-	return self.pushers;
+- (NSArray*)pushers {
+	return _pushers;
 }
 
 - (NSUInteger)size {
@@ -40,19 +39,25 @@
 }
 
 - (NSArray*)strips {
-	NSMutableArray *strips = NSMutableArray.new;
-	[self.pushers forEach:^(PPPixelPusher* pusher, BOOL *stop) {
-		[strips addObjectsFromArray:pusher.strips];
-	}];
-	return strips;
+	if (!self.stripCache) {
+		NSMutableArray *strips = NSMutableArray.new;
+		self.stripCache = strips;
+		[self.pushers forEach:^(PPPixelPusher* pusher, NSUInteger idx, BOOL *stop) {
+			[strips addObjectsFromArray:pusher.strips];
+		}];
+	}
+	return self.stripCache;
 }
 
 - (void)removePusher:(PPPixelPusher*)pusher {
 	[_pushers removeObject:pusher];
+	self.stripCache = nil;
 }
 
 - (void)addPusher:(PPPixelPusher*)pusher {
 	[_pushers addObject:pusher];
+	[_pushers sortUsingComparator:PPPixelPusher.sortComparator];
+	self.stripCache = nil;
 }
 
 @end

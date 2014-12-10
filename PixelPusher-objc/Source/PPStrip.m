@@ -43,10 +43,10 @@ const PPOutputCurveBlock sCurveAntilogFunction = ^float(float input)
 	return (powf(2.0f, 8.0f * input) - 1) * (1.0f / 255);
 };
 
-static PPOutputCurveBlock	gOutputCurveFunction = NULL;
-static uint32_t				gOutputCurveTableLength = 0;
-static uint32_t				gOutputCurveTableByteMask;
-static uint16_t*			gOutputCurveTable = NULL;
+PPOutputCurveBlock	gOutputCurveFunction = NULL;
+uint32_t			gOutputCurveTableLength = 0;
+uint16_t*			gOutputCurveTable = NULL;
+uint32_t			gOutputCurveTableByteMask;		// 0xFF if table is 65536 entries long, otherwise 0
 
 
 @implementation PPStrip
@@ -70,7 +70,7 @@ static uint16_t*			gOutputCurveTable = NULL;
 	}
 }
 
-inline void VerifyOutputCurve(uint32_t length)
+void VerifyOutputCurve(uint32_t length)
 {
 	if (gOutputCurveTableLength < length)
 	{
@@ -125,9 +125,9 @@ void FreeOutputCurve()
 		_flags = flags;
 		_touched = YES;
 		_powerScale = 1.0;
-		_brightnessRed = 1.0;
-		_brightnessGreen = 1.0;
-		_brightnessBlue = 1.0;
+		_brightness.red = 1.0;
+		_brightness.green = 1.0;
+		_brightness.blue = 1.0;
 		_brightnessScaleRed = BRIGHTNESS_SCALE_1;
 		_brightnessScaleGreen = BRIGHTNESS_SCALE_1;
 		_brightnessScaleBlue = BRIGHTNESS_SCALE_1;
@@ -175,38 +175,23 @@ void FreeOutputCurve()
 	_powerScale = powerScale;
 	[self calculateBrightnessScales];
 }
-- (void)setBrightness:(float)brightness
+- (void)setBrightness:(PPFloatPixel)brightness
 {
-	_brightnessRed = brightness;
-	_brightnessGreen = brightness;
-	_brightnessBlue = brightness;
+	_brightness = brightness;
 	[self calculateBrightnessScales];
 }
-- (float)brightness
+- (void)setBrightnessRed:(float)red green:(float)green blue:(float)blue;
 {
-	return (_brightnessRed + _brightnessGreen + _brightnessBlue) / 3;
-}
-
-- (void)setBrightnessRed:(float)brightness
-{
-	_brightnessRed = brightness;
-	[self calculateBrightnessScales];
-}
-- (void)setBrightnessGreen:(float)brightness
-{
-	_brightnessGreen = brightness;
-	[self calculateBrightnessScales];
-}
-- (void)setBrightnessBlue:(float)brightness
-{
-	_brightnessBlue = brightness;
+	_brightness.red = red;
+	_brightness.green = green;
+	_brightness.blue = blue;
 	[self calculateBrightnessScales];
 }
 
 - (float)averagePixelComponentValue
 {
-	uint8_t*			const dataEnd = _serializedData + _serializedDataBytes;
-	uint8_t*			data;
+	uint8_t const*		const dataEnd = _serializedData + _serializedDataBytes;
+	uint8_t const*		data;
 	uint32_t			total;
 
 	assert(_serializedDataBytes % 3 == 0);
@@ -255,12 +240,166 @@ void FreeOutputCurve()
 {
 	float			const scale = _powerScale * BRIGHTNESS_SCALE_1;
 	
-	_brightnessScaleRed = lroundf(scale * _brightnessRed);
+	_brightnessScaleRed = lroundf(scale * _brightness.red);
 	_brightnessScaleRed = MIN(_brightnessScaleRed, (uint32_t)65536);
-	_brightnessScaleGreen = lroundf(scale * _brightnessGreen);
+	_brightnessScaleGreen = lroundf(scale * _brightness.green);
 	_brightnessScaleGreen = MIN(_brightnessScaleGreen, (uint32_t)65536);
-	_brightnessScaleBlue = lroundf(scale * _brightnessBlue);
+	_brightnessScaleBlue = lroundf(scale * _brightness.blue);
 	_brightnessScaleBlue = MIN(_brightnessScaleBlue, (uint32_t)65536);
+}
+
+- (void)setPixels:(NSUInteger)pixelCount withByteArray:(uint8_t const*)byteArray
+{
+	VerifyOutputCurve(256);
+	
+	if (pixelCount > _pixelCount)
+	{
+		assert(FALSE);
+		pixelCount = _pixelCount;
+	}
+	
+	uint16_t const*		const table = gOutputCurveTable;
+	uint32_t			const mask = gOutputCurveTableByteMask;
+	uint32_t			const scaleRed = _brightnessScaleRed;
+	uint32_t			const scaleGreen = _brightnessScaleGreen;
+	uint32_t			const scaleBlue = _brightnessScaleBlue;
+	uint8_t const*		const srcEnd = byteArray + pixelCount * 3;
+	uint8_t const*		src;
+	uint8_t*			dst;
+	
+	src = byteArray;
+	dst = _serializedData;
+	if (_flags & SFLAG_LOGARITHMIC)
+	{
+		while (src < srcEnd)
+		{
+			uint32_t			r;
+			uint32_t			g;
+			uint32_t			b;
+			
+			r = src[0];
+			g = src[1];
+			b = src[2];
+			r |= (r << 8);
+			g |= (g << 8);
+			b |= (b << 8);
+			r = r * scaleRed / BRIGHTNESS_SCALE_1;
+			r = MIN(r, (uint32_t)65535);
+			g = g * scaleGreen / BRIGHTNESS_SCALE_1;
+			g = MIN(g, (uint32_t)65535);
+			b = b * scaleBlue / BRIGHTNESS_SCALE_1;
+			b = MIN(b, (uint32_t)65535);
+
+			dst[0] = (uint8_t)(r >> 8);
+			dst[1] = (uint8_t)(g >> 8);
+			dst[2] = (uint8_t)(b >> 8);
+			dst += 3;
+			src += 3;
+		}
+	}
+	else if (_flags & SFLAG_WIDEPIXELS)
+	{
+		while (src < srcEnd)
+		{
+			uint32_t			r;
+			uint32_t			g;
+			uint32_t			b;
+			
+			r = src[0];
+			g = src[1];
+			b = src[2];
+			r |= (r << 8) & mask;
+			r = table[r];
+			g |= (g << 8) & mask;
+			g = table[g];
+			b |= (b << 8) & mask;
+			b = table[b];
+			r = r * scaleRed / BRIGHTNESS_SCALE_1;
+			r = MIN(r, (uint32_t)65535);
+			g = g * scaleGreen / BRIGHTNESS_SCALE_1;
+			g = MIN(g, (uint32_t)65535);
+			b = b * scaleBlue / BRIGHTNESS_SCALE_1;
+			b = MIN(b, (uint32_t)65535);
+
+			dst[0] = (uint8_t)(r >> 8);
+			dst[1] = (uint8_t)(g >> 8);
+			dst[2] = (uint8_t)(b >> 8);
+			dst[3] = (uint8_t)r;
+			dst[4] = (uint8_t)g;
+			dst[5] = (uint8_t)b;
+			dst += 6;
+			src += 3;
+		}
+	}
+	else if ((mask != 0) ||
+			 (scaleRed > BRIGHTNESS_SCALE_1) ||
+			 (scaleGreen > BRIGHTNESS_SCALE_1) ||
+			 (scaleBlue > BRIGHTNESS_SCALE_1))
+	{
+		while (src < srcEnd)
+		{
+			uint32_t			r;
+			uint32_t			g;
+			uint32_t			b;
+			
+			r = src[0];
+			g = src[1];
+			b = src[2];
+			r |= (r << 8) & mask;
+			r = table[r];
+			g |= (g << 8) & mask;
+			g = table[g];
+			b |= (b << 8) & mask;
+			b = table[b];
+			r = r * scaleRed / BRIGHTNESS_SCALE_1;
+			r = MIN(r, (uint32_t)65535);
+			g = g * scaleGreen / BRIGHTNESS_SCALE_1;
+			g = MIN(g, (uint32_t)65535);
+			b = b * scaleBlue / BRIGHTNESS_SCALE_1;
+			b = MIN(b, (uint32_t)65535);
+			dst[0] = (uint8_t)(r >> 8);
+			dst[1] = (uint8_t)(g >> 8);
+			dst[2] = (uint8_t)(b >> 8);
+			dst += 3;
+			src += 3;
+		}
+	}
+	else if ((scaleRed != BRIGHTNESS_SCALE_1) ||
+			 (scaleGreen != BRIGHTNESS_SCALE_1) ||
+			 (scaleBlue != BRIGHTNESS_SCALE_1))
+	{
+		while (src < srcEnd)
+		{
+			uint32_t			r;
+			uint32_t			g;
+			uint32_t			b;
+			
+			r = table[src[0]];
+			g = table[src[1]];
+			b = table[src[2]];
+			r = r * scaleRed / BRIGHTNESS_SCALE_1;
+			g = g * scaleGreen / BRIGHTNESS_SCALE_1;
+			b = b * scaleBlue / BRIGHTNESS_SCALE_1;
+			dst[0] = (uint8_t)(r >> 8);
+			dst[1] = (uint8_t)(g >> 8);
+			dst[2] = (uint8_t)(b >> 8);
+			dst += 3;
+			src += 3;
+		}
+	}
+	else
+	{
+		while (src < srcEnd)
+		{
+			dst[0] = (uint8_t)(table[src[0]] >> 8);
+			dst[1] = (uint8_t)(table[src[1]] >> 8);
+			dst[2] = (uint8_t)(table[src[2]] >> 8);
+			dst += 3;
+			src += 3;
+		}
+	}
+
+	_touched = YES;
 }
 
 - (void)setPixelAtIndex:(uint32_t)index withByteRed:(uint8_t)red green:(uint8_t)green blue:(uint8_t)blue
@@ -461,11 +600,15 @@ void FreeOutputCurve()
 /////////////////////////////////////////////////
 #pragma mark - OPERATIONS CALLED ONLY BY PP LIBRARY:
 
-- (uint32_t)serialize:(uint8_t*)buffer
+- (uint32_t)serialize:(uint8_t*)buffer size:(NSUInteger)sizeInBytes
 {
     _touched = NO;
-	memcpy(buffer, _serializedData, _serializedDataBytes);
-	return _serializedDataBytes;
+	if (_serializedDataBytes < sizeInBytes)
+	{
+		sizeInBytes = _serializedDataBytes;
+	}
+	memcpy(buffer, _serializedData, sizeInBytes);
+	return sizeInBytes;
 }
 
 

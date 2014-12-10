@@ -34,6 +34,7 @@
 /////////////////////////////////////////////////
 
 #import <Foundation/Foundation.h>
+#import "PPPixel.h"
 
 
 /////////////////////////////////////////////////
@@ -106,14 +107,13 @@ extern const PPOutputCurveBlock sCurveAntilogFunction;
 @property (nonatomic, readonly) uint32_t flags;
 @property (nonatomic, readonly) BOOL isWidePixel;
 @property (nonatomic, assign) float powerScale;
-@property (nonatomic, assign) float brightness;
-@property (nonatomic, assign) float brightnessRed;
-@property (nonatomic, assign) float brightnessGreen;
-@property (nonatomic, assign) float brightnessBlue;
-@property (nonatomic, readonly) float averagePixelComponentValue;	// 1.0 is maximum
+@property (nonatomic, assign) PPFloatPixel brightness;
+- (void)setBrightnessRed:(float)red green:(float)green blue:(float)blue;
+@property (nonatomic, readonly) float averagePixelComponentValue;	// 1.0 is maximum, includes brightness
 
 // OPERATIONS:
 
+- (void)setPixels:(NSUInteger)pixelCount withByteArray:(uint8_t const*)byteArray;
 - (void)setPixelAtIndex:(uint32_t)index withByteRed:(uint8_t)red green:(uint8_t)green blue:(uint8_t)blue;
 - (void)setPixelAtIndex:(uint32_t)index withWordRed:(uint16_t)red green:(uint16_t)green blue:(uint16_t)blue;
 - (void)setPixelAtIndex:(uint32_t)index withFloatRed:(float)red green:(float)green blue:(float)blue;
@@ -122,6 +122,6 @@ extern const PPOutputCurveBlock sCurveAntilogFunction;
 
 // TODO:  Either have this method return a pointer to the serialized data,
 // or pass in a bufferLength (to be safe).
-- (uint32_t)serialize:(uint8_t*)buffer;
+- (uint32_t)serialize:(uint8_t*)buffer size:(NSUInteger)sizeInBytes;
 
 @end

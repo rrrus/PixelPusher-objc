@@ -10,6 +10,31 @@
 
 @class UIColor;
 
+typedef struct __attribute__((packed)) {
+	uint8_t red;
+	uint8_t green;
+	uint8_t blue;
+} PPBytePixel;
+
+typedef struct __attribute__((packed)) {
+	uint16_t red;
+	uint16_t green;
+	uint16_t blue;
+} PPShortPixel;
+
+typedef struct {
+	float red;
+	float green;
+	float blue;
+} PPFloatPixel;
+
+extern PPFloatPixel PPFloatPixelMake(float red, float green, float blue);
+extern BOOL PPFloatPixelEqual(PPFloatPixel a, PPFloatPixel b);
+
+/*
+void PPAddToFloatPixel(PPFloatPixel *pix, float red, float green, float blue);
+void PPAddToBytePixel(PPBytePixel *pix, uint8_t red, uint8_t green, uint8_t blue);
+
 @interface PPPixel : NSObject
 
 @property (nonatomic, assign) CGFloat red;
@@ -26,3 +51,4 @@
 - (void)setColor:(UIColor*)color;
 
 @end
+*/

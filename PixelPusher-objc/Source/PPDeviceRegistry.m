@@ -5,9 +5,6 @@
 //  Created by Rus Maxham on 5/27/13.
 //  Copyright (c) 2013 rrrus. All rights reserved.
 //
-//  globalBrightnessRGB added by Christopher Schardt on 7/19/14
-//  scalePixelComponents stuff added by Christopher Schardt on 8/11/14
-//
 
 #import "PPDeviceHeader.h"
 #import "PPDeviceRegistry.h"
@@ -36,10 +33,11 @@ static PPDeviceRegistry *gSharedRegistry;
 
 @interface PPDeviceRegistry () <GCDAsyncUdpSocketDelegate> {
 	NSMutableDictionary *_pusherMap;
+	NSMutableDictionary *_groupMap;
 }
 @property (nonatomic, strong) NSMutableDictionary *pusherLastSeenMap;
-@property (nonatomic, strong) NSMutableDictionary *groupMap;
 @property (nonatomic, strong) NSMutableOrderedSet *sortedPushers;
+@property (nonatomic, strong) NSMutableOrderedSet *sortedGroups;
 @property (nonatomic, strong) NSMutableArray *stripsCache;
 
 @property (nonatomic, strong) GCDAsyncUdpSocket	*discoverySocket;
@@ -84,41 +82,13 @@ static PPDeviceRegistry *gSharedRegistry;
 	[self.scene setAutoThrottle:autothrottle];
 }
 
-- (void)setGlobalBrightness:(float)globalBrightness {
+- (void)setGlobalBrightness:(PPFloatPixel)globalBrightness {
 	self.scene.globalBrightness = globalBrightness;
 }
-- (void)setGlobalBrightnessRed:(float)globalBrightness {
-	self.scene.globalBrightnessRed = globalBrightness;
-}
-- (void)setGlobalBrightnessGreen:(float)globalBrightness {
-	self.scene.globalBrightnessGreen = globalBrightness;
-}
-- (void)setGlobalBrightnessBlue:(float)globalBrightness {
-	self.scene.globalBrightnessBlue = globalBrightness;
-}
-/*		// maybe someday
-- (void)setGlobalBrightnessLimit:(float)brightnessLimit {
-	self.scene.globalBrightnessLimit = brightnessLimit;
-}
-*/
 
-- (float)globalBrightness {
+- (PPFloatPixel)globalBrightness {
 	return self.scene.globalBrightness;
 }
-- (float)globalBrightnessRed {
-	return self.scene.globalBrightnessRed;
-}
-- (float)globalBrightnessGreen {
-	return self.scene.globalBrightnessGreen;
-}
-- (float)globalBrightnessBlue {
-	return self.scene.globalBrightnessBlue;
-}
-/*	// maybe someday
-- (float)globalBrightnessLimit {
-	return self.scene.globalBrightnessLimit;
-}
-*/
 
 - (int64_t)getTotalBandwidth {
 	return self.scene.totalBandwidth;
@@ -138,8 +108,9 @@ static PPDeviceRegistry *gSharedRegistry;
     if (self) {
 		self.frameRateLimit = 60;
 		_pusherMap = NSMutableDictionary.new;
-		self.groupMap = NSMutableDictionary.new;
+		_groupMap = NSMutableDictionary.new;
 		self.sortedPushers = NSMutableOrderedSet.new;
+		self.sortedGroups = NSMutableOrderedSet.new;
 		self.pusherLastSeenMap = NSMutableDictionary.new;
 		self.scene = PPScene.new;
 
@@ -153,14 +124,9 @@ static PPDeviceRegistry *gSharedRegistry;
 										repeats:YES];
 		
 		[NSNotificationCenter.defaultCenter addObserver:self
-											   selector:@selector(appDidBackground)
-												   name:UIApplicationDidEnterBackgroundNotification
-												 object:nil];
-		[NSNotificationCenter.defaultCenter addObserver:self
 											   selector:@selector(appDidActivate)
 												   name:UIApplicationDidBecomeActiveNotification
 												 object:nil];
-
     }
     return self;
 }
@@ -170,16 +136,18 @@ static PPDeviceRegistry *gSharedRegistry;
 	[NSTimer scheduledTimerWithTimeInterval:1 target:self selector:@selector(bind) userInfo:nil repeats:NO];
 }
 
-- (void)appDidBackground {
-	[self unbind];
-}
-
-- (void)bind {
+- (void)bind
+{
 	if (!self.discoverySocket) {
 		// setup the discovery service
 		self.discoverySocket = [GCDAsyncUdpSocket.alloc initWithDelegate:self delegateQueue:dispatch_get_main_queue()];
 		[self.discoverySocket setIPv6Enabled:NO];
 		NSError *error;
+		
+		[self.discoverySocket enableReusePort:YES error:&error];
+		assert(!error);
+		[self.discoverySocket enableBroadcast:YES error:&error];
+		assert(!error);
 		[self.discoverySocket bindToPort:kDiscoveryPort error:&error];
 		if (error) {
 			UIAlertView *alert = [UIAlertView.alloc initWithTitle:@"PixelPusher"
@@ -191,14 +159,8 @@ static PPDeviceRegistry *gSharedRegistry;
 			return;
 //			self.discoverySocket = nil;
 		}
-		[self.discoverySocket enableBroadcast:YES error:&error];
-		if (error) {
-			[NSException raise:NSGenericException format:@"error enabling broadcast on discovery port: %@", error];
-		}
 		[self.discoverySocket beginReceiving:&error];
-		if (error) {
-			[NSException raise:NSGenericException format:@"error beginning receive on discovery port: %@", error];
-		}
+		assert(!error);
 	}
 }
 
@@ -223,18 +185,21 @@ static PPDeviceRegistry *gSharedRegistry;
 	return self.sortedPushers.array;
 }
 
+- (NSArray*)groups {
+	return self.sortedGroups.array;
+}
+
 - (NSArray*)pushersInGroup:(int32_t)groupNumber {
-	NSMutableArray *pushers = NSMutableArray.new;
-	[self.sortedPushers forEach:^(PPPixelPusher *pusher, NSUInteger idx, BOOL *stop) {
-		if (pusher.groupOrdinal == groupNumber) [pushers addObject:pusher];
-	}];
-	return pushers;
+	PPPusherGroup *group = DYNAMIC_CAST(PPPusherGroup, self.groupMap[@(groupNumber)]);
+
+	if (group != nil)	return group.pushers;
+	else				return @[];
 }
 
 - (NSArray*)stripsInGroup:(int32_t)groupNumber {
-	id group = self.groupMap[@(groupNumber)];
+	PPPusherGroup *group = DYNAMIC_CAST(PPPusherGroup, self.groupMap[@(groupNumber)]);
 
-	if (group != nil)	return [group strips];
+	if (group != nil)	return group.strips;
 	else				return @[];
 }
 
@@ -257,15 +222,17 @@ static PPDeviceRegistry *gSharedRegistry;
 		[self.pusherLastSeenMap removeObjectForKey:macAddr];
 		[self.sortedPushers removeObject:pusher];
 		self.stripsCache = nil;
-		[self.groupMap[@(pusher.groupOrdinal)] removePusher:pusher];
+		PPPusherGroup *group = self.groupMap[@(pusher.groupOrdinal)];
+		[group removePusher:pusher];
+		if (group.pushers.count == 0) {
+			[_groupMap removeObjectForKey:@(pusher.groupOrdinal)];
+			[self.sortedGroups removeObject:group];
+		}
+
 		if (self.scene.isRunning) [self.scene removePusher:pusher];
 
 		[NSNotificationCenter.defaultCenter postNotificationName:PPDeviceRegistryRemovedPusher object:pusher];
 	}
-}
-
-- (void)setStrip:(NSString*)macAddress index:(int32_t)stripNumber pixels:(NSArray*)pixels {
-//	[self.pusherMap[macAddress] setStrip:stripNumber pixels:pixels];
 }
 
 - (void)startPushing {
@@ -276,42 +243,30 @@ static PPDeviceRegistry *gSharedRegistry;
 	if (self.scene.isRunning) [self.scene cancel];
 }
 
-
-/////////////////////////////////////////////////
-#pragma mark - BRIGHTNESS-LIMITING OPERATIONS
-
-- (BOOL)scalePixelComponentsForAverageBrightnessLimit:(float)brightnessLimit	// >=1.0 for no scaling
-										forEachPusher:(BOOL)forEachPusher		// compute average for each pusher
-{
-	return [self.scene scalePixelComponentsForAverageBrightnessLimit:brightnessLimit
-														forEachPusher:forEachPusher];
-}
-
-
-/////////////////////////////////////////////////
-#pragma mark - GCDAsyncUdpSocketDelegate methods
-
-- (void)udpSocket:(GCDAsyncUdpSocket *)sock
-   didReceiveData:(NSData *)data
-	  fromAddress:(NSData *)address
-withFilterContext:(id)filterContext
-{
-	[self receive:data];
-}
-
-- (void)udpSocketDidClose:(GCDAsyncUdpSocket *)sock withError:(NSError *)error {
-	DDLogError(@"updSocketDidClose: %@", error);
-}
-
 - (void)receive:(NSData*)data {
     // This is for the UDP callback, this should not be called directly
-	PPDeviceHeader *header = [PPDeviceHeader.alloc initWithPacket:data];
+	PPDeviceHeader *header;
+	@try {
+		header = [PPDeviceHeader.alloc initWithPacket:data];
+	}
+	@catch (NSException *exception) {
+		NSLog(@"while parsing discovery packet: %@", exception);
+	}
+	if (!header) return;
+
 	NSString *macAddr = header.macAddressString;
 	if (header.deviceType != ePixelPusher) {
 		DDLogInfo(@"Ignoring non-PixelPusher discovery packet from %@", header);
 		return;
 	}
-	PPPixelPusher *device = [PPPixelPusher.alloc initWithHeader:header];
+	PPPixelPusher *device;
+	@try {
+		device = [PPPixelPusher.alloc initWithHeader:header];
+	}
+	@catch (NSException *exception) {
+		NSLog(@"while parsing pixel pusher discovery packet: %@", exception);
+	}
+	if (!device) return;
 	DDLogVerbose(@"squitter %@", device);
 	// Set the timestamp for the last time this device checked in
 	self.pusherLastSeenMap[macAddr] = NSDate.date;
@@ -336,18 +291,15 @@ withFilterContext:(id)filterContext
 	}
 
 	// update the power limit variables
-	gPowerScale = 1.0;
-	if (gTotalPowerLimit > 0)
-	{
+	if (gTotalPowerLimit > 0) {
 		gTotalPower = 0;
-		[self.sortedPushers forEach:^(PPPixelPusher *pusher, NSUInteger idx, BOOL *stop)
-			{
-				gTotalPower += pusher.powerTotal;
-			}
-		];
-		if (gTotalPower > gTotalPowerLimit)
-		{
+		[self.sortedPushers forEach:^(PPPixelPusher *pusher, NSUInteger idx, BOOL *stop) {
+			gTotalPower += pusher.powerTotal;
+		}];
+		if (gTotalPower > gTotalPowerLimit) {
 			gPowerScale = gTotalPowerLimit / gTotalPower;
+		} else {
+			gPowerScale = 1.0;
 		}
 	}
 }
@@ -358,13 +310,14 @@ withFilterContext:(id)filterContext
 	DDLogVerbose(@"Device changed: %@", macAddr);
 	PPPixelPusher *pusher = self.pusherMap[macAddr];
 	[pusher copyHeader:device];
-	[self.sortedPushers sortUsingComparator:self.pusherComparator];
+	[self.sortedPushers sortUsingComparator:PPPixelPusher.sortComparator];
 
 	// NOTE: dispatch on main queue if ever udp receive is handled on non-main queue
 	[NSNotificationCenter.defaultCenter postNotificationName:PPDeviceRegistryUpdatedPusher object:pusher];
 }
 
-- (void)addNewPusher:(PPPixelPusher*)pusher macAddress:(NSString*)macAddr {
+- (void)addNewPusher:(PPPixelPusher*)pusher macAddress:(NSString*)macAddr
+{
 	// tell the pusher to finish allocating itself
 	[pusher allocateStrips];
 	DDLogInfo(@"new pusher: %@", pusher);
@@ -372,43 +325,70 @@ withFilterContext:(id)filterContext
 	_pusherMap[macAddr] = pusher;
 	[self.sortedPushers addObject:pusher];
 	// TODO: would be nice to use a tree-based set that inserts in sort order
-	[self.sortedPushers sortUsingComparator:self.pusherComparator];
+	[self.sortedPushers sortUsingComparator:PPPixelPusher.sortComparator];
 	self.stripsCache = nil;
 
-	if (self.groupMap[@(pusher.groupOrdinal)] != nil) {
+	if (self.groupMap[@(pusher.groupOrdinal)] != nil)
+	{
 		DDLogVerbose(@"Adding pusher to group %d", pusher.groupOrdinal);
 		[self.groupMap[@(pusher.groupOrdinal)] addPusher:pusher];
-	} else {
+	}
+	else
+	{
 		// we need to create a PusherGroup since it doesn't exist yet.
-		PPPusherGroup *pg = PPPusherGroup.new;
+		PPPusherGroup *pg = [PPPusherGroup.alloc initWithOrdinal:pusher.groupOrdinal];
 		DDLogVerbose(@"Creating group and adding pusher to group %d", pusher.groupOrdinal);
 		[pg addPusher:pusher];
-		self.groupMap[@(pusher.groupOrdinal)] = pg;
+		_groupMap[@(pusher.groupOrdinal)] = pg;
+		[self.sortedGroups addObject:pg];
+		[self.sortedGroups sortUsingComparator:
+			^NSComparisonResult(PPPusherGroup *group0, PPPusherGroup *group1)
+			{
+				if (group0.ordinal == group1.ordinal) return NSOrderedSame;
+				if (group0.ordinal  < group1.ordinal) return NSOrderedAscending;
+				return NSOrderedDescending;
+			}
+		];
 	}
+
 	pusher.autoThrottle = gAutoThrottle;
 
+	// When this method is called immediately, it doesn't work.
+	// Don't know why, but a delay is no problem:
+	[pusher performSelector:@selector(resetHardwareBrightness) afterDelay:1.0];
+	
 	[NSNotificationCenter.defaultCenter postNotificationName:PPDeviceRegistryAddedPusher object:pusher];
 }
 
-- (NSComparator)pusherComparator {
-	return ^NSComparisonResult(PPPixelPusher *obj1, PPPixelPusher *obj2) {
-		int32_t group0 = obj1.groupOrdinal;
-		int32_t group1 = obj2.groupOrdinal;
-		if (group0 != group1) {
-			if (group0 < group1) return NSOrderedAscending;
-			return NSOrderedDescending;
-		}
-
-		int32_t ord1 = obj1.controllerOrdinal;
-		int32_t ord2 = obj2.controllerOrdinal;
-		if (ord1 != ord2) {
-			if (ord1 < ord2) return NSOrderedAscending;
-			return NSOrderedDescending;
-		}
-
-		return [obj1.macAddress compare:obj2.macAddress];
-	};
+- (void)enqueuePusherCommandInAllPushers:(PPPusherCommand*)command
+{
+	PPPixelPusher*		pusher;
+	
+	for (pusher in _sortedPushers)
+	{
+		[pusher enqueuePusherCommand:command];
+	}
 }
 
+- (BOOL)scalePixelComponentsForAverageBrightnessLimit:(float)brightnessLimit	// >=1.0 for no scaling
+										forEachPusher:(BOOL)forEachPusher		// compute average for each pusher
+{
+	return [self.scene scalePixelComponentsForAverageBrightnessLimit:brightnessLimit
+													   forEachPusher:forEachPusher];
+}
+
+#pragma mark - GCDAsyncUdpSocketDelegate methods
+
+- (void)udpSocket:(GCDAsyncUdpSocket *)sock
+   didReceiveData:(NSData *)data
+	  fromAddress:(NSData *)address
+withFilterContext:(id)filterContext
+{
+	[self receive:data];
+}
+
+- (void)udpSocketDidClose:(GCDAsyncUdpSocket *)sock withError:(NSError *)error {
+	DDLogError(@"updSocketDidClose: %@", error);
+}
 
 @end

@@ -36,10 +36,10 @@
 })
 
 // lumberjack macros
-#define INIT_LOG_LEVEL_VERBOSE static const int ddLogLevel = LOG_LEVEL_VERBOSE;
-#define INIT_LOG_LEVEL_INFO static const int ddLogLevel = LOG_LEVEL_INFO;
-#define INIT_LOG_LEVEL_WARN static const int ddLogLevel = LOG_LEVEL_WARN;
-#define INIT_LOG_LEVEL_ERROR static const int ddLogLevel = LOG_LEVEL_ERROR;
+//#define INIT_LOG_LEVEL_VERBOSE static const int ddLogLevel = LOG_LEVEL_VERBOSE;
+//#define INIT_LOG_LEVEL_INFO static const int ddLogLevel = LOG_LEVEL_INFO;
+//#define INIT_LOG_LEVEL_WARN static const int ddLogLevel = LOG_LEVEL_WARN;
+//#define INIT_LOG_LEVEL_ERROR static const int ddLogLevel = LOG_LEVEL_ERROR;
 
 // utility functions
 static inline float randf(float scale)

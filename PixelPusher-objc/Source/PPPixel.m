@@ -8,6 +8,38 @@
 
 #import "PPPixel.h"
 
+PPFloatPixel PPFloatPixelMake(float red, float green, float blue)
+{
+	PPFloatPixel pix = {.red = red, .green = green, .blue = blue};
+	return pix;
+}
+BOOL PPFloatPixelEqual(PPFloatPixel a, PPFloatPixel b)
+{
+	return (a.red == b.red && a.green == b.green && a.blue == b.blue);
+}
+	
+/*
+
+void PPAddToBytePixel(PPBytePixel *pix, uint8_t red, uint8_t green, uint8_t blue) {
+	uint8_t or,og,ob;
+	or = pix->red + red;
+	og = pix->green + green;
+	ob = pix->blue + blue;
+	pix->red = (uint8_t)MIN(255, or);
+	pix->green = (uint8_t)MIN(255, og);
+	pix->blue = (uint8_t)MIN(255, ob);
+}
+
+void PPAddToFloatPixel(PPFloatPixel *pix, float red, float green, float blue) {
+	float or,og,ob;
+	or = pix->red + red;
+	og = pix->green + green;
+	ob = pix->blue + blue;
+	pix->red = MIN(1, or);
+	pix->green = MIN(1, og);
+	pix->blue = MIN(1, ob);
+}
+
 @interface PPPixel ()
 @end
 
@@ -74,3 +106,5 @@
 }
 
 @end
+
+*/

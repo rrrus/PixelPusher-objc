@@ -5,9 +5,6 @@
 //  Created by Rus Maxham on 5/27/13.
 //  Copyright (c) 2013 rrrus. All rights reserved.
 //
-//  globalBrightnessRGB added by Christopher Schardt on 7/19/14
-//  scalePixelComponents stuff added by Christopher Schardt on 8/11/14
-//
 
 #import "NSData+Utils.h"
 #import "PPDeviceHeader.h"
@@ -17,23 +14,22 @@
 INIT_LOG_LEVEL_INFO
 
 static const int32_t kDefaultPusherPort = 9897;
-static const int32_t ACCEPTABLE_LOWEST_SW_REV = 121;
 
 @interface PPPixelPusher ()
-@property (nonatomic, assign) int32_t stripsAttached;
-@property (nonatomic, assign) int32_t artnetUniverse;
-@property (nonatomic, assign) int32_t artnetChannel;
+@property (nonatomic, assign) uint32_t stripsAttached;
+@property (nonatomic, assign) uint32_t artnetUniverse;
+@property (nonatomic, assign) uint32_t artnetChannel;
 
 // redeclaring readonly public interfaces for private assign access
 @property (nonatomic, strong) NSArray *strips;
-@property (nonatomic, assign) int32_t pixelsPerStrip;
-@property (nonatomic, assign) int32_t groupOrdinal;
-@property (nonatomic, assign) int32_t controllerOrdinal;
+@property (nonatomic, assign) uint32_t pixelsPerStrip;
+@property (nonatomic, assign) uint32_t groupOrdinal;
+@property (nonatomic, assign) uint32_t controllerOrdinal;
 @property (nonatomic, assign) NSTimeInterval updatePeriod;
-@property (nonatomic, assign) int64_t powerTotal;
-@property (nonatomic, assign) int64_t deltaSequence;
-@property (nonatomic, assign) int32_t maxStripsPerPacket;
-@property (nonatomic, assign) int16_t myPort;
+@property (nonatomic, assign) uint64_t powerTotal;
+@property (nonatomic, assign) uint64_t deltaSequence;
+@property (nonatomic, assign) uint32_t maxStripsPerPacket;
+@property (nonatomic, assign) uint16_t port;
 @property (nonatomic, strong) NSArray *stripFlags;
 @property (nonatomic, assign) uint32_t pusherFlags;
 @property (nonatomic, assign) uint32_t segments;
@@ -42,22 +38,44 @@ static const int32_t ACCEPTABLE_LOWEST_SW_REV = 121;
 
 @implementation PPPixelPusher
 
-- (id)initWithHeader:(PPDeviceHeader*)header {
++ (NSComparator)sortComparator {
+	return ^NSComparisonResult(PPPixelPusher *obj1, PPPixelPusher *obj2) {
+		int32_t group0 = obj1.groupOrdinal;
+		int32_t group1 = obj2.groupOrdinal;
+		if (group0 != group1) {
+			if (group0 < group1) return NSOrderedAscending;
+			return NSOrderedDescending;
+		}
+		
+		int32_t ord1 = obj1.controllerOrdinal;
+		int32_t ord2 = obj2.controllerOrdinal;
+		if (ord1 != ord2) {
+			if (ord1 < ord2) return NSOrderedAscending;
+			return NSOrderedDescending;
+		}
+		
+		return [obj1.macAddress compare:obj2.macAddress];
+	};
+}
+
+- (id)initWithHeader:(PPDeviceHeader*)header 
+{
 	self = [super initWithHeader:header];
-	if (self) {
-		self.brightnessRed = 1.0;
-		self.brightnessGreen = 1.0;
-		self.brightnessBlue = 1.0;
+	if (self)
+	{
+		self.brightness = PPFloatPixelMake(1, 1, 1);
 		
 		NSData *packet = header.packetRemainder;
-		if (self.softwareRevision < ACCEPTABLE_LOWEST_SW_REV) {
-			DDLogWarn(@"WARNING!  This PixelPusher Library requires firmware revision %g", ACCEPTABLE_LOWEST_SW_REV/100.0);
+		if (self.softwareRevision < PP_ACCEPTABLE_LOWEST_SW_REV) {
+			// TODO: use the device registry delegate to relay this message
+			DDLogWarn(@"WARNING!  This PixelPusher Library requires firmware revision %g", PP_ACCEPTABLE_LOWEST_SW_REV/100.0);
 			DDLogWarn(@"WARNING!  This PixelPusher is using %g", self.softwareRevision/100.0);
 			DDLogWarn(@"WARNING!  This is not expected to work.  Please update your PixelPusher.");
 		}
-		if (packet.length < 28) {
-			[NSException raise:NSInvalidArgumentException format:@"expected header size %d, but got %lu", 28, (unsigned long)packet.length];
-		}
+		assert(packet.length >= 28);
+//		if (packet.length < 28) {
+//			[NSException raise:NSInvalidArgumentException format:@"expected header size %d, but got %lu", 28, (unsigned long)packet.length];
+//		}
 
 		self.stripsAttached = [packet ubyteAtOffset:0];
 		self.maxStripsPerPacket = [packet ubyteAtOffset:1];
@@ -73,27 +91,27 @@ static const int32_t ACCEPTABLE_LOWEST_SW_REV = 121;
 		self.artnetUniverse = [packet ushortAtOffset:24];
 		self.artnetChannel = [packet ushortAtOffset:26];
         if (packet.length >= 30 && self.softwareRevision > 100) {
-            self.myPort = [packet ushortAtOffset:28];
+            self.port = [packet ushortAtOffset:28];
         } else {
-            self.myPort = kDefaultPusherPort;
+            self.port = kDefaultPusherPort;
         }
 		
 		// A minor complication here.  The PixelPusher firmware generates announce packets from
 		// a static structure, so the size of stripFlags is always 8;  even if there are fewer
 		// strips configured.  So we have a wart. - jls.
 
-		int stripFlagSize = 8;
+		uint32_t stripFlagSize = 8;
 		if (self.stripsAttached > stripFlagSize) stripFlagSize = self.stripsAttached;
 		
 		NSMutableArray *theStripFlags = NSMutableArray.new;
 		self.stripFlags = theStripFlags;
-		if ((int)packet.length >= (30+stripFlagSize) && self.softwareRevision > 108) {
-			for (int i=0; i<stripFlagSize; i++) {
+		if (packet.length >= (30+stripFlagSize) && self.softwareRevision > 108) {
+			for (uint32_t i=0; i<stripFlagSize; i++) {
 				uint8_t flag = [packet ubyteAtOffset:30+i];
 				[theStripFlags addObject:@(flag)];
 			}
 		} else {
-			for (int i=0; i<stripFlagSize; i++) [theStripFlags addObject:@(0)];
+			for (uint32_t i=0; i<stripFlagSize; i++) [theStripFlags addObject:@(0)];
 		}
 
 		// you may be asking yourself, why the +2 on that postStripFlagOffset calculation?
@@ -103,8 +121,9 @@ static const int32_t ACCEPTABLE_LOWEST_SW_REV = 121;
 		// this padding requirement is fixed.  other devices that support >8 strips don't use a
 		// fixed struct and insert this padding to comply with this spec, so we can safely
 		// add this 2-byte padding regardless of strip count.
-		int postStripFlagOffset = 30 + stripFlagSize + 2;
-		if ((int)packet.length >= (postStripFlagOffset+(4*3)) && self.softwareRevision > 116) {
+		uint32_t postStripFlagOffset = 30 + stripFlagSize + 2;
+		if (packet.length >= (postStripFlagOffset+(4*3)) && self.softwareRevision > 116)
+		{
 			self.pusherFlags = [packet uintAtOffset:postStripFlagOffset];
 			self.segments = [packet uintAtOffset:postStripFlagOffset+4];
 			self.powerDomain = [packet uintAtOffset:postStripFlagOffset+8];
@@ -114,23 +133,55 @@ static const int32_t ACCEPTABLE_LOWEST_SW_REV = 121;
 }
 
 - (NSString *)description {
-	return [NSString stringWithFormat:@"%@ (%@, controller %d, group %d, deltaSeq %lld, update %f, power %lld, flags %03x, firmware v%1.2f, hardware rev %d)",
-			super.description, self.ipAddress, self.controllerOrdinal, self.groupOrdinal, self.deltaSequence, self.updatePeriod,
+	return [NSString stringWithFormat:@"%@ (%@:%d, controller %d, group %d, deltaSeq %lld, update %f, power %lld, flags %03x, firmware v%1.2f, hardware rev %d)",
+			super.description, self.ipAddress, self.port, self.controllerOrdinal, self.groupOrdinal, self.deltaSequence, self.updatePeriod,
 			self.powerTotal, self.pusherFlags, self.softwareRevision/100.0f, self.hardwareRevision];
+}
+
+- (void)setBrightness:(PPFloatPixel)brightness {
+	if (!PPFloatPixelEqual(_brightness, brightness)) {
+		_brightness = brightness;
+		if (_strips) {
+			[_strips forEach:^(PPStrip* strip, NSUInteger idx, BOOL *stop) {
+				strip.brightness = brightness;
+			}];
+		}
+	}
 }
 
 - (void)allocateStrips {
 	if (!_strips) {
 		NSMutableArray *array = NSMutableArray.new;
-		for (int i=0; i<self.stripsAttached; i++) {
+		for (NSUInteger i=0; i<self.stripsAttached; i++) {
 			int32_t stripFlags = [self.stripFlags[i] intValue];
 			PPStrip *strip = [PPStrip.alloc initWithStripNumber:i pixelCount:self.pixelsPerStrip flags:stripFlags];
-			strip.brightnessRed = _brightnessRed;
-			strip.brightnessGreen = _brightnessGreen;
-			strip.brightnessBlue = _brightnessBlue;
+			strip.brightness = self.brightness;
 			[array addObject:strip];
 		}
 		_strips = array;
+	}
+}
+- (void)resetHardwareBrightness
+{
+	NSInteger			stripIndex;
+	
+	stripIndex = _strips.count;
+	while(--stripIndex >= 0)
+	{
+		[self enqueuePusherCommand:[PPPusherCommand brightnessCommand:0xFFFF forStrip:stripIndex]];
+	}
+	[self enqueuePusherCommand:[PPPusherCommand globalBrightnessCommand:0xFFFF]];
+}
+- (void)enqueuePusherCommand:(PPPusherCommand*)command
+{
+	// [PPPusherCommand wifiConfigureCommandForSSID...] can fail, so test:
+	if (command)
+	{
+		if (!_pusherCommandQueue)
+		{
+			_pusherCommandQueue = [NSMutableArray.alloc initWithCapacity:1];
+		}
+		[_pusherCommandQueue addObject:command];
 	}
 }
 
@@ -142,7 +193,7 @@ static const int32_t ACCEPTABLE_LOWEST_SW_REV = 121;
 		_strips = nil;
 	}
 	NSMutableString *changes = NSMutableString.new;
-	if (self.updatePeriod != device.updatePeriod) [changes appendFormat:@" updatePeriod: %f", device.updatePeriod];
+	if (self.updatePeriod != device.updatePeriod) [changes appendFormat:@" updatePeriod: %1.2fms", device.updatePeriod*1000];
 	if (self.deltaSequence != device.deltaSequence) [changes appendFormat:@" deltaSeq: %lld", device.deltaSequence];
 	if (self.powerTotal != device.powerTotal) [changes appendFormat:@" power: %lld", device.powerTotal];
 	if (changes.length > 0) DDLogInfo(@"update pusher %@: %@", self.ipAddress, changes);
@@ -157,7 +208,7 @@ static const int32_t ACCEPTABLE_LOWEST_SW_REV = 121;
 	self.groupOrdinal = device.groupOrdinal;
 	self.artnetChannel = device.artnetChannel;
 	self.artnetUniverse = device.artnetUniverse;
-	self.myPort = device.myPort;
+	self.port = device.port;
 	self.stripFlags = (NSArray*)device.stripFlags.copy;
 	self.pusherFlags = device.pusherFlags;
 	self.segments = device.segments;
@@ -200,7 +251,7 @@ static const int32_t ACCEPTABLE_LOWEST_SW_REV = 121;
 		|| self.pixelsPerStrip != other.pixelsPerStrip
     	|| self.artnetChannel != other.artnetChannel
 		|| self.artnetUniverse != other.artnetUniverse
-		|| self.myPort != other.myPort
+		|| self.port != other.port
 		|| labs(self.powerTotal - other.powerTotal) > 10000
 		|| self.powerDomain != other.powerDomain
 		|| self.segments != other.segments
@@ -233,88 +284,25 @@ static const int32_t ACCEPTABLE_LOWEST_SW_REV = 121;
 	}
 }
 
+- (float)averagePixelComponentValue {
+	float total = 0;
 
-/////////////////////////////////////////////////
-#pragma mark - BRIGHTNESS PROPERTIES, OPERATIONS
-
-- (float)brightness
-{
-	return (_brightnessRed + _brightnessGreen + _brightnessBlue) / 3;
-}
-- (void)setBrightness:(float)brightness
-{
-	if ((_brightnessRed != brightness) ||
-		(_brightnessGreen != brightness) ||
-		(_brightnessBlue != brightness))
-	{
-		_brightnessRed = brightness;
-		_brightnessGreen = brightness;
-		_brightnessBlue = brightness;
-		if (_strips)
-		{
-			[_strips forEach:^(PPStrip* strip, NSUInteger idx, BOOL *stop)
-				{
-					strip.brightnessRed = brightness;
-					strip.brightnessGreen = brightness;
-					strip.brightnessBlue = brightness;
-				}
-			];
-		}
-	}
-}
-- (void)setBrightnessRed:(float)brightness {
-	if (_brightnessRed != brightness) {
-		_brightnessRed = brightness;
-		if (_strips) {
-			[_strips forEach:^(PPStrip* strip, NSUInteger idx, BOOL *stop) {
-				strip.brightnessRed = brightness;
-			}];
-		}
-	}
-}
-- (void)setBrightnessGreen:(float)brightness {
-	if (_brightnessGreen != brightness) {
-		_brightnessGreen = brightness;
-		if (_strips) {
-			[_strips forEach:^(PPStrip* strip, NSUInteger idx, BOOL *stop) {
-				strip.brightnessGreen = brightness;
-			}];
-		}
-	}
-}
-- (void)setBrightnessBlue:(float)brightness {
-	if (_brightnessBlue != brightness) {
-		_brightnessBlue = brightness;
-		if (_strips) {
-			[_strips forEach:^(PPStrip* strip, NSUInteger idx, BOOL *stop) {
-				strip.brightnessBlue = brightness;
-			}];
-		}
-	}
-}
-
-- (float)averagePixelComponentValue
-{
-	float			total;
-	PPStrip*		strip;
-	
-	total = 0;
-	for (strip in _strips)
+	// TODO: dispatch concurrently
+	for (PPStrip* strip in _strips)
 	{
 		total += strip.averagePixelComponentValue;
 	}
 	return total / _strips.count;
+
 }
 
-- (void)scalePixelComponentValues:(float)scale;		// 1.0f for no scaling
-{
-	PPStrip*		strip;
+- (void)scalePixelComponentValues:(float)scale {
+	if (scale > 1) scale = 1;
 	
-	for (strip in _strips)
+	for (PPStrip* strip in _strips)
 	{
 		[strip scalePixelComponentValues:scale];
 	}
 }
-
 
 @end
