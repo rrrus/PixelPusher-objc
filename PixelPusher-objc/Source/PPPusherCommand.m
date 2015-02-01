@@ -25,6 +25,16 @@ static UInt8	const theMagicCookie[16] =
 { 0x40, 0x09, 0x2d, 0xa6, 0x15, 0xa5, 0xdd, 0xe5, 0x6a, 0x9d, 0x4d, 0x5a, 0xcf, 0x09, 0xaf, 0x50 };
 
 
+/////////////////////////////////////////////////
+#pragma mark - PRIVATE STUFF
+
+@interface PPPusherCommand ()
+
+@property (nonatomic, strong) NSData* data;	// re-declared so that we can set it
+
+@end
+
+
 @implementation PPPusherCommand
 
 
@@ -40,7 +50,7 @@ static UInt8	const theMagicCookie[16] =
 	
 	PPPusherCommand*	const command = [PPPusherCommand.alloc init];
 
-	command->_dataToSend = [NSData dataWithBytes:bytes length:sizeof(bytes)];
+	[command setData:[NSData dataWithBytes:bytes length:sizeof(bytes)]];
 	return command;
 }
 
@@ -54,7 +64,7 @@ static UInt8	const theMagicCookie[16] =
 
 	PPPusherCommand*	const command = [PPPusherCommand.alloc init];
 	
-	command->_dataToSend = [NSData dataWithBytes:bytes length:sizeof(bytes)];
+	[command setData:[NSData dataWithBytes:bytes length:sizeof(bytes)]];
 	return command;
 }
 + (PPPusherCommand*)brightnessCommand:(UInt16)brightness forStrip:(NSUInteger)strip
@@ -70,7 +80,7 @@ static UInt8	const theMagicCookie[16] =
 
 	PPPusherCommand*	const command = [PPPusherCommand.alloc init];
 	
-	command->_dataToSend = [NSData dataWithBytes:bytes length:sizeof(bytes)];
+	[command setData:[NSData dataWithBytes:bytes length:sizeof(bytes)]];
 	return command;
 }
 
@@ -111,7 +121,7 @@ static UInt8	const theMagicCookie[16] =
 	
 	PPPusherCommand*	const command = [PPPusherCommand.alloc init];
 
-	command->_dataToSend = [NSData dataWithBytes:bytes length:byteCount];
+	[command setData:[NSData dataWithBytes:bytes length:byteCount]];
 	return command;
 }
 
@@ -168,8 +178,23 @@ static UInt8	const theMagicCookie[16] =
 
 	PPPusherCommand*	const command = [PPPusherCommand.alloc init];
 
-	command->_dataToSend = [NSData dataWithBytes:bytes length:sizeof(bytes)];
+	[command setData:[NSData dataWithBytes:bytes length:sizeof(bytes)]];
 	return command;
+}
+
+
+/////////////////////////////////////////////////
+#pragma mark - PROPERTIES
+
+- (PPPusherCommandType)type
+{
+	if (_data)
+	{
+		uint8_t const*	const data = _data.bytes;
+		
+		return data[sizeof(theMagicCookie)];
+	}
+	return 0;
 }
 
 

@@ -268,7 +268,7 @@ B) Adding/retrieving from an NSMutableDictionary is not always quick.
 		if (pusherCommandQueue.count > 0)
 		{
 			PPPusherCommand*	const command = pusherCommandQueue[0];
-			NSData*				const data = command.dataToSend;
+			NSData*				const data = command.data;
 			
 			memcpy(p, data.bytes, data.length);
 			if (_pusher.pusherFlags & PFLAG_FIXEDSIZE)

@@ -80,7 +80,8 @@ typedef UInt8		PPPusherCommandComponentOrderings[8];
 
 // PROPERTIES
 
-@property (nonatomic, readonly) NSData* dataToSend;
+@property (nonatomic, readonly) PPPusherCommandType type;
+@property (nonatomic, readonly) NSData* data;
 
 
 @end
