@@ -6,7 +6,10 @@
 //  Copyright (c) 2013 rrrus. All rights reserved.
 //
 
+
 #import "PPPixel.h"
+#import "PPPrivate.h"
+
 
 PPFloatPixel PPFloatPixelMake(float red, float green, float blue)
 {

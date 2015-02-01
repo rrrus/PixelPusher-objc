@@ -13,6 +13,7 @@
 
 #import "PPPusher.h"
 #import "PPStrip.h"
+#import "PPPrivate.h"
 
 
 /////////////////////////////////////////////////
@@ -96,7 +97,7 @@ void BuildOutputCurve(uint32_t length)
 	{
 		uint32_t		const value = lroundf(65535.0f * gOutputCurveFunction(index * indexScalar));
 		
-		assert(value < 65536);
+		ASSERT(value < 65536);
 		gOutputCurveTable[index] = (uint16_t)value;
 	}
 }
@@ -134,7 +135,7 @@ void FreeOutputCurve()
 	
 	if (flags & SFLAG_WIDEPIXELS)
 	{
-		assert(!(pixelCount & 1));
+		ASSERT(!(pixelCount & 1));
 		_pixelCount = (pixelCount + 1) / 2;
 	}
 	else
@@ -194,7 +195,7 @@ void FreeOutputCurve()
 	uint8_t const*		data;
 	uint32_t			total;
 
-	assert(_serializedDataBytes % 3 == 0);
+	ASSERT(_serializedDataBytes % 3 == 0);
 	data = _serializedData;
 	total = 0;
 	
@@ -218,7 +219,7 @@ void FreeOutputCurve()
 			
 			data += 6;
 		}
-		assert(_serializedDataBytes % 6 == 0);
+		ASSERT(_serializedDataBytes % 6 == 0);
 		return (float)total / ((_serializedDataBytes / 2) * 65535);
 	}
 	else
@@ -254,7 +255,7 @@ void FreeOutputCurve()
 	
 	if (pixelCount > _pixelCount)
 	{
-		assert(FALSE);
+		ASSERT(FALSE);
 		pixelCount = _pixelCount;
 	}
 	
@@ -602,7 +603,7 @@ void FreeOutputCurve()
 /////////////////////////////////////////////////
 #pragma mark - OPERATIONS CALLED ONLY BY PP LIBRARY:
 
-- (uint32_t)serializeIntoBuffer:(uint8_t*)buffer bufferLength:(NSUInteger)bytes
+- (uint32_t)fillRgbBuffer:(uint8_t*)buffer bufferLength:(NSUInteger)bytes
 {
     _touched = NO;
 	if (_serializedDataBytes < bytes)

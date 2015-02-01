@@ -13,6 +13,7 @@
 
 #import "PPPusherGroup.h"
 #import "PPPusher.h"
+#import "PPPrivate.h"
 
 
 /////////////////////////////////////////////////

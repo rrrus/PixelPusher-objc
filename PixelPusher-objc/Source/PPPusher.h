@@ -5,7 +5,7 @@
 //	PPPusher is an Objective-C class that handles communication with a single PixelPusher LED controller.
 //	 * contains parameters received from broadcast packets
 //	 * contains parameters that affect how data is transmitted
-//	 * when [flush] is called, calls [serializeIntoBuffer:] for each PPStrip to get pixel data and
+//	 * when [flush] is called, calls [fillRgbBuffer:] for each PPStrip to get pixel data and
 //	   assembles packets from the data, which are sent at precisely calculated times.
 //	 * enqueues PPPusherCommands and sends them at appropriate times
 //
@@ -25,7 +25,6 @@
 //
 
 #import <Foundation/Foundation.h>
-#import "HLDeferred.h"
 #import "PPDeviceHeader.h"
 #import "PPPixel.h"
 #import "PPPusherCommand.h"
@@ -71,7 +70,7 @@ typedef enum
 
 @property (nonatomic, readonly) NSArray* strips;
 @property (nonatomic, assign) BOOL doAdjustForDroppedPackets;
-@property (nonatomic, assign) BOOL isRecordingToFile;
+@property (nonatomic, assign) BOOL isCapturingToFile;
 @property (nonatomic, assign) PPFloatPixel brightnessScale;
 @property (nonatomic, readonly) BOOL doesAnyStripSupportHardwareBrightnessScaling;
 @property (nonatomic, readonly) float averageBrightness;	// 0-1, in all strips
@@ -95,11 +94,24 @@ typedef enum
 //@property (nonatomic, readonly) NSString* ipAddressOfLastClient;	// not yet implemented
 //@property (nonatomic, readonly) uint16_t portOfLastClient;		// not yet implemented
 
+// OPERATIONS:
+
+- (void)enqueuePusherCommand:(PPPusherCommand*)command;
+
+// [setBrightnessScale:] sets factors that are always applied to pixel values.
+// This method instead scales, just once, the pixels values that are currently in each strip.
+- (void)scaleAverageBrightness:(float)scale;
+
+// Enqueues pusher commands to reset pusher and strip hardware brightness.
+- (void)resetHardwareBrightness;
+
+
 // PROPERTIES TO BE USED ONLY BY PPRegistry:
 
 + (NSComparator)sortComparator;
 @property (nonatomic, assign) NSTimeInterval extraDelay;
-@property (nonatomic, assign) NSTimeInterval lastSeenDate;
+@property (nonatomic, assign) NSTimeInterval lastSeenTime;		// in CACurrentMediaTime() units
+@property (nonatomic, readonly) int32_t unsentPacketCount;
 //@property (nonatomic, readonly) uint64_t bandwidthEstimate;	// currently just returns zero
 
 /* Jas sez:
@@ -112,15 +124,6 @@ much.  (Engineering:  it ends up being an ID controller.  No P term.)
 */
 @property (nonatomic, readonly) uint32_t deltaSequence;
 
-// OPERATIONS:
-
-- (void)enqueuePusherCommand:(PPPusherCommand*)command;
-
-// [setBrightnessScale:] sets factors that are always applied to pixel values.
-// This method instead scales, just once, the pixels values that are currently in each strip.
-- (void)scaleAverageBrightness:(float)scale;
-- (void)resetHardwareBrightness;
-
 // OPERATIONS TO BE CALLED ONLY BY PPRegistry:
 
 - (void)close;
@@ -132,8 +135,8 @@ much.  (Engineering:  it ends up being an ID controller.  No P term.)
 //	* one for each PPPusherCommand enqueued in PPPusher
 //	* calls [serialize:] for each PPStrip, gathering the data into as few packets as possible
 //	* sets up a block for each packet on a concurrent queue to execute at the right time for synchrony
-//	* fulfills a promise being waited upon by the NEXT frame (very tricky stuff)
-- (HLDeferred*)flush;
+//	* calls [ppAllPacketsSentByPusher:] when all of its packets have been sent.
+- (void)sendPackets;
 
 
 @end

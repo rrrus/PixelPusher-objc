@@ -8,7 +8,7 @@
 //
 //	The original PPStrip stored these in an Objective-C array of PPPixel objects,
 //	each containing a CGFloat property for each color component (red, green blue).
-//	When [serializeIntoBuffer:] was called, this data structure was converted into a C array
+//	When [fillRgbBuffer:] was called, this data structure was converted into a C array
 //	of bytes, to be sent in a UDP packet.
 //
 //	This version of PPStrip builds the C array of bytes directly, using a new set
@@ -135,6 +135,6 @@ extern const PPOutputCurveBlock sCurveAntilogFunction;
 // This method instead scales, just once, the pixels values that are currently in each strip.
 - (void)scaleAverageBrightness:(float)scale;		// 1.0f for no scaling
 
-- (uint32_t)serializeIntoBuffer:(uint8_t*)buffer bufferLength:(NSUInteger)bytes;
+- (uint32_t)fillRgbBuffer:(uint8_t*)buffer bufferLength:(NSUInteger)bytes;
 
 @end

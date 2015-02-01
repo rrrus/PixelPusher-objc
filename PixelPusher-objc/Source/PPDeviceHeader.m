@@ -16,6 +16,7 @@
 #import <sys/socket.h>
 #import <net/if.h>
 #import <net/if_dl.h>
+#import "PPPrivate.h"
 #import "PPDeviceHeader.h"
 
 
@@ -68,7 +69,7 @@ typedef struct __attribute__((packed)) DeviceHeader
 
 	if (packet.length < sizeof(DeviceHeader))
 	{
-		assert(NO);		// bad data or bug
+		ASSERT(NO);		// bad data or bug
 		self = nil;		//??? Does ARC release self?
 		return self;
 	}
@@ -78,11 +79,18 @@ typedef struct __attribute__((packed)) DeviceHeader
 	_deviceType = data->deviceType;
 	if (_deviceType != ePixelPusher)
 	{
-		assert(NO);		// could be other device, could be bug
+		ASSERT(NO);		// could be other device, could be bug
 		self = nil;		//??? Does ARC release self?
 		return self;
 	}
 
+	if ((*(uint32_t*)data->macAddress == 0) &&
+		(*(uint16_t*)(data->macAddress + 4) == 0))
+	{
+		ASSERT(NO);		// bad data or bug
+		self = nil;		//??? Does ARC release self?
+		return self;
+	}
 	memcpy(&_macSockAddr.sa_data, data->macAddress, 6);
 	_macSockAddr.sa_len = 6;
 	_macSockAddr.sa_family = AF_LINK;
@@ -93,8 +101,9 @@ typedef struct __attribute__((packed)) DeviceHeader
 
 	if (*(uint32_t*)data->ipAddress == 0)	
 	{
-		assert(NO);		// bad data or bug
-		return nil;		//??? Does ARC release self?
+		ASSERT(NO);		// bad data or bug
+		self = nil;		//??? Does ARC release self?
+		return self;
 	}
 	*(uint32_t*)&_ipSockAddr.sa_data = *(uint32_t*)data->ipAddress;
 	_ipSockAddr.sa_len = 4;
@@ -150,12 +159,12 @@ typedef struct __attribute__((packed)) DeviceHeader
 
 - (uint8_t const*)packetRemainder
 {
-	assert(_packet);		// [releasePacketRemainder called too early?]
+	ASSERT(_packet);		// [releasePacketRemainder called too early?]
 	return _packet.bytes + sizeof(DeviceHeader);
 }
 - (NSUInteger)packetRemainderLength
 {
-	assert(_packet);		// [releasePacketRemainder called too early?]
+	ASSERT(_packet);		// [releasePacketRemainder called too early?]
 	return _packet.length - sizeof(DeviceHeader);
 }
 

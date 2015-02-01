@@ -9,10 +9,19 @@
 //	 * If a controller hasn't been heard from in a while, the corresponding PPPusher is deleted.
 //	 * PPPusherGroups are formed using the groupOrdinal fields of the PPPushers.
 //
+//	To use this class:
+//	 * Have one of your classes implement <PPFrameDelegate>
+//	 * In [ppRenderStart], call the "setPixel(s)" methods in each PPStrip to set RGB data to send.
+//	   (get references to PPStrips with PPRegistry.the.stripArray or PPRegistry.the.pusherArray[n].stripArray.)
+//	 * You can do the above operation in the main queue and just return YES, or...
+//	   you can return NO and then call [ppRenderFinished] (from the main thread) when you're finished.
+//	 * The "setPixel(s)" methods may be called from a worker queue if not more than one queue is doing so,
+//	   and not after [ppRenderFinished] has been called
+//
 //  Created by Rus Maxham on 5/27/13.
 //  Copyright (c) 2013 rrrus. All rights reserved.
 //
-//	Modified by Christopher Schardt in late 2014:
+//	Modified extensively by Christopher Schardt in late 2014:
 //		grouped properties, operations, responders, etc...
 //		removed pusherMap, which was a duplicate of PPScene.pusherDict
 //		fixed calculation of _powerScale
@@ -39,7 +48,6 @@ extern NSString*	const PPRegistryPusherDisappeared;
 /////////////////////////////////////////////////
 #pragma mark - FORWARDS:
 
-@class HLDeferred;
 @class PPPusherGroup;
 
 
@@ -47,8 +55,12 @@ extern NSString*	const PPRegistryPusherDisappeared;
 #pragma mark - PROTOCOLS:
 
 @protocol PPFrameDelegate <NSObject>
+
 @required
-- (HLDeferred*)pixelPusherRender;
+// must return whether rendering was finished.
+// If it wasn't, [ppRenderFinished] must be called when it is.
+- (BOOL)ppRenderStart;
+
 @end
 
 
@@ -62,16 +74,16 @@ extern NSString*	const PPRegistryPusherDisappeared;
 + (PPRegistry*)the;
 
 @property (nonatomic, assign) BOOL isRunning;
-@property (nonatomic, assign) BOOL isRecordingToFile;
+@property (nonatomic, assign) BOOL isCapturingToFile;
 
 @property (nonatomic, weak) id<PPFrameDelegate> frameDelegate;
 @property (nonatomic, assign) PPFloatPixel brightnessScale;
 
-@property (nonatomic, readonly) NSArray *groups;			// PPPusherGroups, sorted by ordinal
-@property (nonatomic, readonly) NSArray *pushers;			// PPPushers, sorted by [PPPusher sortComparator]	
-@property (nonatomic, readonly) NSArray *strips;			// PPStrips, sorted by pusher/index in pusher
-@property (nonatomic, readonly) NSDictionary *groupDict;	// PPPusherGroups, keyed by NSNumbers with ordinal
-@property (nonatomic, readonly) NSDictionary *pusherDict;	// PPPushers, keyed by mac address string
+@property (nonatomic, readonly) NSArray* groupArray;		// PPPusherGroups, sorted by ordinal
+@property (nonatomic, readonly) NSArray* pusherArray;		// PPPushers, sorted by [PPPusher sortComparator]	
+@property (nonatomic, readonly) NSArray* stripArray;		// PPStrips, sorted by pusher/index in pusher
+@property (nonatomic, readonly) NSDictionary* groupDict;	// PPPusherGroups, keyed by NSNumbers with ordinal
+@property (nonatomic, readonly) NSDictionary* pusherDict;	// PPPushers, keyed by mac address string
 
 - (PPPusherGroup*)groupWithOrdinal:(int32_t)groupOrdinal;	// convenience method
 
@@ -98,7 +110,12 @@ extern NSString*	const PPRegistryPusherDisappeared;
 
 // RESPONDERS:
 
-// for use by PPPusher only, do not call!
+// If [delegate ppRenderStart] returns NO, this must be called when rendering is finished:
+- (void)ppRenderFinished;
+
+// RESPONDERS FOR USE ONLY BY PPPusher:
+
+- (void)ppAllPacketsSentByPusher:(PPPusher*)pusher;
 - (void)pusherSocketFailed:(PPPusher*)pusher;
 
 @end

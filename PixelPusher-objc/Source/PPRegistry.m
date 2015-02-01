@@ -16,13 +16,13 @@
 
 //#import <UIKit/UIKit.h>
 #import "GCDAsyncUdpSocket.h"
-#import "HLDeferredList.h"
 
 #import "PPDeviceHeader.h"
 #import "PPRegistry.h"
 #import "PPPixel.h"
 #import "PPPusher.h"
 #import "PPPusherGroup.h"
+#import "PPPrivate.h"
 
 
 INIT_LOG_LEVEL_INFO
@@ -31,7 +31,6 @@ INIT_LOG_LEVEL_INFO
 /////////////////////////////////////////////////
 #pragma mark - SWITCHES:
 
-#define DO_LOG_FRAME_TIMES	FALSE
 #define PPRegistry_DO_LOCK	FALSE
 
 
@@ -42,32 +41,20 @@ NSString*		const PPRegistryPusherAppeared = @"PPRegistryPusherAppeared";
 NSString*		const PPRegistryPusherDisappeared = @"PPRegistryPusherDisappeared";
 
 static const int32_t kDiscoveryPort = 7331;
-static const int32_t kDisconnectTimeout = 10;	// seconds
+static const int32_t kDisconnectTimeout = 100;	// seconds
 static const int64_t kExpiryTimerInterval = 1;	// seconds
 
-static const int32_t kExpectedPusherCount = 3;
+static const int32_t kExpectedPusherCount = 3;	// only used as initial NSMutableArray, NSMutableDictionary capacity
 
 
 /////////////////////////////////////////////////
 #pragma mark - TYPES:
-
-typedef struct
-{
-	CFTimeInterval render;
-	CFTimeInterval flush;
-	CFTimeInterval throttle;
-} FrameTimes;
 
 
 /////////////////////////////////////////////////
 #pragma mark - STATIC DATA:
 
 static PPRegistry *theRegistry;
-
-#if DO_LOG_FRAME_TIMES
-static FrameTimes		sFrameTimes[85];
-static uint32_t			sFrameCount = 0;
-#endif
 
 
 /////////////////////////////////////////////////
@@ -77,17 +64,18 @@ static uint32_t			sFrameCount = 0;
 {
 	GCDAsyncUdpSocket*		_discoverySocket;		// detects when pushers appear or change
 	NSTimer*				_expireTimer;			// detects when pushers disappear
-	NSMutableDictionary*	_appearedPusherDict;	// PPPushers to be added at [frameTask], key = mac address
-	NSMutableDictionary*	_disappearedPusherDict;	// PPPushers to be removed at [frameTask], key = mac address
+	NSMutableDictionary*	_appearedPusherDict;	// PPPushers to be added at [ppNextFrame], key = mac address
+	NSMutableDictionary*	_disappearedPusherDict;	// PPPushers to be removed at [ppNextFrame], key = mac address
 	NSMutableArray*			_pusherArray;			// PPPushers, sorted by [PPPusher sortComparator]
 	NSMutableDictionary*	_pusherDict;			// PPPushers, keyed by mac address string
 	NSMutableArray*			_groupArray;			// PPPusherGroups, sorted by ordinal
 	NSMutableDictionary*	_groupDict;				// PPPusherGroups, keyed by NSNumbers with ordinal
 	NSMutableArray*			_sortedStripArray;		// PPStrips, only built when needed - a cache
 
-	BOOL					_powerTotalChanged;
-	HLDeferred*				_defaultFramePromise;
-	HLDeferred*				_lastFrameFlush;
+	BOOL					_isPowerTotalChanged;
+	BOOL					_isRenderingFinished;
+	NSInteger				_pusherWithUnsentPacketsCount;
+	NSTimeInterval			_frameStartTime;
 }
 
 @end
@@ -116,9 +104,6 @@ static uint32_t			sFrameCount = 0;
 	_groupArray = [NSMutableArray.alloc initWithCapacity:1];
 	_groupDict = [NSMutableDictionary.alloc initWithCapacity:1];
 	
-	_defaultFramePromise = [HLDeferred deferredWithResult:nil];
-	_lastFrameFlush = [HLDeferred deferredWithResult:nil];
-
     return self;
 }
 
@@ -149,7 +134,7 @@ static uint32_t			sFrameCount = 0;
 		{
 			[self bindDiscoverySocket];
 			[self startExpireTimer];
-			[self frameTask];
+			[self ppNextFrame];
 		}
 		else
 		{
@@ -165,10 +150,10 @@ static uint32_t			sFrameCount = 0;
 				PPPusher*		pusher;
 				
 				// When we resume running, we don't want to think that a pusher disappeared
-				// because its lastSeenDate is quite old.  So we clear these dates:
+				// because its lastSeenTime is quite old.  So we clear these dates:
 				for (pusher in _pusherArray)
 				{
-					[pusher setLastSeenDate:0];
+					[pusher setLastSeenTime:0];
 				}
 			}
 		}
@@ -183,17 +168,17 @@ static uint32_t			sFrameCount = 0;
 	}
 }
 
-- (void)setIsRecordingToFile:(BOOL)doRecord
+- (void)setIsCapturingToFile:(BOOL)doRecord
 {
-	if (doRecord != _isRecordingToFile)
+	if (doRecord != _isCapturingToFile)
 	{
-		_isRecordingToFile = doRecord;
+		_isCapturingToFile = doRecord;
 		
 		PPPusher*		pusher;
 		
 		for (pusher in _pusherArray)
 		{
-			[pusher setIsRecordingToFile:doRecord];
+			[pusher setIsCapturingToFile:doRecord];
 		}
 	}
 }
@@ -261,15 +246,15 @@ static uint32_t			sFrameCount = 0;
 {
 	return _pusherDict;
 }
-- (NSArray*)groups
+- (NSArray*)groupArray
 {
 	return _groupArray;
 }
-- (NSArray*)pushers
+- (NSArray*)pusherArray
 {
 	return _pusherArray;
 }
-- (NSArray*)strips
+- (NSArray*)stripArray
 {
 	if (!_sortedStripArray)
 	{
@@ -305,16 +290,16 @@ static uint32_t			sFrameCount = 0;
 		[_discoverySocket setIPv6Enabled:NO];
 
 		[_discoverySocket enableReusePort:YES error:&error];
-		assert(!error);
+		ASSERT(!error);
 
 		[_discoverySocket enableBroadcast:YES error:&error];
-		assert(!error);
+		ASSERT(!error);
 
 		[_discoverySocket bindToPort:kDiscoveryPort error:&error];
-		assert(!error);
+		ASSERT(!error);
 
 		[_discoverySocket beginReceiving:&error];
-		assert(!error);
+		ASSERT(!error);
 	}
 }
 - (void)unbindDiscoverySocket
@@ -386,7 +371,7 @@ static uint32_t			sFrameCount = 0;
 			}
 			average /= _pusherDict.count;
 		}
-		assert(average <= 1.0f);	// brightness average shouldn't exceed 1.0
+		ASSERT(average <= 1.0f);	// brightness average shouldn't exceed 1.0
 		
 		float				const scale = (average > 0) ? MIN(brightnessLimit / average, 1)
 														: 1;
@@ -405,112 +390,120 @@ static uint32_t			sFrameCount = 0;
 
 
 /////////////////////////////////////////////////
-#pragma mark - FRAME OPERATIONS:
+#pragma mark - FRAME RESPONDERS:
 
-- (void)frameTask
+- (void)ppNextFrame
 {
-	CFTimeInterval		const start = CACurrentMediaTime();
+//	LOG(@"ppNextFrame");
+
+	_frameStartTime = CACurrentMediaTime();
 
 	// We add and remove to/from the arrays and dictionaries only here so as to not confuse client
-	// code that checks the group/pusher/strips at the beginning of [pixelPusherRender] and assumes
+	// code that checks the group/pusher/strips at the beginning of [ppRenderStart] and assumes
 	// they will stay the same until rendering is over (such as LED Lab).
 	[self handleAppearedPushers];
 	[self handleDisappearedPushers];
-	if (_powerTotalChanged && (_totalPowerLimit >= 0))
-	{
-		[self calculatePowerScale];
-		_powerTotalChanged = NO;
-	}
+	[self calculatePowerScale];
 
-	HLDeferred*			frameRenderPromise;
-	
-	assert(_frameDelegate);		// This library won't do much of anything without a delegate
-	frameRenderPromise = [_frameDelegate pixelPusherRender];
-	if (!frameRenderPromise)
+	_isRenderingFinished = NO;
+	ASSERT(_frameDelegate);		// This library won't do much of anything without a delegate
+	if ([_frameDelegate ppRenderStart])
 	{
-		frameRenderPromise = _defaultFramePromise;
+		// The client has finished rendering directly.
+		[self ppRenderFinished];
 	}
-	
-	[frameRenderPromise then:
-		^id(id result2)
-		{
-#if DO_LOG_FRAME_TIMES
-			uint32_t		const timesIdx = sFrameCount % _frameRateLimit;
-			
-			sFrameTimes[timesIdx].render = CACurrentMediaTime()	- start;
-#endif			
-			// We need to retain _lastFrameFlush since [then:] will likely release it, since it may call
-			// call [frameTask] recursively.  ARC will actually retain and then release the return value
-			// of [then:], which is the HLDeferred object, so if has been released, we will crash.
-			// I hate ARC.
-			HLDeferred*		const strongPrevFramePromise = _lastFrameFlush;
-			
-			// wait for all card tasks from last frame to finish flushing
-			[strongPrevFramePromise then:
-				^id(id result)
-				{
-					// lastFrameFlush was waiting for promises in [PPPusher flush] to be fulfilled.
-					// One tricky thing about this complex, promise-based architecture is that [PPPusher flush] will
-					// now cause a recursive call from a block in [PPPusher flush] to [PPPusher flush].
-					// One therefore has to be very careful about instance variables in PPPusher.
-#if DO_LOG_FRAME_TIMES
-					sFrameTimes[timesIdx].throttle = CACurrentMediaTime() - start - sFrameTimes[timesIdx].render;
-#endif
-					NSMutableArray*		const promises = [NSMutableArray arrayWithCapacity:_pusherArray.count];
-					PPPusher*			pusher;
-					
-					for (pusher in _pusherArray)
-					{
-						[promises addObject:[pusher flush]];
-					}
-					_lastFrameFlush = [HLDeferredList.alloc initWithDeferreds:promises];
-					
-#if DO_LOG_FRAME_TIMES
-					sFrameTimes[timesIdx].flush = CACurrentMediaTime() - start - sFrameTimes[timesIdx].render - sFrameTimes[timesIdx].throttle;
-					if (timesIdx == 0)
-					{
-						CFTimeInterval sumRender = 0;
-						CFTimeInterval sumFlush = 0;
-						CFTimeInterval sumThrottle = 0;
-						for (uint32_t idx = 0; idx < _frameRateLimit; idx++)
-						{
-							sumRender += sFrameTimes[idx].render;
-							sumFlush += sFrameTimes[idx].flush;
-							sumThrottle += sFrameTimes[idx].throttle;
-						}
-						sumRender /= _frameRateLimit;
-						sumThrottle /= _frameRateLimit;
-						sumFlush /= _frameRateLimit;
-						CFTimeInterval idle = minFrameInterval-sumThrottle-sumRender-sumFlush;
-						DDLogInfo(@"avg render %1.1f%%, flush %1.1f%%, send %1.1f%%, idle %1.1f%%",
-								  sumRender/minFrameInterval*100, sumFlush/minFrameInterval*100, sumSend/minFrameInterval*100, idle/minFrameInterval*100);
-						DDLogInfo(@"avg render %1.2fms, flush %1.2fms, throttle %1.3fms, idle %1.2fms",
-								  sumRender*1000, sumFlush*1000, sumThrottle*1000, idle*1000);
-					}
-#endif
-					if (_isRunning)
-					{
-						// delay to our min frame interval if we haven't exceeded it yet
-						CFTimeInterval		const minFrameInterval = 1.0 / _frameRateLimit;
-						CFTimeInterval		const delayTilNextFrame = minFrameInterval - (CACurrentMediaTime() - start);
-						dispatch_time_t		const popTime = dispatch_time(DISPATCH_TIME_NOW,
-																			(int64_t)(MAX(0, delayTilNextFrame) * NSEC_PER_SEC));
-						dispatch_after(popTime, dispatch_get_main_queue(),
-							^{
-								[self frameTask];
-							}
-						);
-					}
-					return nil;
-				}
-			];
-#if DO_LOG_FRAME_TIMES
-			sFrameCount++;
-#endif
-			return nil;
-		}
-	];
 }
+- (void)ppRenderFinished
+{
+//	LOG(@"ppRenderFinished");
+
+	_isRenderingFinished = YES;
+	if (_pusherArray.count > 0)
+	{
+		if (_pusherWithUnsentPacketsCount <= 0)
+		{
+			// The previous frame's packets have been sent.  Send!
+			[self ppSendNextPackets];
+		}
+		else
+		{
+			// The previous frame's packets have not been sent.  Wait.
+			// (This is quite common!)
+//			LOG(@"[PPRegistry ppRenderFinished] - previous frame's packets not yet sent");
+		}
+	}
+	else
+	{
+		_pusherWithUnsentPacketsCount = 0;		// for when pushers appear again
+		[self ppScheduleNextFrame];
+	}
+}
+- (void)ppAllPacketsSentByPusher:(PPPusher*)pusher
+{
+	_pusherWithUnsentPacketsCount--;
+//	LOG(@"PPRegistry PUSHER %*d --_pusherWithUnsentPacketsCount = %d", pusher.controllerOrdinal, pusher.controllerOrdinal, _pusherWithUnsentPacketsCount);
+	ASSERT(_pusherWithUnsentPacketsCount >= 0);
+	if (_pusherWithUnsentPacketsCount <= 0)
+	{
+		// All the previous frame's packets have been sent.
+		if (_isRenderingFinished)
+		{
+			// The rendering for the current frame is finished too.  Send!
+			[self ppSendNextPackets];
+		}
+		else
+		{
+			// The rendering for the current frame is not finished.  Wait.
+		}
+	}
+}
+- (void)ppSendNextPackets
+{
+//	LOG(@"PPRegistry PREPARE PACKETS _pusherWithUnsentPacketsCount = %d", _pusherArray.count);
+	
+	_isRenderingFinished = NO;	// prevents unlikely, infinite recursion
+	_pusherWithUnsentPacketsCount = _pusherArray.count;
+	if (_pusherWithUnsentPacketsCount > 0)
+	{
+		PPPusher*			pusher;
+		
+		for (pusher in _pusherArray)
+		{
+			// [sendPackets] will create packets for pusher commands and strip data,
+			// and create blocks that will send them at the right time according to
+			// Jas' Metronomicon algorithm.
+			// When each pusher has sent all its packets, it calls [ppAllPacketsSentByPusher:].
+			[pusher sendPackets];
+		}
+	}
+	[self ppScheduleNextFrame];
+}
+- (void)ppScheduleNextFrame
+{
+//	LOG(@"ppScheduleNextFrame");
+
+	if (_isRunning)
+	{
+		CFTimeInterval		const minFrameDuration = 1.0 / _frameRateLimit;
+		CFTimeInterval		const frameDuration = CACurrentMediaTime() - _frameStartTime;
+		CFTimeInterval		const delayTilNextFrame = MAX(minFrameDuration - frameDuration, 0);
+		dispatch_time_t		const nextFrameTime = dispatch_time(DISPATCH_TIME_NOW,
+																(int64_t)(delayTilNextFrame * NSEC_PER_SEC));
+		if (delayTilNextFrame > 0)
+		{
+//			LOG(@"ppScheduleNextFrame - duration : %1.3f, delay - %1.3f sec", frameDuration, delayTilNextFrame);
+		}
+		dispatch_after(nextFrameTime, dispatch_get_main_queue(),
+			^{
+				[self ppNextFrame];
+			}
+		);
+	}
+}
+
+
+/////////////////////////////////////////////////
+#pragma mark - FRAME OPERATIONS:
 
 - (void)handleAppearedPushers
 {
@@ -518,14 +511,15 @@ static uint32_t			sFrameCount = 0;
 	
 	for (pusher in _appearedPusherDict.objectEnumerator)
 	{
-//		NSLog(@"[PPScene handleAppearedPushers] IP - %@ MAC - %@", \
-//				pusher.header.ipAddress, pusher.header.macAddress);
+		NSString*		const macAddress = pusher.header.macAddress;
+		
+		LOG(@"[PPScene handleAppearedPushers] IP - %@ MAC - %@", pusher.header.ipAddress, macAddress);
 
 		[pusher setBrightnessScale:_brightnessScale];
 		[pusher setDoAdjustForDroppedPackets:_doAdjustForDroppedPackets];
-		[pusher setIsRecordingToFile:_isRecordingToFile];
+		[pusher setIsCapturingToFile:_isCapturingToFile];
 		[pusher setExtraDelay:_extraDelay];
-		_pusherDict[pusher.header.macAddress] = pusher;
+		_pusherDict[macAddress] = pusher;
 
 		NSRange			range;
 		NSUInteger		insertionIndex;
@@ -588,7 +582,7 @@ static uint32_t			sFrameCount = 0;
 	{
 		NSString*		const macAddress = pusher.header.macAddress;
 		
-//		NSLog(@"[PPScene handleDisappearedPushers] IP - %@ MAC - %@", pusher.header.ipAddress, macAddress);
+		LOG(@"[PPScene handleDisappearedPushers] IP - %@ MAC - %@", pusher.header.ipAddress, macAddress);
 
 		// We call [close] right away, rather than wait for [card dealloc]
 		[pusher close];
@@ -617,17 +611,21 @@ static uint32_t			sFrameCount = 0;
 
 - (void)calculatePowerScale
 {
-	uint64_t		power;
-	PPPusher*		pusher;
-	
-	power = 0;
-	for (pusher in _pusherArray)
+	if (_isPowerTotalChanged && (_totalPowerLimit >= 0))
 	{
-		power += pusher.powerTotal;
+		uint64_t		power;
+		PPPusher*		pusher;
+		
+		power = 0;
+		for (pusher in _pusherArray)
+		{
+			power += pusher.powerTotal;
+		}
+		_totalPower = power;
+		_powerScale = ((uint64_t)_totalPowerLimit < power) ? (float)_totalPowerLimit / power
+														   : 1.0f;
 	}
-	_totalPower = power;
-	_powerScale = ((uint64_t)_totalPowerLimit < power) ? (float)_totalPowerLimit / power
-													   : 1.0f;
+	_isPowerTotalChanged = NO;
 }
 
 
@@ -669,16 +667,16 @@ withFilterContext:(id)filterContext
 				}
 				// using a dictionary prevents adding a pusher more than once
 				_appearedPusherDict[macAddress] = pusher;
-//				NSLog(@"[PPScene udpSocket:didReceiveData:] APPEARED IP - %@ MAC - %@", \
+//				LOG(@"[PPScene udpSocket:didReceiveData:] APPEARED IP - %@ MAC - %@", \
 //						pusher.header.ipAddress, macAddress);
 			}
 			else
 			{
 				[pusher updateWithHeader:header];
 			}
-			[pusher setLastSeenDate:NSDate.date.timeIntervalSinceReferenceDate];
+			[pusher setLastSeenTime:CACurrentMediaTime()];
 			
-			_powerTotalChanged = YES;
+			_isPowerTotalChanged = YES;
 		}
 	}
 }
@@ -696,20 +694,20 @@ withFilterContext:(id)filterContext
 
 - (void)deviceExpireTask:(NSTimer*)timer
 {
-	NSTimeInterval		const now = NSDate.date.timeIntervalSinceReferenceDate;	// Get just once for efficiency
+	NSTimeInterval		const now = CACurrentMediaTime();	// Get just once for efficiency
 	PPPusher*			pusher;
 
 	for (pusher in _pusherArray)
 	{
-		NSTimeInterval		const lastSeenDate = pusher.lastSeenDate;
+		NSTimeInterval		const lastSeenTime = pusher.lastSeenTime;
 		
-		if (lastSeenDate != 0)
+		if (lastSeenTime != 0)
 		{
-			if (now - lastSeenDate > kDisconnectTimeout)
+			if (now - lastSeenTime > kDisconnectTimeout)
 			{
 				// using a dictionary prevents adding a pusher more than once
 				_disappearedPusherDict[pusher.header.macAddress] = pusher;
-//				NSLog(@"[PPScene deviceExpireTask] DISAPPEARED IP - %@ MAC - %@", \
+//				LOG(@"[PPScene deviceExpireTask] DISAPPEARED IP - %@ MAC - %@", \
 //						pusher.header.ipAddress, pusher.header.macAddress);
 			}
 		}

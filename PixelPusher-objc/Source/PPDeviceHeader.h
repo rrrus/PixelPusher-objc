@@ -13,6 +13,7 @@
 //	 * using DeviceHeader{} instead of NSData methods - quicker
 //	 * quicker implementation of packetRemainder
 //	 * created _ipAddress and _macAddress in [initWithPacket:]
+//	 * added tests for basic packet validity
 //
 
 #import <Foundation/Foundation.h>

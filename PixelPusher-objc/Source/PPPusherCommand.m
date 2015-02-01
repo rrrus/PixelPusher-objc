@@ -13,6 +13,7 @@
 //
 
 #import "PPPusherCommand.h"
+#import "PPPrivate.h"
 
 
 /////////////////////////////////////////////////
@@ -74,7 +75,7 @@ static UInt8	const theMagicCookie[16] =
 }
 + (PPPusherCommand*)brightnessCommand:(UInt16)brightness forStrip:(NSUInteger)strip
 {
-	assert(strip <= 255);
+	ASSERT(strip <= 255);
 
 	UInt8				bytes[sizeof(theMagicCookie) + 4];
 	
