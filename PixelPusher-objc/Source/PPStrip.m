@@ -11,7 +11,7 @@
 //
 /////////////////////////////////////////////////
 
-#import "PPPixelPusher.h"
+#import "PPPusher.h"
 #import "PPStrip.h"
 
 
@@ -118,32 +118,32 @@ void FreeOutputCurve()
 {
 	self = [self init];
 
-	//??? Why would NSObject ever fail to initialize?
-//	if (self)
+//	Setting this causes black to be sent to the strip before any data arrives.
+//	This makes sense at startup but not when resuming.
+//	_touched = YES;
+
+	_stripNumber = stripNumber;
+	_flags = flags;
+	_powerScale = 1.0;
+	_brightnessScale.red = 1.0;
+	_brightnessScale.green = 1.0;
+	_brightnessScale.blue = 1.0;
+	_brightnessScaleRed = BRIGHTNESS_SCALE_1;
+	_brightnessScaleGreen = BRIGHTNESS_SCALE_1;
+	_brightnessScaleBlue = BRIGHTNESS_SCALE_1;
+	
+	if (flags & SFLAG_WIDEPIXELS)
 	{
-		_stripNumber = stripNumber;
-		_flags = flags;
-		_touched = YES;
-		_powerScale = 1.0;
-		_brightness.red = 1.0;
-		_brightness.green = 1.0;
-		_brightness.blue = 1.0;
-		_brightnessScaleRed = BRIGHTNESS_SCALE_1;
-		_brightnessScaleGreen = BRIGHTNESS_SCALE_1;
-		_brightnessScaleBlue = BRIGHTNESS_SCALE_1;
-		
-		if (flags & SFLAG_WIDEPIXELS)
-		{
-			assert(!(pixelCount & 1));
-			_pixelCount = (pixelCount + 1) / 2;
-		}
-		else
-		{
-			_pixelCount = pixelCount;
-		}
-		_serializedDataBytes = pixelCount * 3;
-		_serializedData = calloc(pixelCount * 3, 1);
+		assert(!(pixelCount & 1));
+		_pixelCount = (pixelCount + 1) / 2;
 	}
+	else
+	{
+		_pixelCount = pixelCount;
+	}
+	_serializedDataBytes = pixelCount * 3;
+	_serializedData = calloc(pixelCount * 3, 1);
+
 	return self;
 }
 
@@ -175,20 +175,20 @@ void FreeOutputCurve()
 	_powerScale = powerScale;
 	[self calculateBrightnessScales];
 }
-- (void)setBrightness:(PPFloatPixel)brightness
+- (void)setBrightnessScale:(PPFloatPixel)brightness
 {
-	_brightness = brightness;
+	_brightnessScale = brightness;
 	[self calculateBrightnessScales];
 }
-- (void)setBrightnessRed:(float)red green:(float)green blue:(float)blue;
+- (void)setBrightnessScaleRed:(float)red green:(float)green blue:(float)blue;
 {
-	_brightness.red = red;
-	_brightness.green = green;
-	_brightness.blue = blue;
+	_brightnessScale.red = red;
+	_brightnessScale.green = green;
+	_brightnessScale.blue = blue;
 	[self calculateBrightnessScales];
 }
 
-- (float)averagePixelComponentValue
+- (float)averageBrightness
 {
 	uint8_t const*		const dataEnd = _serializedData + _serializedDataBytes;
 	uint8_t const*		data;
@@ -240,11 +240,11 @@ void FreeOutputCurve()
 {
 	float			const scale = _powerScale * BRIGHTNESS_SCALE_1;
 	
-	_brightnessScaleRed = lroundf(scale * _brightness.red);
+	_brightnessScaleRed = lroundf(scale * _brightnessScale.red);
 	_brightnessScaleRed = MIN(_brightnessScaleRed, (uint32_t)65536);
-	_brightnessScaleGreen = lroundf(scale * _brightness.green);
+	_brightnessScaleGreen = lroundf(scale * _brightnessScale.green);
 	_brightnessScaleGreen = MIN(_brightnessScaleGreen, (uint32_t)65536);
-	_brightnessScaleBlue = lroundf(scale * _brightness.blue);
+	_brightnessScaleBlue = lroundf(scale * _brightnessScale.blue);
 	_brightnessScaleBlue = MIN(_brightnessScaleBlue, (uint32_t)65536);
 }
 
@@ -544,7 +544,9 @@ void FreeOutputCurve()
 	_touched = YES;
 }
 
-- (void)scalePixelComponentValues:(float)scale;		// 1.0f for no scaling
+// [setBrightnessScale:] sets factors that are always applied to pixel values.
+// This method instead scales, just once, the pixels values that are currently in each strip.
+- (void)scaleAverageBrightness:(float)scale;		// 1.0f for no scaling
 {
 	if (scale != 1.0f)
 	{
@@ -600,15 +602,15 @@ void FreeOutputCurve()
 /////////////////////////////////////////////////
 #pragma mark - OPERATIONS CALLED ONLY BY PP LIBRARY:
 
-- (uint32_t)serialize:(uint8_t*)buffer size:(NSUInteger)sizeInBytes
+- (uint32_t)serializeIntoBuffer:(uint8_t*)buffer bufferLength:(NSUInteger)bytes
 {
     _touched = NO;
-	if (_serializedDataBytes < sizeInBytes)
+	if (_serializedDataBytes < bytes)
 	{
-		sizeInBytes = _serializedDataBytes;
+		bytes = _serializedDataBytes;
 	}
-	memcpy(buffer, _serializedData, sizeInBytes);
-	return sizeInBytes;
+	memcpy(buffer, _serializedData, bytes);
+	return bytes;
 }
 
 

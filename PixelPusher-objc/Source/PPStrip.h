@@ -3,11 +3,12 @@
 //  PPStrip.h
 //  PixelPusher-objc
 //
-//	This class stores LED/Pixel values for one PixelPusher strip.
+//	This class stores LED/Pixel values for one PixelPusher strip.  [serializeInBuffer:]
+//	copies all of those values into a buffer for sending in a packet by PPPusher.
 //
 //	The original PPStrip stored these in an Objective-C array of PPPixel objects,
 //	each containing a CGFloat property for each color component (red, green blue).
-//	When [serialize:] was called, this data structure was converted into a C array
+//	When [serializeIntoBuffer:] was called, this data structure was converted into a C array
 //	of bytes, to be sent in a UDP packet.
 //
 //	This version of PPStrip builds the C array of bytes directly, using a new set
@@ -40,13 +41,24 @@
 /////////////////////////////////////////////////
 #pragma mark - SWITCHES:
 
-#define NEW_PPStrip		TRUE
-
 
 /////////////////////////////////////////////////
 #pragma mark - TYPES:
 
 typedef float (^PPOutputCurveBlock)(float input);
+
+/** set an intensity output curve function.  the function will be called repeatedly with input values
+	ranging from 0-1.  the function should return output values in the range from 0-1.
+	the curve function may be called at any time, from non-main threads, and multiple calls
+	concurrently to recompute output curves for varying output depths.  beware to ensure
+	the function is thread-safe and reentrant.
+ 
+	@example
+		// set an inverse output curve
+		[PPStrip setOutputCurveFunction:^float(float input) {
+			return 1.0-input;
+		}];
+ */
 
 
 /////////////////////////////////////////////////
@@ -61,7 +73,7 @@ extern const PPOutputCurveBlock sCurveAntilogFunction;
 /////////////////////////////////////////////////
 #pragma mark - FORWARDS:
 
-@class PPPixelPusher;
+@class PPPusher;
 
 
 /////////////////////////////////////////////////
@@ -90,10 +102,10 @@ extern const PPOutputCurveBlock sCurveAntilogFunction;
 			return 1.0-input;
 		}];
 */
-// TODO:  This should be a property of PPPixelPusher or maybe PPDeviceRegistry or PPScene
+// TODO:  This should be a property of PPPusher or maybe PPRegistry or PPScene
 + (void)setOutputCurveFunction:(PPOutputCurveBlock)curveFunction;
 
-/** `pixelCount` should be the PPPixelPusher's pixelsPerStrip value.  the actual number of
+/** `pixelCount` should be the PPPusher's pixelsPerStrip value.  the actual number of
 	pixels for the strip will be calculated and allocated appropriately based on that
 	value combined with any pixel-count re-interpreteting flags.
 */
@@ -104,12 +116,13 @@ extern const PPOutputCurveBlock sCurveAntilogFunction;
 @property (nonatomic, readonly) BOOL touched;
 @property (nonatomic, readonly) uint32_t stripNumber;
 @property (nonatomic, readonly) uint32_t pixelCount;
-@property (nonatomic, readonly) uint32_t flags;
+@property (nonatomic, readonly) uint32_t flags;			// combination of SFLAG_ bits
 @property (nonatomic, readonly) BOOL isWidePixel;
 @property (nonatomic, assign) float powerScale;
-@property (nonatomic, assign) PPFloatPixel brightness;
-- (void)setBrightnessRed:(float)red green:(float)green blue:(float)blue;
-@property (nonatomic, readonly) float averagePixelComponentValue;	// 1.0 is maximum, includes brightness
+
+@property (nonatomic, assign) PPFloatPixel brightnessScale;
+- (void)setBrightnessScaleRed:(float)red green:(float)green blue:(float)blue;
+@property (nonatomic, readonly) float averageBrightness;	// 1.0 is maximum, includes brightnessScale
 
 // OPERATIONS:
 
@@ -118,10 +131,10 @@ extern const PPOutputCurveBlock sCurveAntilogFunction;
 - (void)setPixelAtIndex:(uint32_t)index withWordRed:(uint16_t)red green:(uint16_t)green blue:(uint16_t)blue;
 - (void)setPixelAtIndex:(uint32_t)index withFloatRed:(float)red green:(float)green blue:(float)blue;
 
-- (void)scalePixelComponentValues:(float)scale;		// 1.0f for no scaling
+// [setBrightnessScale:] sets factors that are always applied to pixel values.
+// This method instead scales, just once, the pixels values that are currently in each strip.
+- (void)scaleAverageBrightness:(float)scale;		// 1.0f for no scaling
 
-// TODO:  Either have this method return a pointer to the serialized data,
-// or pass in a bufferLength (to be safe).
-- (uint32_t)serialize:(uint8_t*)buffer size:(NSUInteger)sizeInBytes;
+- (uint32_t)serializeIntoBuffer:(uint8_t*)buffer bufferLength:(NSUInteger)bytes;
 
 @end

@@ -1,11 +1,16 @@
-/****************************************************************************
- *
- * "PPPusherCommand.m" implements the PPPusherConfigure class.
- *
- * Created in 2014 Christopher Schardt
- * Based on PusherCommand.java by Jas Strong
- *
- ****************************************************************************/
+//
+//  PPPusherCommand.m
+//  PixelPusher-objc
+//
+// PPPusherCommand is an Objective-C class that encapsulates a command sent
+// to a PixelPusher LED controller.
+//
+// After creating a PPPusherCommand, pass it to [PPPusher enqueuePusherCommand:],
+// or [PPRegistry enqueuePusherCommandInAllPushers:]
+//
+// Created in 2014 Christopher Schardt
+// Based on PusherCommand.java by Jas Strong
+//
 
 #import "PPPusherCommand.h"
 
@@ -125,7 +130,7 @@ static UInt8	const theMagicCookie[16] =
 	return command;
 }
 
-+ (PPPusherCommand*)ledConfigureCommandForStripCount:(UInt32)stripCount pixelsPerStrip:(UInt32)pixelsPerStrip
++ (PPPusherCommand*)ledConfigureCommandForStripCount:(uint32_t)stripCount pixelsPerStrip:(uint32_t)pixelsPerStrip
 									stripTypes:(PPPusherCommandStripTypes)stripTypes
 									componentOrderings:(PPPusherCommandComponentOrderings)componentOrderings
 {
@@ -134,7 +139,7 @@ static UInt8	const theMagicCookie[16] =
 										group:0 controller:0
 										artnetUniverse:0 artnetChannel:0];
 }
-+ (PPPusherCommand*)ledConfigureCommandForStripCount:(UInt32)stripCount pixelsPerStrip:(UInt32)pixelsPerStrip
++ (PPPusherCommand*)ledConfigureCommandForStripCount:(uint32_t)stripCount pixelsPerStrip:(uint32_t)pixelsPerStrip
 									stripTypes:(PPPusherCommandStripTypes)stripTypes
 									componentOrderings:(PPPusherCommandComponentOrderings)componentOrderings
 									group:(UInt16)group controller:(UInt16)controller
@@ -144,7 +149,7 @@ static UInt8	const theMagicCookie[16] =
 										group:group controller:controller
 										artnetUniverse:0 artnetChannel:0];
 }
-+ (PPPusherCommand*)ledConfigureCommandForStripCount:(UInt32)stripCount pixelsPerStrip:(UInt32)pixelsPerStrip
++ (PPPusherCommand*)ledConfigureCommandForStripCount:(uint32_t)stripCount pixelsPerStrip:(uint32_t)pixelsPerStrip
 									stripTypes:(PPPusherCommandStripTypes)stripTypes
 									componentOrderings:(PPPusherCommandComponentOrderings)componentOrderings
 									group:(UInt16)group controller:(UInt16)controller
@@ -158,10 +163,10 @@ static UInt8	const theMagicCookie[16] =
 	b += sizeof(theMagicCookie);
 	*b++ = PPPusherCommandLedConfigure;
 	
-	*(UInt32*)b = NSSwapHostIntToLittle(stripCount);
-	b += sizeof(UInt32);
-	*(UInt32*)b = NSSwapHostIntToLittle(pixelsPerStrip);
-	b += sizeof(UInt32);
+	*(uint32_t*)b = NSSwapHostIntToLittle(stripCount);
+	b += sizeof(uint32_t);
+	*(uint32_t*)b = NSSwapHostIntToLittle(pixelsPerStrip);
+	b += sizeof(uint32_t);
 	
 	memcpy(b, stripTypes, sizeof(PPPusherCommandStripTypes));
 	b += sizeof(PPPusherCommandStripTypes);

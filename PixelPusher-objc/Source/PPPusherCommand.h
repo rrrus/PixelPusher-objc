@@ -1,12 +1,16 @@
-/****************************************************************************
- *
- * "PPPusherCommand.h" defines the "pusher commands" that can be sent to
- * PixelPusher LED controllers.
- *
- * Created in 2014 Christopher Schardt
- * Based on PusherCommand.java by Jas Strong
- *
- ****************************************************************************/
+//
+//  PPPusherCommand.h
+//  PixelPusher-objc
+//
+// PPPusherCommand is an Objective-C class that encapsulates a command sent
+// to a PixelPusher LED controller.
+//
+// After creating a PPPusherCommand, pass it to [PPPusher enqueuePusherCommand:],
+// or [PPRegistry enqueuePusherCommandInAllPushers:]
+//
+// Created in 2014 Christopher Schardt
+// Based on PusherCommand.java by Jas Strong
+//
 
 #import <Foundation/Foundation.h>
 
@@ -65,14 +69,14 @@ typedef UInt8		PPPusherCommandComponentOrderings[8];
 + (PPPusherCommand*)wifiConfigureCommandForSSID:(NSString*)ssid
 											key:(NSString*)key
 											securityType:(PPPusherCommandSecurityType)securityType;
-+ (PPPusherCommand*)ledConfigureCommandForStripCount:(UInt32)stripCount pixelsPerStrip:(UInt32)pixelsPerStrip
++ (PPPusherCommand*)ledConfigureCommandForStripCount:(uint32_t)stripCount pixelsPerStrip:(uint32_t)pixelsPerStrip
 									stripTypes:(PPPusherCommandStripTypes)stripTypes
 									componentOrderings:(PPPusherCommandComponentOrderings)componentOrderings;
-+ (PPPusherCommand*)ledConfigureCommandForStripCount:(UInt32)stripCount pixelsPerStrip:(UInt32)pixelsPerStrip
++ (PPPusherCommand*)ledConfigureCommandForStripCount:(uint32_t)stripCount pixelsPerStrip:(uint32_t)pixelsPerStrip
 									stripTypes:(PPPusherCommandStripTypes)stripTypes
 									componentOrderings:(PPPusherCommandComponentOrderings)componentOrderings
 									group:(UInt16)group controller:(UInt16)controller;
-+ (PPPusherCommand*)ledConfigureCommandForStripCount:(UInt32)stripCount pixelsPerStrip:(UInt32)pixelsPerStrip
++ (PPPusherCommand*)ledConfigureCommandForStripCount:(uint32_t)stripCount pixelsPerStrip:(uint32_t)pixelsPerStrip
 									stripTypes:(PPPusherCommandStripTypes)stripTypes
 									componentOrderings:(PPPusherCommandComponentOrderings)componentOrderings
 									group:(UInt16)group controller:(UInt16)controller

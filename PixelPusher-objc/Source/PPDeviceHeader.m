@@ -5,55 +5,140 @@
 //  Created by Rus Maxham on 5/27/13.
 //  Copyright (c) 2013 rrrus. All rights reserved.
 //
+//	Modified by Christopher Schardt in early 2015:
+//	 * re-structured
+//	 * brought in PPDeviceType
+//	 * using DeviceHeader{} instead of NSData methods - quicker
+//	 * quicker implementation of packetRemainder
+//	 * created _ipAddress and _macAddress in [initWithPacket:]
+//
 
 #import <sys/socket.h>
 #import <net/if.h>
 #import <net/if_dl.h>
-#import "NSData+Utils.h"
 #import "PPDeviceHeader.h"
 
-static const int headerLength = 24;
 
-@interface PPDeviceHeader()
+/////////////////////////////////////////////////
+#pragma mark - CONSTANTS:
+
+static const int32_t PP_ACCEPTABLE_LOWEST_SW_REV = 121;
+
+
+/////////////////////////////////////////////////
+#pragma mark - TYPES:
+
+typedef struct __attribute__((packed)) DeviceHeader
+{
+	uint8_t			macAddress[6];
+	uint8_t			ipAddress[4];
+	uint8_t			deviceType;
+	uint8_t			protocolVersion;
+	uint16_t		vendorId;
+	uint16_t		productId;
+	uint16_t		hwRevision;
+	uint16_t		swRevision;
+	uint32_t		linkSpeed;
+} DeviceHeader;
+
+
+
+/////////////////////////////////////////////////
+#pragma mark - PRIVATE STUFF:
+
+@interface PPDeviceHeader ()
+{
+	struct sockaddr	_macSockAddr;
+	struct sockaddr	_ipSockAddr;
+	NSData*			_packet;		// retained for [packetRemainder]
+}
+
 @end
+
 
 @implementation PPDeviceHeader
 
-- (id)initWithPacket:(NSData*)packet {
-	self = [self init];
-	if (self) {
-		if (packet.length < headerLength) {
-			[NSException raise:NSInvalidArgumentException format:@"expected header size %d, but got %lu", headerLength, (unsigned long)packet.length];
-		}
 
-		[packet getBytes:&(_macAddress.sa_data) range:NSMakeRange(0, 6)];
-		_macAddress.sa_len = 6;
-		_macAddress.sa_family = AF_LINK;
-		[packet getBytes:&_ipAddress.sa_data range:NSMakeRange(6, 4)];
-		_ipAddress.sa_len = 4;
-		_ipAddress.sa_family = AF_INET;
-		_deviceType = [packet ubyteAtOffset:10];
-		_protocolVersion = [packet ubyteAtOffset:11];
-		_vendorId = [packet ushortAtOffset:12];
-		_productId = [packet ushortAtOffset:14];
-		_hwRevision = [packet ushortAtOffset:16];
-		_swRevision = [packet ushortAtOffset:18];
-		_linkSpeed = [packet uintAtOffset:20];
-		_packetRemainder = [packet subdataWithRange:NSMakeRange(headerLength, packet.length-headerLength)];
+/////////////////////////////////////////////////
+#pragma mark - EXISTENCE:
+
+- (id)initWithPacket:(NSData*)packet
+{
+	self = [self init];
+
+	if (packet.length < sizeof(DeviceHeader))
+	{
+		assert(NO);		// bad data or bug
+		self = nil;		//??? Does ARC release self?
+		return self;
 	}
+
+	DeviceHeader const*		const data = (DeviceHeader const*)packet.bytes;
+	
+	_deviceType = data->deviceType;
+	if (_deviceType != ePixelPusher)
+	{
+		assert(NO);		// could be other device, could be bug
+		self = nil;		//??? Does ARC release self?
+		return self;
+	}
+
+	memcpy(&_macSockAddr.sa_data, data->macAddress, 6);
+	_macSockAddr.sa_len = 6;
+	_macSockAddr.sa_family = AF_LINK;
+	_macAddress = [NSString stringWithFormat:@"%02x:%02x:%02x:%02x:%02x:%02x",
+								(uint8_t)_macSockAddr.sa_data[0], (uint8_t)_macSockAddr.sa_data[1],
+								(uint8_t)_macSockAddr.sa_data[2], (uint8_t)_macSockAddr.sa_data[3],
+								(uint8_t)_macSockAddr.sa_data[4], (uint8_t)_macSockAddr.sa_data[5]];
+
+	if (*(uint32_t*)data->ipAddress == 0)	
+	{
+		assert(NO);		// bad data or bug
+		return nil;		//??? Does ARC release self?
+	}
+	*(uint32_t*)&_ipSockAddr.sa_data = *(uint32_t*)data->ipAddress;
+	_ipSockAddr.sa_len = 4;
+	_ipSockAddr.sa_family = AF_INET;
+	_ipAddress = [NSString stringWithFormat:@"%d.%d.%d.%d",
+								(uint8_t)_ipSockAddr.sa_data[0], (uint8_t)_ipSockAddr.sa_data[1],
+								(uint8_t)_ipSockAddr.sa_data[2], (uint8_t)_ipSockAddr.sa_data[3]];
+	
+	_protocolVersion = data->protocolVersion;
+	_vendorId = NSSwapLittleShortToHost(data->vendorId);
+	_productId = NSSwapLittleShortToHost(data->productId);
+	_linkSpeed = NSSwapLittleIntToHost(data->linkSpeed);
+	_hwRevision = NSSwapLittleShortToHost(data->hwRevision);
+	_swRevision = NSSwapLittleShortToHost(data->swRevision);
+	
+	if (_swRevision < PP_ACCEPTABLE_LOWEST_SW_REV)
+	{
+		// TODO: use the device registry delegate to relay this message
+		DDLogWarn(@"WARNING!  This PixelPusher Library requires firmware revision %g", PP_ACCEPTABLE_LOWEST_SW_REV/100.0);
+		DDLogWarn(@"WARNING!  This PixelPusher is using %g", softwareRevision/100.0);
+		DDLogWarn(@"WARNING!  This is not expected to work.  Please update your PixelPusher.");
+	}
+	
+	_packet = packet;	// retain for use by [packetRemainder]
+	
 	return self;
 }
 
-- (NSString*)description {
+
+/////////////////////////////////////////////////
+#pragma mark - PROPERTIES:
+
+- (NSString*)description
+{
 	NSMutableString *outStr = NSMutableString.string;
-	switch (_deviceType) {
+	switch (_deviceType)
+	{
 		case eEtherDream:	[outStr appendString:@"EtherDream"]; break;
 		case eLumiaBridge:	[outStr appendString:@"LumiaBridge"]; break;
 		case ePixelPusher:	[outStr appendString:@"PixelPusher"]; break;
 		default:			[outStr appendString:@"unknown"]; break;
 	}
-	[outStr appendFormat:@": MAC(%@), ", self.macAddressString];
-	[outStr appendFormat:@"IP(%@), ", self.ipAddressString];
+	[outStr appendFormat:@": MAC(%@), ", self.macAddress];
+	[outStr appendFormat:@"IP(%@), ", self.ipAddress];
 	[outStr appendFormat:@"Protocol Ver(%d), ", _protocolVersion];
 	[outStr appendFormat:@"Vendor ID(%d), ", _vendorId];
 	[outStr appendFormat:@"Product ID(%d), ", _productId];
@@ -63,19 +148,25 @@ static const int headerLength = 24;
 	return outStr;
 }
 
-- (NSString*)macAddressString {
-	return [NSString stringWithFormat:@"%02x:%02x:%02x:%02x:%02x:%02x",
-			(uint8_t)_macAddress.sa_data[0], (uint8_t)_macAddress.sa_data[1], (uint8_t)_macAddress.sa_data[2],
-			(uint8_t)_macAddress.sa_data[3], (uint8_t)_macAddress.sa_data[4], (uint8_t)_macAddress.sa_data[5]];
+- (uint8_t const*)packetRemainder
+{
+	assert(_packet);		// [releasePacketRemainder called too early?]
+	return _packet.bytes + sizeof(DeviceHeader);
+}
+- (NSUInteger)packetRemainderLength
+{
+	assert(_packet);		// [releasePacketRemainder called too early?]
+	return _packet.length - sizeof(DeviceHeader);
 }
 
-- (NSString*)ipAddressString {
-	NSMutableString *str = NSMutableString.string;
-	for (int i=0; i<_ipAddress.sa_len; i++) {
-		[str appendFormat:@"%d", (uint8_t)_ipAddress.sa_data[i]];
-		if (i<_ipAddress.sa_len-1) [str appendString:@"."];
-	}
-	return str;
+
+/////////////////////////////////////////////////
+#pragma mark - OPERATIONS:
+
+- (void)releasePacketRemainder
+{
+	_packet = nil;
 }
+
 
 @end
