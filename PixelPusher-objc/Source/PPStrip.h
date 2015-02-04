@@ -135,6 +135,6 @@ extern const PPOutputCurveBlock sCurveAntilogFunction;
 // This method instead scales, just once, the pixels values that are currently in each strip.
 - (void)scaleAverageBrightness:(float)scale;		// 1.0f for no scaling
 
-- (uint32_t)fillRgbBuffer:(uint8_t*)buffer bufferLength:(NSUInteger)bytes;
+- (NSUInteger)fillRgbBuffer:(uint8_t*)buffer bufferLength:(NSUInteger)bytes;
 
 @end

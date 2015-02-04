@@ -82,7 +82,7 @@ typedef struct __attribute__((packed)) PPPusherData
 
 	GCDAsyncUdpSocket*		_socket;
 	NSOutputStream*			_captureStream;
-	uint32_t				_maxPacketLength;
+	NSUInteger				_maxPacketLength;
 	uint32_t				_packetIndex;
 	CFTimeInterval			_prevPacketSendTime;
 }
@@ -142,7 +142,7 @@ typedef struct __attribute__((packed)) PPPusherData
 	
 	// If _stripsAttached is less than 8, we still must read 8 bytes for the strip_flags.
 	// If it is more, then the structure becomes variable-length.
-	uint32_t			const stripFlagsSize = MAX(stripCount, (uint32_t)8);
+	NSUInteger			const stripFlagsSize = MAX(stripCount, (NSUInteger)8);
 	uint8_t				zeroStripFlags[256];
 	uint8_t const*		stripFlags;
 	
@@ -162,7 +162,7 @@ typedef struct __attribute__((packed)) PPPusherData
 	// The +2 offset acutally makes _pusherFlags misaligned for uint32s, but it's necessary because
 	// a former compiler bug caused early pushers to insert it erroneously.
 	// Jas decided it was best to keep it in for universal compatibility.
-	uint32_t			const postStripFlagsOffset = StripFlagsOffset + stripFlagsSize + 2;
+	NSUInteger			const postStripFlagsOffset = StripFlagsOffset + stripFlagsSize + 2;
 	uint32_t const*		const postStripFlagsData = (uint32_t const*)
 													((uint8_t const*)data + postStripFlagsOffset);
 	
@@ -173,7 +173,7 @@ typedef struct __attribute__((packed)) PPPusherData
 //		_powerDomain = NSSwapLittleIntToHost(((uint32_t*)postStripFlagsData)[2]);
 	}
 
-	[self initializeStrips:stripCount stripFlags:stripFlags];
+	[self initializeStrips:(uint32_t)stripCount stripFlags:stripFlags];
 	_header = header;
 	[header releasePacketRemainder];
 	
@@ -184,10 +184,10 @@ typedef struct __attribute__((packed)) PPPusherData
 	return self;
 }
 
-- (void)initializeStrips:(NSUInteger)stripCount stripFlags:(uint8_t const*)stripFlags
+- (void)initializeStrips:(uint32_t)stripCount stripFlags:(uint8_t const*)stripFlags
 {
 	NSMutableArray*		const stripArray = [NSMutableArray.alloc initWithCapacity:stripCount];
-	NSUInteger			index;
+	uint32_t			index;
 	
 	_strips = stripArray;
 	for (index = 0; index < stripCount; index++)
@@ -281,8 +281,8 @@ typedef struct __attribute__((packed)) PPPusherData
 
 - (CFTimeInterval)timeBetweenPackets
 {
-	NSUInteger		const stripCount = _strips.count;
-	NSUInteger		const packetsPerFrame = (stripCount >= _maxStripsPerPacket)
+	uint32_t		const stripCount = (uint32_t)_strips.count;
+	uint32_t		const packetsPerFrame = (stripCount >= _maxStripsPerPacket)
 												? (stripCount + _maxStripsPerPacket - 1) / _maxStripsPerPacket
 												: 1;
 	NSTimeInterval	threadSleep;
@@ -574,7 +574,7 @@ typedef struct __attribute__((packed)) PPPusherData
 					[strip setPowerScale:powerScale];
 					*data++ = (uint8_t)strip.stripNumber;
 					
-					uint32_t		const stripPacketSize = [strip fillRgbBuffer:data
+					NSUInteger		const stripPacketSize = [strip fillRgbBuffer:data
 																	bufferLength:dataEnd - data];
 					if (_captureStream)
 					{
@@ -689,8 +689,8 @@ typedef struct __attribute__((packed)) PPPusherData
 //??? eliminating all network/processing delays.
 //??? This needs to be re-worked.
 - (void)captureRgbBuffer:(uint8_t const*)buffer
-					length:(uint32_t)length
-					stripInPacketIndex:(uint32_t)stripInPacketIndex
+					length:(NSUInteger)length
+					stripInPacketIndex:(NSUInteger)stripInPacketIndex
 					packetSendTime:(CFTimeInterval)packetSendTime
 {
 	// we need to make the pusher wait on playback the same length of time between strips as we wait between packets

@@ -95,7 +95,7 @@ void BuildOutputCurve(uint32_t length)
 	
 	for (index = 0; index < length; index++)
 	{
-		uint32_t		const value = lroundf(65535.0f * gOutputCurveFunction(index * indexScalar));
+		uint32_t		const value = (uint32_t)lroundf(65535.0f * gOutputCurveFunction(index * indexScalar));
 		
 		ASSERT(value < 65536);
 		gOutputCurveTable[index] = (uint16_t)value;
@@ -241,11 +241,11 @@ void FreeOutputCurve()
 {
 	float			const scale = _powerScale * BRIGHTNESS_SCALE_1;
 	
-	_brightnessScaleRed = lroundf(scale * _brightnessScale.red);
+	_brightnessScaleRed = (uint32_t)lroundf(scale * _brightnessScale.red);
 	_brightnessScaleRed = MIN(_brightnessScaleRed, (uint32_t)65536);
-	_brightnessScaleGreen = lroundf(scale * _brightnessScale.green);
+	_brightnessScaleGreen = (uint32_t)lroundf(scale * _brightnessScale.green);
 	_brightnessScaleGreen = MIN(_brightnessScaleGreen, (uint32_t)65536);
-	_brightnessScaleBlue = lroundf(scale * _brightnessScale.blue);
+	_brightnessScaleBlue = (uint32_t)lroundf(scale * _brightnessScale.blue);
 	_brightnessScaleBlue = MIN(_brightnessScaleBlue, (uint32_t)65536);
 }
 
@@ -507,11 +507,11 @@ void FreeOutputCurve()
 	uint32_t			b;
 	uint8_t*			dst;
 	
-	r = lroundf(red * 65535);
+	r = (uint32_t)lroundf(red * 65535);
 	r = MIN(r, (uint32_t)65535);
-	g = lroundf(green * 65535);
+	g = (uint32_t)lroundf(green * 65535);
 	g = MIN(r, (uint32_t)65535);
-	b = lroundf(blue * 65535);
+	b = (uint32_t)lroundf(blue * 65535);
 	b = MIN(b, (uint32_t)65535);
 	if (!(_flags & SFLAG_LOGARITHMIC))
 	{
@@ -603,7 +603,7 @@ void FreeOutputCurve()
 /////////////////////////////////////////////////
 #pragma mark - OPERATIONS CALLED ONLY BY PP LIBRARY:
 
-- (uint32_t)fillRgbBuffer:(uint8_t*)buffer bufferLength:(NSUInteger)bytes
+- (NSUInteger)fillRgbBuffer:(uint8_t*)buffer bufferLength:(NSUInteger)bytes
 {
     _touched = NO;
 	if (_serializedDataBytes < bytes)

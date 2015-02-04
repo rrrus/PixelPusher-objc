@@ -77,8 +77,8 @@ typedef enum
 
 // These are read out of broadcast packets sent by the controller, and never change:
 @property (nonatomic, readonly) PPDeviceHeader* header;
-@property (nonatomic, readonly) NSUInteger pixelsPerStrip;
-@property (nonatomic, readonly) NSUInteger maxStripsPerPacket;
+@property (nonatomic, readonly) uint32_t pixelsPerStrip;
+@property (nonatomic, readonly) uint32_t maxStripsPerPacket;
 @property (nonatomic, readonly) uint32_t controllerOrdinal;
 @property (nonatomic, readonly) uint32_t groupOrdinal;
 @property (nonatomic, readonly) uint32_t pusherFlags;
