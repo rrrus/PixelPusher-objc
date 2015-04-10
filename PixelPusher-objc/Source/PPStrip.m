@@ -55,7 +55,7 @@ const CurveFunction sCurveAntilogFunction =  ^float(float input) {
 		if (gOutputLUT8) free((void*)gOutputLUT8);
 		gOutputLUT8 = nil;
 	}
-	
+
 	// special case linear output function
 	if (!gOutputCurveFunction || gOutputCurveFunction == sCurveLinearFunction) {
 		// give the LUTs a non-nil value so we can check to see if they're in use
@@ -68,7 +68,7 @@ const CurveFunction sCurveAntilogFunction =  ^float(float input) {
 		}
 		return;
 	}
-	
+
 	if (depth == 16) {
 		uint16_t *outputLUT16 = malloc(65536*sizeof(uint16_t));
 		gOutputLUT16 = outputLUT16;
@@ -146,9 +146,9 @@ const CurveFunction sCurveAntilogFunction =  ^float(float input) {
 }
 
 - (uint32_t)serialize:(uint8_t*)buffer {
-	
+
 /*
- 
+
 	dumb color transformation from RGB to RGBOW:
 		W = MIN(R,G,B)
 		R -= W
@@ -161,16 +161,16 @@ const CurveFunction sCurveAntilogFunction =  ^float(float input) {
 
 	orange and white LEDs actually have 3 LEDs in each of the same color.  we can drive all three
 	at different intensities to get higher precision brightness out of them.
- 
+
  */
 
 	// convert brightness plus powerScale to 16-bit binary fraction
 	uint32_t iPostLutScale = (uint32_t)(self.brightness * self.powerScale * 65536);
 	__block uint8_t *P = buffer;
-	
+
 	// TODO: optimization opportunity -- use a for loop and a standard C-array
 	// and possibly a real pixmap for the source
-	
+
 	if (self.flags & SFLAG_WIDEPIXELS) {
 		if (gOutputCurveFunction != sCurveLinearFunction) {
 			[self.pixels forEach:^(PPPixel *pixel, NSUInteger idx, BOOL *stop) {
@@ -225,7 +225,7 @@ const CurveFunction sCurveAntilogFunction =  ^float(float input) {
 				uint16_t O = (uint16_t)MIN( R, G*orangeGreenInv/1024 );
 				R -= O;
 				G -= O*orangeGreen/1024;
-				
+
 				*(P++) = gDiv3LUT[R];
 				*(P++) = gDiv3LUT[G];
 				*(P++) = gDiv3LUT[B];
@@ -274,7 +274,7 @@ const CurveFunction sCurveAntilogFunction =  ^float(float input) {
 			}];
 		}
 	}
-	
+
     self.touched = NO;
 	return (uint32_t)(P-buffer);
 }

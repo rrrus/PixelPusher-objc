@@ -31,7 +31,6 @@ INIT_LOG_LEVEL_INFO
 @property (nonatomic, strong) NSMutableDictionary *packetsInFlight;
 @property (nonatomic, strong) GCDAsyncUdpSocket *udpsocket;
 @property (nonatomic, assign) BOOL canceled;
-@property (nonatomic, assign) uint16_t pusherPort;
 @property (nonatomic, assign) NSString *cardAddress;
 @property (nonatomic, assign) int64_t packetNumber;
 @property (nonatomic, strong) NSOutputStream* writeStream;
@@ -50,14 +49,14 @@ INIT_LOG_LEVEL_INFO
 		dispatch_set_target_queue(self.packetQueue, dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0));
 
 		self.pusher = pusher;
-		self.pusherPort = self.pusher.myPort;
 
 		self.flushPromise = [HLDeferred deferredWithResult:nil];
 		self.packetPromises = NSMutableDictionary.new;
 
 		self.udpsocket = [GCDAsyncUdpSocket.alloc initWithDelegate:self delegateQueue:dispatch_get_main_queue()];
+		[self.udpsocket setIPv6Enabled:NO];
 		NSError *error;
-		[self.udpsocket connectToHost:self.pusher.ipAddress onPort:self.pusherPort error:&error];
+		[self.udpsocket connectToHost:self.pusher.ipAddress onPort:self.pusher.port error:&error];
 		if (error) {
 			[NSException raise:NSGenericException format:@"error connecting to pusher (%@): %@", self.pusher.ipAddress, error];
 		}
@@ -78,6 +77,7 @@ INIT_LOG_LEVEL_INFO
 
 - (void)dealloc {
 	[self cancelAllInFlight];
+	[self.udpsocket close];
 }
 
 - (void)setRecord:(BOOL)record {
@@ -117,7 +117,7 @@ INIT_LOG_LEVEL_INFO
 }
 
 - (void)appWillBackground {
-	[self closeWriteStream];
+//	[self closeWriteStream];
 }
 
 - (NSMutableData*)packetFromPool {
@@ -169,6 +169,9 @@ INIT_LOG_LEVEL_INFO
 }
 
 - (HLDeferred*)flush {
+	if (!self.udpsocket.isConnected || self.udpsocket.isClosed) {
+		return self.flushPromise;
+	}
 	int32_t totalLength = 0;
 	BOOL payload;
 	BOOL sentPacket = NO;
@@ -191,7 +194,7 @@ INIT_LOG_LEVEL_INFO
 			// Shoot for the framelimit.
 			self.threadSleep = ((1.0/PPDeviceRegistry.sharedRegistry.frameRateLimit) / (nStrips / stripPerPacket));
 		}
-		
+
 		// Handle errant delay calculation in the firmware.
 		if (self.pusher.updatePeriod > 0.1) {
 			self.threadSleep = (0.016 / (nStrips / stripPerPacket));
@@ -200,9 +203,9 @@ INIT_LOG_LEVEL_INFO
 		CFTimeInterval totalDelay = self.threadSleep + self.threadExtraDelay + self.pusher.extraDelay;
 
 		packetLength += addIntToBuffer(&P, (int32_t)self.packetNumber);
-		
+
 		// TODO: PusherCommands sent here!
-		
+
 		for (int i = 0; i < stripPerPacket;) {
 			if (stripIdx >= nStrips) {
 				break;
@@ -217,7 +220,7 @@ INIT_LOG_LEVEL_INFO
 				uint32_t stripPacketSize = [strip serialize:P];
 				if (self.writeStream) {
 					// TODO: update to canfile format 2
-					
+
 					// we need to make the pusher wait on playback the same length of time between strips as we wait between packets
 					// this number is in microseconds.
 					uint32_t buf = 0;
@@ -295,7 +298,7 @@ INIT_LOG_LEVEL_INFO
 - (void)udpSocket:(GCDAsyncUdpSocket *)sock didNotSendDataWithTag:(long)tag dueToError:(NSError *)error {
 	id key = @(tag);
 	// resolve packet promise
-	DDLogError(@"upd packet %ld send failed with error: %@", tag, error);
+	DDLogError(@"udp packet %ld send failed with error: %@", tag, error);
 	HLDeferred *promise = self.packetPromises[key];
 	[self.packetPromises removeObjectForKey:key];
 	NSMutableData *packet = self.packetsInFlight[key];
@@ -307,13 +310,8 @@ INIT_LOG_LEVEL_INFO
 - (void)udpSocketDidClose:(GCDAsyncUdpSocket *)sock withError:(NSError *)error {
 	DDLogError(@"card socket closed with error: %@", error);
 	[self cancelAllInFlight];
+	[self.udpsocket close];
 
-	CFTimeInterval delayInSeconds = 1;
-	dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, (int64_t)(delayInSeconds * NSEC_PER_SEC));
-	dispatch_after(popTime, dispatch_get_main_queue(), ^(void){
-		DDLogInfo(@"attempting to reconnect card socket");
-		NSError *error2;
-		[self.udpsocket connectToHost:self.pusher.ipAddress onPort:self.pusherPort error:&error2];
-	});
+	[PPDeviceRegistry.sharedRegistry expireDevice:self.pusher.macAddress];
 }
 @end

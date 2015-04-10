@@ -10,14 +10,14 @@
 #import "PPPixelPusher.h"
 
 @interface PPPusherGroup ()
-@property (nonatomic) int32_t ordinal;
+@property (nonatomic) uint32_t ordinal;
 @property (nonatomic, strong) NSMutableArray *pushers;
 @property (nonatomic, strong) NSArray *stripCache;
 @end
 
 @implementation PPPusherGroup
 
-- (id)initWithOrdinal:(int32_t)ordinal {
+- (id)initWithOrdinal:(uint32_t)ordinal {
 	self = [super init];
 	if (self) {
 		self.ordinal = ordinal;
@@ -26,7 +26,7 @@
 	return self;
 }
 
-- (int32_t)ordinal {
+- (uint32_t)ordinal {
 	return _ordinal;
 }
 

@@ -16,20 +16,20 @@ INIT_LOG_LEVEL_INFO
 static const int32_t kDefaultPusherPort = 9897;
 
 @interface PPPixelPusher ()
-@property (nonatomic, assign) int32_t stripsAttached;
-@property (nonatomic, assign) int32_t artnetUniverse;
-@property (nonatomic, assign) int32_t artnetChannel;
+@property (nonatomic, assign) uint32_t stripsAttached;
+@property (nonatomic, assign) uint32_t artnetUniverse;
+@property (nonatomic, assign) uint32_t artnetChannel;
 
 // redeclaring readonly public interfaces for private assign access
 @property (nonatomic, strong) NSArray *strips;
-@property (nonatomic, assign) int32_t pixelsPerStrip;
-@property (nonatomic, assign) int32_t groupOrdinal;
-@property (nonatomic, assign) int32_t controllerOrdinal;
+@property (nonatomic, assign) uint32_t pixelsPerStrip;
+@property (nonatomic, assign) uint32_t groupOrdinal;
+@property (nonatomic, assign) uint32_t controllerOrdinal;
 @property (nonatomic, assign) NSTimeInterval updatePeriod;
-@property (nonatomic, assign) int64_t powerTotal;
-@property (nonatomic, assign) int64_t deltaSequence;
-@property (nonatomic, assign) int32_t maxStripsPerPacket;
-@property (nonatomic, assign) int16_t myPort;
+@property (nonatomic, assign) uint64_t powerTotal;
+@property (nonatomic, assign) uint64_t deltaSequence;
+@property (nonatomic, assign) uint32_t maxStripsPerPacket;
+@property (nonatomic, assign) uint16_t port;
 @property (nonatomic, strong) NSArray *stripFlags;
 @property (nonatomic, assign) uint32_t pusherFlags;
 @property (nonatomic, assign) uint32_t segments;
@@ -46,14 +46,14 @@ static const int32_t kDefaultPusherPort = 9897;
 			if (group0 < group1) return NSOrderedAscending;
 			return NSOrderedDescending;
 		}
-		
+
 		int32_t ord1 = obj1.controllerOrdinal;
 		int32_t ord2 = obj2.controllerOrdinal;
 		if (ord1 != ord2) {
 			if (ord1 < ord2) return NSOrderedAscending;
 			return NSOrderedDescending;
 		}
-		
+
 		return [obj1.macAddress compare:obj2.macAddress];
 	};
 }
@@ -62,7 +62,7 @@ static const int32_t kDefaultPusherPort = 9897;
 	self = [super initWithHeader:header];
 	if (self) {
 		self.brightness = 1.0;
-		
+
 		NSData *packet = header.packetRemainder;
 		if (self.softwareRevision < PP_ACCEPTABLE_LOWEST_SW_REV) {
 //			DDLogWarn(@"WARNING!  This PixelPusher Library requires firmware revision %g", PP_ACCEPTABLE_LOWEST_SW_REV/100.0);
@@ -87,18 +87,18 @@ static const int32_t kDefaultPusherPort = 9897;
 		self.artnetUniverse = [packet ushortAtOffset:24];
 		self.artnetChannel = [packet ushortAtOffset:26];
         if (packet.length >= 30 && self.softwareRevision > 100) {
-            self.myPort = [packet ushortAtOffset:28];
+            self.port = [packet ushortAtOffset:28];
         } else {
-            self.myPort = kDefaultPusherPort;
+            self.port = kDefaultPusherPort;
         }
-		
+
 		// A minor complication here.  The PixelPusher firmware generates announce packets from
 		// a static structure, so the size of stripFlags is always 8;  even if there are fewer
 		// strips configured.  So we have a wart. - jls.
 
 		int stripFlagSize = 8;
 		if (self.stripsAttached > stripFlagSize) stripFlagSize = self.stripsAttached;
-		
+
 		NSMutableArray *theStripFlags = NSMutableArray.new;
 		self.stripFlags = theStripFlags;
 		if (packet.length >= (30+stripFlagSize) && self.softwareRevision > 108) {
@@ -128,8 +128,8 @@ static const int32_t kDefaultPusherPort = 9897;
 }
 
 - (NSString *)description {
-	return [NSString stringWithFormat:@"%@ (%@, controller %d, group %d, deltaSeq %lld, update %f, power %lld, flags %03x, firmware v%1.2f, hardware rev %d)",
-			super.description, self.ipAddress, self.controllerOrdinal, self.groupOrdinal, self.deltaSequence, self.updatePeriod,
+	return [NSString stringWithFormat:@"%@ (%@:%d, controller %d, group %d, deltaSeq %lld, update %f, power %lld, flags %03x, firmware v%1.2f, hardware rev %d)",
+			super.description, self.ipAddress, self.port, self.controllerOrdinal, self.groupOrdinal, self.deltaSequence, self.updatePeriod,
 			self.powerTotal, self.pusherFlags, self.softwareRevision/100.0f, self.hardwareRevision];
 }
 
@@ -180,7 +180,7 @@ static const int32_t kDefaultPusherPort = 9897;
 	self.groupOrdinal = device.groupOrdinal;
 	self.artnetChannel = device.artnetChannel;
 	self.artnetUniverse = device.artnetUniverse;
-	self.myPort = device.myPort;
+	self.port = device.port;
 	self.stripFlags = (NSArray*)device.stripFlags.copy;
 	self.pusherFlags = device.pusherFlags;
 	self.segments = device.segments;
@@ -223,7 +223,7 @@ static const int32_t kDefaultPusherPort = 9897;
 		|| self.pixelsPerStrip != other.pixelsPerStrip
     	|| self.artnetChannel != other.artnetChannel
 		|| self.artnetUniverse != other.artnetUniverse
-		|| self.myPort != other.myPort
+		|| self.port != other.port
 		|| labs(self.powerTotal - other.powerTotal) > 10000
 		|| self.powerDomain != other.powerDomain
 		|| self.segments != other.segments

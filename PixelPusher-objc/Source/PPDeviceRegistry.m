@@ -115,14 +115,14 @@ static PPDeviceRegistry *gSharedRegistry;
 		self.scene = PPScene.new;
 
 		[self bind];
-		
+
 		// monitor pushers' timeouts
 		[NSTimer scheduledTimerWithTimeInterval:kExpiryTimerInterval
 										 target:self
 									   selector:@selector(deviceExpiryTask:)
 									   userInfo:nil
 										repeats:YES];
-		
+
 		[NSNotificationCenter.defaultCenter addObserver:self
 											   selector:@selector(appDidBackground)
 												   name:UIApplicationDidEnterBackgroundNotification
@@ -142,7 +142,7 @@ static PPDeviceRegistry *gSharedRegistry;
 }
 
 - (void)appDidBackground {
-	[self unbind];
+//	[self unbind];
 }
 
 - (void)bind {
@@ -151,6 +151,14 @@ static PPDeviceRegistry *gSharedRegistry;
 		self.discoverySocket = [GCDAsyncUdpSocket.alloc initWithDelegate:self delegateQueue:dispatch_get_main_queue()];
 		[self.discoverySocket setIPv6Enabled:NO];
 		NSError *error;
+		[self.discoverySocket enableReusePort:YES error:&error];
+		if (error) {
+			[NSException raise:NSGenericException format:@"error enabling reuse port on discovery port: %@", error];
+		}
+		[self.discoverySocket enableBroadcast:YES error:&error];
+		if (error) {
+			[NSException raise:NSGenericException format:@"error enabling broadcast on discovery port: %@", error];
+		}
 		[self.discoverySocket bindToPort:kDiscoveryPort error:&error];
 		if (error) {
 			UIAlertView *alert = [UIAlertView.alloc initWithTitle:@"PixelPusher"
@@ -161,10 +169,6 @@ static PPDeviceRegistry *gSharedRegistry;
 			[alert show];
 			return;
 //			self.discoverySocket = nil;
-		}
-		[self.discoverySocket enableBroadcast:YES error:&error];
-		if (error) {
-			[NSException raise:NSGenericException format:@"error enabling broadcast on discovery port: %@", error];
 		}
 		[self.discoverySocket beginReceiving:&error];
 		if (error) {
@@ -200,7 +204,7 @@ static PPDeviceRegistry *gSharedRegistry;
 
 - (NSArray*)pushersInGroup:(int32_t)groupNumber {
 	PPPusherGroup *group = DYNAMIC_CAST(PPPusherGroup, self.groupMap[@(groupNumber)]);
-	
+
 	if (group != nil)	return group.pushers;
 	else				return @[];
 }
@@ -237,7 +241,7 @@ static PPDeviceRegistry *gSharedRegistry;
 			[_groupMap removeObjectForKey:@(pusher.groupOrdinal)];
 			[self.sortedGroups removeObject:group];
 		}
-		
+
 		if (self.scene.isRunning) [self.scene removePusher:pusher];
 
 		[NSNotificationCenter.defaultCenter postNotificationName:PPDeviceRegistryRemovedPusher object:pusher];
@@ -258,13 +262,28 @@ static PPDeviceRegistry *gSharedRegistry;
 
 - (void)receive:(NSData*)data {
     // This is for the UDP callback, this should not be called directly
-	PPDeviceHeader *header = [PPDeviceHeader.alloc initWithPacket:data];
+	PPDeviceHeader *header;
+	@try {
+		header = [PPDeviceHeader.alloc initWithPacket:data];
+	}
+	@catch (NSException *exception) {
+		NSLog(@"while parsing discovery packet: %@", exception);
+	}
+	if (!header) return;
+
 	NSString *macAddr = header.macAddressString;
 	if (header.deviceType != ePixelPusher) {
 		DDLogInfo(@"Ignoring non-PixelPusher discovery packet from %@", header);
 		return;
 	}
-	PPPixelPusher *device = [PPPixelPusher.alloc initWithHeader:header];
+	PPPixelPusher *device;
+	@try {
+		device = [PPPixelPusher.alloc initWithHeader:header];
+	}
+	@catch (NSException *exception) {
+		NSLog(@"while parsing pixel pusher discovery packet: %@", exception);
+	}
+	if (!device) return;
 	DDLogVerbose(@"squitter %@", device);
 	// Set the timestamp for the last time this device checked in
 	self.pusherLastSeenMap[macAddr] = NSDate.date;
@@ -341,7 +360,7 @@ static PPDeviceRegistry *gSharedRegistry;
 			return NSOrderedDescending;
 		}];
 	}
-		
+
 	pusher.autoThrottle = gAutoThrottle;
 
 	[NSNotificationCenter.defaultCenter postNotificationName:PPDeviceRegistryAddedPusher object:pusher];

@@ -46,4 +46,7 @@ extern NSString * const PPDeviceRegistryRemovedPusher;
 - (void)startPushing;
 - (void)stopPushing;
 
+// PPPixelPusher interface only, do not call this method
+- (void)expireDevice:(NSString*)macAddr;
+
 @end

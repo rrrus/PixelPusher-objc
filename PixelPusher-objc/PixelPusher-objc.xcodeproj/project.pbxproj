@@ -7,6 +7,15 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		DB391F6919A2D81200FB3F4E /* UIImage+RRR.h in Headers */ = {isa = PBXBuildFile; fileRef = DB391F6719A2D81200FB3F4E /* UIImage+RRR.h */; };
+		DB391F6A19A2D81200FB3F4E /* UIImage+RRR.m in Sources */ = {isa = PBXBuildFile; fileRef = DB391F6819A2D81200FB3F4E /* UIImage+RRR.m */; };
+		DB4C0CD61993105500B9470F /* PPConfigVC2.h in Headers */ = {isa = PBXBuildFile; fileRef = DB4C0CD31993105500B9470F /* PPConfigVC2.h */; };
+		DB4C0CD71993105500B9470F /* PPConfigVC2.m in Sources */ = {isa = PBXBuildFile; fileRef = DB4C0CD41993105500B9470F /* PPConfigVC2.m */; };
+		DB4C0CD81993106200B9470F /* PPConfigVC2.xib in Resources */ = {isa = PBXBuildFile; fileRef = DB4C0CD51993105500B9470F /* PPConfigVC2.xib */; };
+		DB4C0CDF199592A500B9470F /* RRSimpleCollectionView.h in Headers */ = {isa = PBXBuildFile; fileRef = DB4C0CDD199592A500B9470F /* RRSimpleCollectionView.h */; };
+		DB4C0CE0199592A500B9470F /* RRSimpleCollectionView.m in Sources */ = {isa = PBXBuildFile; fileRef = DB4C0CDE199592A500B9470F /* RRSimpleCollectionView.m */; };
+		DB4C0CE31995B99500B9470F /* RRBorderedButton.h in Headers */ = {isa = PBXBuildFile; fileRef = DB4C0CE11995B99500B9470F /* RRBorderedButton.h */; };
+		DB4C0CE41995B99500B9470F /* RRBorderedButton.m in Sources */ = {isa = PBXBuildFile; fileRef = DB4C0CE21995B99500B9470F /* RRBorderedButton.m */; };
 		DB4D483718132E8800788518 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DB4D483618132E8800788518 /* Foundation.framework */; };
 		DB4D486118132F3000788518 /* NSData+Utils.m in Sources */ = {isa = PBXBuildFile; fileRef = DB4D484818132F3000788518 /* NSData+Utils.m */; };
 		DB4D486218132F3000788518 /* PPCard.m in Sources */ = {isa = PBXBuildFile; fileRef = DB4D484B18132F3000788518 /* PPCard.m */; };
@@ -77,7 +86,16 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		DB391F6719A2D81200FB3F4E /* UIImage+RRR.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "UIImage+RRR.h"; sourceTree = "<group>"; };
+		DB391F6819A2D81200FB3F4E /* UIImage+RRR.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "UIImage+RRR.m"; sourceTree = "<group>"; };
 		DB3E2B45181341BB0034BFC8 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = text; name = README.md; path = ../README.md; sourceTree = "<group>"; };
+		DB4C0CD31993105500B9470F /* PPConfigVC2.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PPConfigVC2.h; sourceTree = "<group>"; };
+		DB4C0CD41993105500B9470F /* PPConfigVC2.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PPConfigVC2.m; sourceTree = "<group>"; };
+		DB4C0CD51993105500B9470F /* PPConfigVC2.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = PPConfigVC2.xib; sourceTree = "<group>"; };
+		DB4C0CDD199592A500B9470F /* RRSimpleCollectionView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RRSimpleCollectionView.h; sourceTree = "<group>"; };
+		DB4C0CDE199592A500B9470F /* RRSimpleCollectionView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RRSimpleCollectionView.m; sourceTree = "<group>"; };
+		DB4C0CE11995B99500B9470F /* RRBorderedButton.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RRBorderedButton.h; sourceTree = "<group>"; };
+		DB4C0CE21995B99500B9470F /* RRBorderedButton.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RRBorderedButton.m; sourceTree = "<group>"; };
 		DB4D483318132E8800788518 /* libPixelPusher-objc.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPixelPusher-objc.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		DB4D483618132E8800788518 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		DB4D484718132F3000788518 /* NSData+Utils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSData+Utils.h"; sourceTree = "<group>"; };
@@ -194,6 +212,12 @@
 				DB4D484918132F3000788518 /* PixelPusher-objc-Prefix.pch */,
 				DB4D484A18132F3000788518 /* PPCard.h */,
 				DB4D484B18132F3000788518 /* PPCard.m */,
+				DBB01157196C9849000A1C73 /* PPConfigVC.h */,
+				DBB01158196C9849000A1C73 /* PPConfigVC.m */,
+				DBB01159196C9849000A1C73 /* PPConfigVC.xib */,
+				DB4C0CD31993105500B9470F /* PPConfigVC2.h */,
+				DB4C0CD41993105500B9470F /* PPConfigVC2.m */,
+				DB4C0CD51993105500B9470F /* PPConfigVC2.xib */,
 				DB4D484C18132F3000788518 /* PPDevice.h */,
 				DB4D484D18132F3000788518 /* PPDevice.m */,
 				DB4D484E18132F3000788518 /* PPDeviceHeader.h */,
@@ -204,6 +228,7 @@
 				DB4D485318132F3000788518 /* PPPixel.m */,
 				DB4D485418132F3000788518 /* PPPixelPusher.h */,
 				DB4D485518132F3000788518 /* PPPixelPusher.m */,
+				DBB0115C196CA4AD000A1C73 /* PPPusherCell.xib */,
 				DB4D485618132F3000788518 /* PPPusherGroup.h */,
 				DB4D485718132F3000788518 /* PPPusherGroup.m */,
 				DB4D485818132F3000788518 /* PPScene.h */,
@@ -212,13 +237,15 @@
 				DB4D485B18132F3000788518 /* PPStrip.m */,
 				DB4D485C18132F3000788518 /* PPVStrip.h */,
 				DB4D485D18132F3000788518 /* PPVStrip.m */,
+				DB4C0CE11995B99500B9470F /* RRBorderedButton.h */,
+				DB4C0CE21995B99500B9470F /* RRBorderedButton.m */,
 				DB4D485E18132F3000788518 /* RRForEach.h */,
 				DB4D485F18132F3000788518 /* RRForEach.m */,
 				DB4D486018132F3000788518 /* RRMacros.h */,
-				DBB01157196C9849000A1C73 /* PPConfigVC.h */,
-				DBB01158196C9849000A1C73 /* PPConfigVC.m */,
-				DBB01159196C9849000A1C73 /* PPConfigVC.xib */,
-				DBB0115C196CA4AD000A1C73 /* PPPusherCell.xib */,
+				DB4C0CDD199592A500B9470F /* RRSimpleCollectionView.h */,
+				DB4C0CDE199592A500B9470F /* RRSimpleCollectionView.m */,
+				DB391F6719A2D81200FB3F4E /* UIImage+RRR.h */,
+				DB391F6819A2D81200FB3F4E /* UIImage+RRR.m */,
 			);
 			path = Source;
 			sourceTree = "<group>";
@@ -310,8 +337,11 @@
 				DB4D48A71813345C00788518 /* DDLog.h in Headers */,
 				DB4D48B8181335E900788518 /* HLFailure.h in Headers */,
 				DB4D48B7181335DD00788518 /* HLDeferred.h in Headers */,
+				DB391F6919A2D81200FB3F4E /* UIImage+RRR.h in Headers */,
+				DB4C0CDF199592A500B9470F /* RRSimpleCollectionView.h in Headers */,
 				DB4D48B6181335D200788518 /* DDTTYLogger.h in Headers */,
 				DB4D48A9181335C400788518 /* NSData+Utils.h in Headers */,
+				DB4C0CD61993105500B9470F /* PPConfigVC2.h in Headers */,
 				DBB0115A196C9849000A1C73 /* PPConfigVC.h in Headers */,
 				DB4D48AA181335C400788518 /* PPCard.h in Headers */,
 				DB4D48AB181335C400788518 /* PPDevice.h in Headers */,
@@ -323,6 +353,7 @@
 				DB4D48B1181335C400788518 /* PPScene.h in Headers */,
 				DB4D48B2181335C400788518 /* PPStrip.h in Headers */,
 				DB4D48B3181335C400788518 /* PPVStrip.h in Headers */,
+				DB4C0CE31995B99500B9470F /* RRBorderedButton.h in Headers */,
 				DB4D48B4181335C400788518 /* RRForEach.h in Headers */,
 				DB4D48B5181335C400788518 /* RRMacros.h in Headers */,
 			);
@@ -406,6 +437,7 @@
 			files = (
 				DBB01172196CABDC000A1C73 /* PPConfigVC.xib in Resources */,
 				DBB01173196CABE2000A1C73 /* PPPusherCell.xib in Resources */,
+				DB4C0CD81993106200B9470F /* PPConfigVC2.xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -426,6 +458,7 @@
 				DB4D486818132F3000788518 /* PPPusherGroup.m in Sources */,
 				DB4D486918132F3000788518 /* PPScene.m in Sources */,
 				DB4D486A18132F3000788518 /* PPStrip.m in Sources */,
+				DB4C0CE41995B99500B9470F /* RRBorderedButton.m in Sources */,
 				DBB0115B196C9849000A1C73 /* PPConfigVC.m in Sources */,
 				DB4D486B18132F3000788518 /* PPVStrip.m in Sources */,
 				DB4D486C18132F3000788518 /* RRForEach.m in Sources */,
@@ -434,10 +467,13 @@
 				DB4D48811813301900788518 /* DDFileLogger.m in Sources */,
 				DB4D48821813301900788518 /* DDLog.m in Sources */,
 				DB4D48831813301900788518 /* DDTTYLogger.m in Sources */,
+				DB4C0CE0199592A500B9470F /* RRSimpleCollectionView.m in Sources */,
 				DB4D488F181330BB00788518 /* HLDeferred.m in Sources */,
 				DB4D4890181330BB00788518 /* HLDeferredList.m in Sources */,
 				DB4D4891181330BB00788518 /* HLFailure.m in Sources */,
 				DB4D48971813314400788518 /* GCDAsyncSocket.m in Sources */,
+				DB391F6A19A2D81200FB3F4E /* UIImage+RRR.m in Sources */,
+				DB4C0CD71993105500B9470F /* PPConfigVC2.m in Sources */,
 				DB4D48981813314400788518 /* GCDAsyncUdpSocket.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

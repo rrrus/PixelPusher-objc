@@ -37,7 +37,7 @@
 
 - (void)viewDidLoad {
     [super viewDidLoad];
-	
+
 	UINib *nib = [UINib nibWithNibName:@"PPPusherCell" bundle:self.class.pixelPusherBundle];
 	[self.pusherList registerNib:nib forCellReuseIdentifier:@"PusherCell"];
 
@@ -91,13 +91,13 @@
 			aCell.numPixels.text = [NSString stringWithFormat:@"%d px", pusher.pixelsPerStrip];
 			aCell.swVersion.text = [NSString stringWithFormat:@"v%1.2f", pusher.softwareRevision/100.0f];
 			aCell.hwVersion.text = [NSString stringWithFormat:@"r%d", pusher.hardwareRevision];
-			
+
 			if (pusher.softwareRevision < PP_ACCEPTABLE_LOWEST_SW_REV)	aCell.swVersion.textColor = UIColor.redColor;
 			else														aCell.swVersion.textColor = UIColor.blackColor;
 		}
 	}
 
-	
+
 	return aCell;
 }
 
