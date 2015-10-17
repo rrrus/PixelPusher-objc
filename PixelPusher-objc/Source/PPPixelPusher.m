@@ -224,7 +224,7 @@ static const int32_t kDefaultPusherPort = 9897;
     	|| self.artnetChannel != other.artnetChannel
 		|| self.artnetUniverse != other.artnetUniverse
 		|| self.port != other.port
-		|| labs(self.powerTotal - other.powerTotal) > 10000
+		|| (self.powerTotal - other.powerTotal) > 10000
 		|| self.powerDomain != other.powerDomain
 		|| self.segments != other.segments
 		|| self.pusherFlags != other.pusherFlags)

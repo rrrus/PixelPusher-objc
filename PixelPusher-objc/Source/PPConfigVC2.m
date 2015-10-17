@@ -359,7 +359,7 @@ typedef enum {
 	} else {
 		self.subLabel.text = @"";
 	}
-	self.label.text = [NSString stringWithFormat:@"%d", idx.item+1];
+	self.label.text = [NSString stringWithFormat:@"%d",(int)idx.item+1];
 }
 
 @end

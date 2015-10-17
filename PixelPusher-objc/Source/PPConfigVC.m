@@ -87,7 +87,7 @@
 			PPPixelPusher *pusher = pushers[indexPath.item];
 			aCell.ordinal.text = [NSString stringWithFormat:@"%d", pusher.controllerOrdinal];
 			aCell.macAddress.text = pusher.macAddress;
-			aCell.numStrips.text = [NSString stringWithFormat:@"%d strips", pusher.strips.count];
+			aCell.numStrips.text = [NSString stringWithFormat:@"%d strips", (int)pusher.strips.count];
 			aCell.numPixels.text = [NSString stringWithFormat:@"%d px", pusher.pixelsPerStrip];
 			aCell.swVersion.text = [NSString stringWithFormat:@"v%1.2f", pusher.softwareRevision/100.0f];
 			aCell.hwVersion.text = [NSString stringWithFormat:@"r%d", pusher.hardwareRevision];
